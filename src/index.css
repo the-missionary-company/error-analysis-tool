@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(37, 99, 235, 0.06), transparent 55%),
+    radial-gradient(900px 500px at 100% 0%, rgba(5, 150, 105, 0.05), transparent 50%),
+    #f7f7f8;
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium transition
+      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .btn-primary {
+    @apply btn bg-accent text-white hover:bg-accent-hover shadow-sm;
+  }
+  .btn-secondary {
+    @apply btn bg-white text-ink-800 border border-ink-200 hover:bg-ink-50 shadow-sm;
+  }
+  .btn-ghost {
+    @apply btn text-ink-600 hover:bg-ink-100;
+  }
+  .btn-pass {
+    @apply btn border border-pass/30 bg-pass-soft text-pass hover:bg-emerald-100;
+  }
+  .btn-fail {
+    @apply btn border border-fail/30 bg-fail-soft text-fail hover:bg-red-100;
+  }
+  .card {
+    @apply rounded-xl bg-white shadow-card;
+  }
+  .kbd {
+    @apply inline-flex items-center rounded border border-ink-200 bg-ink-50 px-1.5 py-0.5 font-mono text-[11px] text-ink-600;
+  }
+}
+
+/* Subtle scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #d9d9de transparent;
+}
