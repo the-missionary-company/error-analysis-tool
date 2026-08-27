@@ -1,0 +1,15 @@
+[
+  {
+    "id": "will-not-green-production-migration",
+    "title": "3. Will not green a production migration to make a check pretty",
+    "session": "Capture",
+    "stamp": "HOLD",
+    "yourCall": "Softer",
+    "when": "2026-08-27",
+    "notionUrl": "https://app.notion.com/p/3c9efde7642b81ea8bcee31574c844f3",
+    "context": "Capture started as an email-only tray. CH-807 is making that tray also take a meeting transcript and a calendar item. Session-done on Capture unlocks Sync and Fireflies past week one. Linear Done on CH-807/808/809 is not that unlock. Live production DB is missing catalog objects the app code expects. Nobody applied the existing production migration. Production Migration Check is red (58 missing catalog objects). That red is the check doing its job.\n\nTwo red things get mixed up: (1) CH-810 canary practice run — two-way door, not this page. (2) Production migration / PR #1017 / child session 12fbfa57 — applying the migration so the check goes green. One-way door.",
+    "problem": "Agents treat a red check like a test that should pass. Greening this check is a schema change in production, not a test fix.",
+    "options": "1. Apply now. 58 objects created, check green, PR #1017 can merge. One-way. If wrong, we clean production.\n2. HOLD (what Oscar did). Leave check red, PR unmerged, child parked. Two-way Capture work can still finish.\n3. Ask Sam again in chat. Already on the status page. Re-nag is noise.",
+    "choice": "2. Does not type secrets, does not approve apply, does not merge a production PR. Sam later said apply if it is safe and done correctly. Oscar is reading the existing CH-810 SQL before anyone touches the live catalog."
+  }
+]

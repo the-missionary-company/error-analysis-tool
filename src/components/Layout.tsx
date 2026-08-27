@@ -14,7 +14,7 @@ export function Layout() {
             </span>
             <div className="leading-tight">
               <div className="text-sm font-semibold text-ink-950">Error Analysis</div>
-              <div className="text-[11px] text-ink-500">Central Hub + A1 · Hamel method</div>
+              <div className="text-[11px] text-ink-500">Steers · Central Hub + A1</div>
             </div>
           </Link>
           <nav className="flex items-center gap-1 text-sm">
@@ -28,7 +28,18 @@ export function Layout() {
                 )
               }
             >
-              Datasets
+              Steers
+            </NavLink>
+            <NavLink
+              to="/datasets"
+              className={({ isActive }) =>
+                cn(
+                  'rounded-lg px-3 py-1.5 text-ink-600 hover:bg-ink-100',
+                  isActive && 'bg-ink-100 font-medium text-ink-950',
+                )
+              }
+            >
+              Hub + A1
             </NavLink>
             <span className="hidden items-center gap-1.5 px-2 text-ink-400 sm:flex" title="Keyboard-first">
               <Keyboard className="h-3.5 w-3.5" />

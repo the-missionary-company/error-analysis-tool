@@ -73,7 +73,7 @@ export function HomePage() {
     <div className="space-y-8">
       <section className="max-w-2xl">
         <h1 className="text-2xl font-semibold tracking-tight text-ink-950 sm:text-3xl">
-          Error analysis for Central Hub & A1
+          Central Hub & A1 annotation
         </h1>
         <p className="mt-2 text-[15px] leading-relaxed text-ink-600">
           Annotate like a PM: free-form notes first, binary pass/fail, capture{' '}

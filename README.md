@@ -1,66 +1,118 @@
-# Error Analysis Tool — Central Hub + A1
+# Error Analysis Tool — Steers + Central Hub + A1
 
-A production-quality, keyboard-first annotation app for **open coding / error analysis** on Liam's construction-PM products:
+A production-quality annotation app for Liam's construction-PM products.
 
-- **Central Hub** — RAG/hybrid-search cited answers
-- **A1** — meeting-series commitment reconciliation (closed / dropped / quiet / overdue)
+**Steers** (default board) — Sam scores Oscar Vorflux write-ups. Same case, two independent scores: **Content** (did the write-up close the understanding gap?) and **Action** (did Oscar do the right thing?). Highlights stay attached to spans. Labels persist in `localStorage` and in a downloadable JSON file.
 
-Built around Hamel Husain's error analysis method: free-form notes first, binary pass/fail, record *what* is wrong (not why), saturate human notes, then cluster into a taxonomy and count.
+**Central Hub** and **A1** — Hamel-style open coding: free-form notes first, binary pass/fail, then cluster into a taxonomy.
+
+No Phoenix, no Braintrust, no LLM judge, no 1-to-5 stars.
+
+## Live URL
+
+After GitHub Pages is enabled and this workflow has deployed:
+
+https://the-missionary-company.github.io/error-analysis-tool/
 
 ## Stack
 
-Vite + React + TypeScript + Tailwind CSS. No backend — `localStorage` + JSON export/import. Optional OpenAI-compatible clustering from the browser (key stored only in `localStorage`), plus offline "Copy prompt → paste JSON back."
+Vite + React + TypeScript + Tailwind CSS. No backend — `localStorage` + JSON export/import.
 
 ## Run
 
-From `/workspace/error-analysis-tool`:
-
-```text
-# install dependencies, then start the Vite dev server on 0.0.0.0:5173
-# package scripts: install → run dev | run build | run preview
+```bash
+npm ci
+npm test
+npm run dev
 ```
 
-Use the package manager scripts defined in `package.json` (`dev`, `build`, `preview`).
+The Vite `base` is `/error-analysis-tool/`, so the app is at `http://localhost:5173/error-analysis-tool/`.
 
-## Hamel workflow (encoded in the product)
+```bash
+npm run build
+npm run preview
+```
 
-1. **Annotate** — For each trace, mark Pass/Fail and write a short smoking-gun note. Do **not** pick categories yet.
-2. **Saturate** — Keep going until new notes stop surprising you (criteria stabilize; later notes are sharper).
-3. **Cluster** — Copy the clustering prompt (or Cluster with LLM) to group fail notes into failure modes.
-4. **Count** — Use the pivot (category × count). Tag modes as *eval-worthy* vs *product/UX fix*.
-5. **Act** — Fix product issues; turn eval-worthy modes into regression tests / eval sets.
+## Steers scoring
 
-## Keyboard shortcuts (Annotate)
+Do **not** collapse Content and Action into one Pass/Fail.
 
-| Key | Action |
-| --- | --- |
-| `1` / `p` | Pass |
-| `2` / `f` | Fail |
-| `Cmd/Ctrl+S` or `Cmd/Ctrl+Enter` | Save |
-| `Left` / `j` | Previous |
-| `Right` / `k` | Next |
-| `n` | Next unlabeled |
-| `?` | Cheatsheet |
+1. **Content** — Did the write-up close the understanding gap (context, problem, options, choice)? Pass or Fail + its own comment. A question here means missing information for the next write-up.
+2. **Action** — Did Oscar as tech lead / portfolio orchestrator do the right thing? Pass or Fail + its own comment. A fix here is behavior / living instruction.
 
-## Data
+Sam can Pass content and Fail action, or the reverse.
 
-Seeded datasets live in `src/data/seed.ts`. Import custom traces as:
+Optional chips (not the score): jumped to options; taught the feature instead of the development story; too thin to decide; cathedral / extra ceremony.
 
-- a full `Dataset` object, or
-- `{ "traces": Trace[] }`, or
-- a bare `Trace[]` array
+The seed case ships **unscored**. Do not invent labels.
 
-Export/import annotations from the Annotate view as JSON.
+## Load more cases
 
-## First 15 minutes
+Oscar drops a JSON array (or `{ "cases": [...] }`) with:
 
-1. Open the app → pick **Central Hub — cited answers**.
-2. Skim guidance strip; annotate 5–8 items with Pass/Fail + one concrete note each (`1`/`2`, then save).
-3. Spot intentional failure modes in the seed (wrong approval, missing open submittal, hallucinated certainty, raw doc IDs).
-4. Switch to **A1** and annotate a few commitment-state mistakes (false closed, missed dropped, false overdue).
-5. Open **Taxonomy** → **Copy clustering prompt** → paste into ChatGPT → paste JSON back (or set an API key and Cluster with LLM).
-6. Review pivot counts; tag categories eval-worthy vs product/UX; export annotations JSON for the team.
+```json
+{
+  "id": "stable-id",
+  "title": "3. Title",
+  "session": "Capture",
+  "stamp": "HOLD",
+  "when": "2026-08-27",
+  "yourCall": "Softer",
+  "notionUrl": "https://app.notion.com/...",
+  "context": "...",
+  "problem": "...",
+  "options": "1. ...\n2. ...",
+  "choice": "..."
+}
+```
 
-## Privacy
+`public/sample-steer-cases.json` is the seed case in that shape.
 
-API keys and annotations never leave the browser except when you explicitly call an LLM endpoint or export JSON.
+## Labels JSON (hand to Oscar)
+
+Export writes:
+
+```json
+{
+  "kind": "oscar-steer-board",
+  "exportedAt": "2026-08-27T12:00:00.000Z",
+  "cases": [],
+  "reviews": [
+    {
+      "caseId": "will-not-green-production-migration",
+      "content": { "passFail": "pass", "comment": "..." },
+      "action": { "passFail": "fail", "comment": "..." },
+      "highlights": [
+        {
+          "id": "h1",
+          "section": "choice",
+          "start": 0,
+          "end": 12,
+          "text": "span text",
+          "lane": "action",
+          "passFail": "fail",
+          "comment": "..."
+        }
+      ],
+      "chips": ["too-thin-to-decide"],
+      "updatedAt": "2026-08-27T12:00:00.000Z"
+    }
+  ]
+}
+```
+
+Import that file to restore labels after a refresh on another machine.
+
+## Hub + A1 (unchanged)
+
+1. Open **Hub + A1**.
+2. Annotate traces with Pass/Fail + a smoking-gun note.
+3. Taxonomy → copy clustering prompt or cluster with an optional LLM key.
+
+Keyboard shortcuts on Annotate: `1`/`p` Pass, `2`/`f` Fail, `⌘/Ctrl+S` save, `j`/`k` prev/next, `n` next unlabeled, `?` cheatsheet.
+
+## Deploy
+
+`.github/workflows/deploy.yml` runs `npm ci`, `npm run build`, and uploads **`dist`** to GitHub Pages (not the repo root).
+
+In the repo: **Settings → Pages → Source: GitHub Actions**.

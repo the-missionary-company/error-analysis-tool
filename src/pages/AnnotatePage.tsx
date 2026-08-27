@@ -165,8 +165,8 @@ export function AnnotatePage() {
     return (
       <div className="card px-6 py-12 text-center">
         <p className="text-sm text-ink-600">Dataset not found.</p>
-        <Link to="/" className="btn-primary mt-4">
-          Back home
+        <Link to="/datasets" className="btn-primary mt-4">
+          Back to datasets
         </Link>
       </div>
     );
@@ -184,7 +184,7 @@ export function AnnotatePage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <Link to="/" className="mb-2 inline-flex items-center gap-1 text-xs text-ink-500 hover:text-ink-800">
+          <Link to="/datasets" className="mb-2 inline-flex items-center gap-1 text-xs text-ink-500 hover:text-ink-800">
             <ArrowLeft className="h-3.5 w-3.5" />
             Datasets
           </Link>
