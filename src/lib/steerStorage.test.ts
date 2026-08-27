@@ -29,7 +29,11 @@ describe('steerStorage', () => {
   it('loads the seed case without writing empty scores', () => {
     const store = memoryStore();
     const cases = loadSteerCases(store);
-    expect(cases.map((c) => c.id)).toEqual(['will-not-green-production-migration']);
+    expect(cases.map((c) => c.id)).toEqual([
+      'will-not-green-production-migration',
+      'parked-capture-after-child-finished',
+      'tracer-keep-moving-as-apply-auth',
+    ]);
     expect(loadSteerReviews(store)).toEqual({});
     expect(store.getItem('ea.steers.reviews')).toBeNull();
   });
@@ -196,8 +200,8 @@ describe('steerStorage', () => {
       store,
     );
     const cases = loadSteerCases(store);
-    expect(cases).toHaveLength(2);
-    expect(cases[1].id).toBe('second-case');
+    expect(cases).toHaveLength(4);
+    expect(cases[3].id).toBe('second-case');
     const restored = loadSteerReviews(store)[SEED_STEERS[0].id];
     expect(restored.content.passFail).toBe('fail');
     expect(restored.action.passFail).toBe('pass');

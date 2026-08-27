@@ -32,6 +32,8 @@ export interface SteerCase {
   stamp: string;
   when: string;
   yourCall?: string;
+  tooAggressive?: string;
+  yourCallBody?: string;
   context: string;
   problem: string;
   options: string;

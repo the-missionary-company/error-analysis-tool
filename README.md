@@ -48,7 +48,7 @@ Sam can Pass content and Fail action, or the reverse.
 
 Optional chips (not the score): jumped to options; taught the feature instead of the development story; too thin to decide; cathedral / extra ceremony.
 
-The seed case ships **unscored**. Do not invent labels.
+Seed cases ship **unscored**. Do not invent labels. Content and Action stay empty until Sam marks them.
 
 ## Load more cases
 
@@ -62,6 +62,8 @@ Oscar drops a JSON array (or `{ "cases": [...] }`) with:
   "stamp": "HOLD",
   "when": "2026-08-27",
   "yourCall": "Softer",
+  "tooAggressive": "Yes",
+  "yourCallBody": "Open. Score Content ... Score Action ...",
   "notionUrl": "https://app.notion.com/...",
   "context": "...",
   "problem": "...",
@@ -70,7 +72,7 @@ Oscar drops a JSON array (or `{ "cases": [...] }`) with:
 }
 ```
 
-`public/sample-steer-cases.json` is the seed case in that shape.
+`public/sample-steer-cases.json` is the seed cases in that shape.
 
 ## Labels JSON (hand to Oscar)
 

@@ -193,8 +193,12 @@ function parseCase(value: unknown, index: number): SteerCase {
     choice: String(obj.choice),
   };
   const yourCall = readString(obj, 'yourCall');
+  const tooAggressive = readString(obj, 'tooAggressive');
+  const yourCallBody = readString(obj, 'yourCallBody');
   const notionUrl = readString(obj, 'notionUrl');
   if (yourCall) parsed.yourCall = yourCall;
+  if (tooAggressive) parsed.tooAggressive = tooAggressive;
+  if (yourCallBody) parsed.yourCallBody = yourCallBody;
   if (notionUrl) parsed.notionUrl = notionUrl;
   return parsed;
 }

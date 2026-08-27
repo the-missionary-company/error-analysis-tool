@@ -6,7 +6,7 @@ const SECTIONS: { key: SteerSection; label: string }[] = [
   { key: 'context', label: 'Context' },
   { key: 'problem', label: 'Problem' },
   { key: 'options', label: 'Options' },
-  { key: 'choice', label: 'Choice' },
+  { key: 'choice', label: 'Choice and why' },
 ];
 
 export function SteerCaseView({
@@ -32,6 +32,7 @@ export function SteerCaseView({
         <div className="mt-3 flex flex-wrap gap-2 text-xs">
           <MetaChip label="Session" value={steer.session} />
           <MetaChip label="Stamp" value={steer.stamp} tone={steer.stamp === 'HOLD' ? 'hold' : undefined} />
+          {steer.tooAggressive && <MetaChip label="Too aggressive?" value={steer.tooAggressive} />}
           {steer.yourCall && <MetaChip label="Your call" value={steer.yourCall} />}
           <MetaChip label="When" value={steer.when} />
         </div>
@@ -64,6 +65,17 @@ export function SteerCaseView({
           />
         </section>
       ))}
+
+      {steer.yourCallBody && (
+        <section className="card p-5">
+          <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-400">
+            Your call
+          </div>
+          <p className="whitespace-pre-wrap text-sm leading-relaxed text-ink-800">
+            {steer.yourCallBody}
+          </p>
+        </section>
+      )}
     </article>
   );
 }
