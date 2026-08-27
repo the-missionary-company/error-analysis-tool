@@ -52,7 +52,7 @@ export function SteerCaseView({
       {SECTIONS.map(({ key, label }) => (
         <section key={key} className="card p-5">
           <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-400">
-            {label}
+            {key === 'context' ? steer.contextLabel ?? label : key === 'choice' ? steer.choiceLabel ?? label : label}
           </div>
           <HighlightableText
             text={steer[key]}

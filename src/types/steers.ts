@@ -34,6 +34,8 @@ export interface SteerCase {
   yourCall?: string;
   tooAggressive?: string;
   yourCallBody?: string;
+  contextLabel?: string;
+  choiceLabel?: string;
   context: string;
   problem: string;
   options: string;

@@ -13,11 +13,11 @@ export function Layout() {
         <div className="mx-auto flex h-14 max-w-[1400px] items-center justify-between gap-4 px-4 sm:px-6">
           <Link to="/" className="flex items-center gap-2.5">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-sm font-bold text-white">
-              EA
+              ED
             </span>
             <div className="leading-tight">
-              <div className="text-sm font-semibold text-ink-950">Error Analysis</div>
-              <div className="text-[11px] text-ink-500">Steers · Central Hub + A1</div>
+              <div className="text-sm font-semibold text-ink-950">Eval dashboard</div>
+              <div className="text-[11px] text-ink-500">Steers · Hub + A1</div>
             </div>
           </Link>
           <nav className="flex items-center gap-1 text-sm">

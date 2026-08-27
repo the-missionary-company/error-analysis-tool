@@ -134,7 +134,7 @@ export function SteersPage() {
     <div className="space-y-5">
       <section className="max-w-3xl">
         <h1 className="text-2xl font-semibold tracking-tight text-ink-950 sm:text-3xl">
-          Oscar Vorflux steers
+          Eval dashboard
         </h1>
         <p className="mt-2 text-[15px] leading-relaxed text-ink-600">
           Same case, two independent scores. <strong>Content / understanding</strong> is how

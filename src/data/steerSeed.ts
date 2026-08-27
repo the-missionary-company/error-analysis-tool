@@ -90,4 +90,46 @@ I have to tell those apart. You will not label them for me. AWAITING after a chu
     yourCallBody:
       'Open. Score Content on whether this closes the gap. Score Action on the archive.',
   },
+  {
+    id: 'held-the-undoable-dress-rehearsal',
+    title: '13 Held the undoable dress rehearsal',
+    session: 'Capture',
+    stamp: 'HOLD',
+    tooAggressive: 'Open',
+    yourCall: 'Open',
+    when: '2026-08-27',
+    notionUrl: 'https://app.notion.com/p/3c9efde7642b81b9a3c8f6385dd48589',
+    contextLabel: 'Background',
+    choiceLabel: 'Choice',
+    context: `Capture generalization shipped a deny-by-default fence so the new mixed-source inbox would not go live on real mailboxes at ship. Current production is \`closed/6\`. The designed next step is CH-810 / PR #1017: walk the fence with a fake Meeting, no real email, then slam it shut again. That is the dress rehearsal. The live canary is later, and it is Sam on one mailbox.
+Oscar had just been burned by treating “keep moving” as apply auth (steer 11, Tracer CH-822). The over-correction was to HOLD anything that touched the production fence, including the synthetic canary.`,
+    problem:
+      'Sam asked why the dress rehearsal was on HOLD. A synthetic canary that is designed to undo is obviously something we should run. Holding it made him wait to say “of course go.” He then locked the stage rule: we do not have active users. If a production migration or push is safe and we can undo it, push. When there are users, be much more careful.',
+    options: `A. Keep HOLDing any production fence walk until Sam says yes. Pro: never repeats the Tracer apply. Con: parks the designed dress rehearsal. LOE: zero now, lots of Sam time.
+B. KEEP undoable production (synthetic canary, reversible migration) after a reverse-check. HOLD only what cannot be undone. Pro: matches the stage we are in. Con: rollback can fail; we watch that. LOE: the canary we already have.
+C. Treat “no users” as apply-anything. Pro: faster. Con: secrets, live mailbox, leave-it-on, Calendar Approve still should not be Oscar. LOE: cheap and wrong.`,
+    choice: `B. Synthetic canary is KEEP. Live mailbox stays HOLD. Leave-it-on stays HOLD until rollback is proven. I still read the SQL. I still do not type secrets. Blank-check apply is still not auth.
+Sam 27 Aug 2026, 14:53–14:56 Seoul.`,
+  },
+  {
+    id: 'do-the-hmac-and-the-cheap-smoke-yourself',
+    title: '14 Do the HMAC and the cheap smoke yourself',
+    session: 'Mixed',
+    stamp: 'HOLD',
+    tooAggressive: 'Open',
+    yourCall: 'Open',
+    when: '2026-08-27',
+    notionUrl: 'https://app.notion.com/p/3c9efde7642b815b911ee833e2d4a501',
+    contextLabel: 'Background',
+    choiceLabel: 'Choice',
+    context:
+      'Oscar treated a synthetic canary HMAC as something Sam should watch on Slack. Capture was parked on a missing host secret. Oscar told Sam to watch Slack. Sam already said no users + undoable production is a go. He then said this is general: that is why he has a tech lead.',
+    problem:
+      'Handing Sam Slack babysitting for a fake HMAC is not involving him for authority. It is making him the operator. He also wants a cheap browser click of a manual smoke before he sits with Ken, tokens kept small. Login/2FA he will do. 1Password accounts he will add when needed.',
+    options: `A. Keep asking Sam to watch Slack and click first. Con: he is the operator. LOE: his night.
+B. Oscar mints, Slacks himself the copy, provisions, runs the undoable canary, and does a cheap browser pre-click. Bring Sam in for login or a one-way door. LOE: small.
+C. Full unattended Ken-path smoke including Confirm on real mail. Con: that is Ken's proof, and it files real email. LOE: wrong.`,
+    choice: `B. Autonomous on reversible setup and cheap pre-clicks. Ken's member-path Confirm is still Ken. Superadmin is not the proof.
+Sam 27 Aug 2026, 15:08 Seoul.`,
+  },
 ];

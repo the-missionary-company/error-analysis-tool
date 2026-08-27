@@ -34,7 +34,7 @@ function expectEmptyScores(caseId: string) {
 
 describe('seed cases', () => {
   it('includes the production-migration HOLD steer with no invented scores', () => {
-    expect(SEED_STEERS).toHaveLength(4);
+    expect(SEED_STEERS).toHaveLength(6);
     const seed = SEED_STEERS[0];
     expect(seed.id).toBe('will-not-green-production-migration');
     expect(seed.title).toBe('3. Will not green a production migration to make a check pretty');
@@ -164,12 +164,79 @@ I have to tell those apart. You will not label them for me. AWAITING after a chu
     expectEmptyScores(seed!.id);
   });
 
-  it('queues steers 10, 11, and 12 together after the HOLD seed', () => {
+  it('includes steer 13 dress-rehearsal body verbatim with empty scores', () => {
+    const seed = SEED_STEERS.find((item) => item.id === 'held-the-undoable-dress-rehearsal');
+    expect(seed).toBeDefined();
+    expect(seed?.title).toBe('13 Held the undoable dress rehearsal');
+    expect(seed?.session).toBe('Capture');
+    expect(seed?.stamp).toBe('HOLD');
+    expect(seed?.tooAggressive).toBe('Open');
+    expect(seed?.yourCall).toBe('Open');
+    expect(seed?.when).toBe('2026-08-27');
+    expect(seed?.notionUrl).toBe(
+      'https://app.notion.com/p/3c9efde7642b81b9a3c8f6385dd48589',
+    );
+    expect(seed?.contextLabel).toBe('Background');
+    expect(seed?.choiceLabel).toBe('Choice');
+    expect(seed?.context).toBe(
+      `Capture generalization shipped a deny-by-default fence so the new mixed-source inbox would not go live on real mailboxes at ship. Current production is \`closed/6\`. The designed next step is CH-810 / PR #1017: walk the fence with a fake Meeting, no real email, then slam it shut again. That is the dress rehearsal. The live canary is later, and it is Sam on one mailbox.
+Oscar had just been burned by treating “keep moving” as apply auth (steer 11, Tracer CH-822). The over-correction was to HOLD anything that touched the production fence, including the synthetic canary.`,
+    );
+    expect(seed?.problem).toBe(
+      'Sam asked why the dress rehearsal was on HOLD. A synthetic canary that is designed to undo is obviously something we should run. Holding it made him wait to say “of course go.” He then locked the stage rule: we do not have active users. If a production migration or push is safe and we can undo it, push. When there are users, be much more careful.',
+    );
+    expect(seed?.options).toBe(
+      `A. Keep HOLDing any production fence walk until Sam says yes. Pro: never repeats the Tracer apply. Con: parks the designed dress rehearsal. LOE: zero now, lots of Sam time.
+B. KEEP undoable production (synthetic canary, reversible migration) after a reverse-check. HOLD only what cannot be undone. Pro: matches the stage we are in. Con: rollback can fail; we watch that. LOE: the canary we already have.
+C. Treat “no users” as apply-anything. Pro: faster. Con: secrets, live mailbox, leave-it-on, Calendar Approve still should not be Oscar. LOE: cheap and wrong.`,
+    );
+    expect(seed?.choice).toBe(
+      `B. Synthetic canary is KEEP. Live mailbox stays HOLD. Leave-it-on stays HOLD until rollback is proven. I still read the SQL. I still do not type secrets. Blank-check apply is still not auth.
+Sam 27 Aug 2026, 14:53–14:56 Seoul.`,
+    );
+    expectEmptyScores(seed!.id);
+  });
+
+  it('includes steer 14 HMAC and cheap smoke body verbatim with empty scores', () => {
+    const seed = SEED_STEERS.find((item) => item.id === 'do-the-hmac-and-the-cheap-smoke-yourself');
+    expect(seed).toBeDefined();
+    expect(seed?.title).toBe('14 Do the HMAC and the cheap smoke yourself');
+    expect(seed?.session).toBe('Mixed');
+    expect(seed?.stamp).toBe('HOLD');
+    expect(seed?.tooAggressive).toBe('Open');
+    expect(seed?.yourCall).toBe('Open');
+    expect(seed?.when).toBe('2026-08-27');
+    expect(seed?.notionUrl).toBe(
+      'https://app.notion.com/p/3c9efde7642b815b911ee833e2d4a501',
+    );
+    expect(seed?.contextLabel).toBe('Background');
+    expect(seed?.choiceLabel).toBe('Choice');
+    expect(seed?.context).toBe(
+      'Oscar treated a synthetic canary HMAC as something Sam should watch on Slack. Capture was parked on a missing host secret. Oscar told Sam to watch Slack. Sam already said no users + undoable production is a go. He then said this is general: that is why he has a tech lead.',
+    );
+    expect(seed?.problem).toBe(
+      'Handing Sam Slack babysitting for a fake HMAC is not involving him for authority. It is making him the operator. He also wants a cheap browser click of a manual smoke before he sits with Ken, tokens kept small. Login/2FA he will do. 1Password accounts he will add when needed.',
+    );
+    expect(seed?.options).toBe(
+      `A. Keep asking Sam to watch Slack and click first. Con: he is the operator. LOE: his night.
+B. Oscar mints, Slacks himself the copy, provisions, runs the undoable canary, and does a cheap browser pre-click. Bring Sam in for login or a one-way door. LOE: small.
+C. Full unattended Ken-path smoke including Confirm on real mail. Con: that is Ken's proof, and it files real email. LOE: wrong.`,
+    );
+    expect(seed?.choice).toBe(
+      `B. Autonomous on reversible setup and cheap pre-clicks. Ken's member-path Confirm is still Ken. Superadmin is not the proof.
+Sam 27 Aug 2026, 15:08 Seoul.`,
+    );
+    expectEmptyScores(seed!.id);
+  });
+
+  it('queues steers 10–14 together after the HOLD seed', () => {
     expect(SEED_STEERS.map((item) => item.id)).toEqual([
       'will-not-green-production-migration',
       'parked-capture-after-child-finished',
       'tracer-keep-moving-as-apply-auth',
       'task-done-is-not-project-done',
+      'held-the-undoable-dress-rehearsal',
+      'do-the-hmac-and-the-cheap-smoke-yourself',
     ]);
   });
 
@@ -216,6 +283,8 @@ describe('parseSteerCases', () => {
           tooAggressive: 'Yes',
           yourCallBody:
             'Open. Score Content on whether this closes the gap. Score Action on the park and the blank check.',
+          contextLabel: 'Background',
+          choiceLabel: 'Choice',
         },
       ],
     });
@@ -223,6 +292,8 @@ describe('parseSteerCases', () => {
     expect(cases[0].yourCallBody).toBe(
       'Open. Score Content on whether this closes the gap. Score Action on the park and the blank check.',
     );
+    expect(cases[0].contextLabel).toBe('Background');
+    expect(cases[0].choiceLabel).toBe('Choice');
   });
 
   it('rejects traces-shaped JSON so Hub/A1 imports stay separate', () => {
@@ -339,7 +410,7 @@ describe('exportSteerBoardJSON', () => {
     const json = exportSteerBoardJSON(SEED_STEERS, [
       { ...emptyReview('will-not-green-production-migration') },
     ]);
-    expect(parseSteerCases(json)).toHaveLength(4);
+    expect(parseSteerCases(json)).toHaveLength(6);
     expect(parseSteerReviews(json)).toHaveLength(1);
   });
 
@@ -365,7 +436,7 @@ describe('exportSteerBoardJSON', () => {
       },
     ]);
     const loaded = parseSteerPayload(json);
-    expect(loaded.cases).toHaveLength(4);
+    expect(loaded.cases).toHaveLength(6);
     expect(loaded.reviews).toHaveLength(1);
     expect(loaded.reviews[0].content.passFail).toBe('pass');
     expect(loaded.reviews[0].action.passFail).toBe('fail');
@@ -392,9 +463,9 @@ describe('mergeCases', () => {
       choice: 'ch',
     };
     const merged = mergeCases(SEED_STEERS, [imported, extra]);
-    expect(merged).toHaveLength(5);
+    expect(merged).toHaveLength(7);
     expect(merged[0].title).toBe('Updated title from Oscar');
-    expect(merged[4].id).toBe('new-case');
+    expect(merged[6].id).toBe('new-case');
   });
 });
 

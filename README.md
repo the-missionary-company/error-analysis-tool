@@ -1,8 +1,8 @@
-# Error Analysis Tool — Steers + Central Hub + A1
+# Eval dashboard — Steers + Central Hub + A1
 
-A production-quality annotation app for Liam's construction-PM products.
+Sam's eval dashboard for scoring Oscar's past steers.
 
-**Steers** (default board) — Sam scores Oscar Vorflux write-ups. Same case, two independent scores: **Content / understanding** (how Oscar sent the message — did Sam understand the write-up, and what the agents are doing?) and **Action / tech lead** (how Oscar acted as the tech lead). Highlights stay attached to spans. Labels persist in `localStorage` and in a downloadable JSON file.
+**Steers** (default board) — Same case, two independent scores: **Content / understanding** (how Oscar sent the message — did Sam understand the write-up, and what the agents are doing?) and **Action / tech lead** (how Oscar acted as the tech lead). Highlights stay attached to spans. Labels persist in `localStorage` and in a downloadable JSON file.
 
 **Central Hub** and **A1** — Hamel-style open coding: free-form notes first, binary pass/fail, then cluster into a taxonomy.
 
@@ -10,7 +10,9 @@ No Phoenix, no Braintrust, no LLM judge, no 1-to-5 stars.
 
 ## Live URL
 
-This ships on **Vercel** at the project domain root. GitHub Pages stays blocked.
+https://eval-dashboard-zeta.vercel.app/
+
+Vercel project `eval-dashboard`. GitHub Pages stays blocked.
 
 ## Stack
 
