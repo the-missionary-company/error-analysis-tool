@@ -33,6 +33,17 @@ npm run build
 npm run preview
 ```
 
+## How Sam uses the board
+
+Read [HOW-IT-WORKS.md](HOW-IT-WORKS.md). Short version:
+
+There is **no Process button**. Scores and span comments save as you go.
+
+1. Pass/Fail **Content / understanding** and **Action / tech lead** on each case.
+2. Highlight a span → pick Content (blue) or Action (amber) → type → Enter. The note sits to the right of that sentence.
+3. “Change this now” is a comment on that span. Oscar can act on it immediately.
+4. Broader patterns wait until you have a pile of scored cases. Nothing auto-clusters or trains an eval skill from this board yet.
+
 ## Steers scoring
 
 Do **not** collapse Content / understanding and Action / tech lead into one Pass/Fail.

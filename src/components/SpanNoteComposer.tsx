@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { LANE_DEFS } from '../lib/steers';
+import { LANE_TONE } from '../lib/laneStyles';
 import { cn } from '../lib/utils';
 import type { NoteKind, ScoreLane } from '../types/steers';
 import type { PendingSpan } from './HighlightableText';
+
+const LANES: ScoreLane[] = ['content', 'action'];
 
 export function SpanNoteComposer({
   span,
@@ -16,95 +19,101 @@ export function SpanNoteComposer({
     action?: { kind: NoteKind; text: string };
   }) => void;
 }) {
-  const [contentKind, setContentKind] = useState<NoteKind>('comment');
-  const [actionKind, setActionKind] = useState<NoteKind>('comment');
-  const [contentText, setContentText] = useState('');
-  const [actionText, setActionText] = useState('');
+  const [lane, setLane] = useState<ScoreLane | null>(null);
+  const [kind, setKind] = useState<NoteKind>('comment');
+  const [text, setText] = useState('');
+  const boxRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (lane) inputRef.current?.focus();
+  }, [lane]);
+
+  useEffect(() => {
+    const onPointer = (event: MouseEvent) => {
+      if (!boxRef.current?.contains(event.target as Node)) onCancel();
+    };
+    window.addEventListener('mousedown', onPointer);
+    return () => window.removeEventListener('mousedown', onPointer);
+  }, [onCancel]);
 
   const keep = () => {
-    const content = contentText.trim();
-    const action = actionText.trim();
+    const trimmed = text.trim();
+    if (!lane || !trimmed) return;
     onSave({
-      content: content ? { kind: contentKind, text: content } : undefined,
-      action: action ? { kind: actionKind, text: action } : undefined,
+      [lane]: { kind, text: trimmed },
     });
   };
 
-  return (
-    <section id="span-composer" className="card border-accent/40 p-4 ring-1 ring-accent/20">
-      <div className="text-xs font-semibold uppercase tracking-wide text-ink-400">This span</div>
-      <p className="mt-1 line-clamp-4 text-sm italic text-ink-800">“{span.text}”</p>
-      <p className="mt-2 text-[11px] leading-relaxed text-ink-500">
-        Pass and Fail stay on the two scores below. Here you can leave a note on Content, Action,
-        or both.
-      </p>
-      <LaneNote
-        lane="content"
-        kind={contentKind}
-        text={contentText}
-        onKind={setContentKind}
-        onText={setContentText}
-      />
-      <LaneNote
-        lane="action"
-        kind={actionKind}
-        text={actionText}
-        onKind={setActionKind}
-        onText={setActionText}
-      />
-      <div className="mt-3 flex justify-end gap-2">
-        <button type="button" className="btn-ghost h-9 px-3" onClick={onCancel}>
-          Dismiss
-        </button>
-        <button type="button" className="btn-primary h-9 px-3" onClick={keep}>
-          Keep highlight
-        </button>
-      </div>
-    </section>
-  );
-}
+  const left = Math.min(Math.max(12, span.x + 8), window.innerWidth - 340);
+  const top = Math.min(Math.max(12, span.y + 8), window.innerHeight - 280);
 
-function LaneNote({
-  lane,
-  kind,
-  text,
-  onKind,
-  onText,
-}: {
-  lane: ScoreLane;
-  kind: NoteKind;
-  text: string;
-  onKind: (kind: NoteKind) => void;
-  onText: (text: string) => void;
-}) {
   return (
-    <div className="mt-3 rounded-lg border border-ink-200 bg-ink-50/60 p-2.5">
-      <div className="text-xs font-medium text-ink-800">{LANE_DEFS[lane].title}</div>
+    <div
+      ref={boxRef}
+      id="span-composer"
+      style={{ left, top }}
+      className="fixed z-50 w-[320px] rounded-xl border border-ink-200 bg-white p-3 shadow-soft"
+    >
+      <p className="line-clamp-3 text-xs italic text-ink-600">“{span.text}”</p>
+      <p className="mt-2 text-[11px] text-ink-500">Which score is this note for?</p>
       <div className="mt-1.5 grid grid-cols-2 gap-1.5">
-        {(['comment', 'question'] as const).map((value) => (
+        {LANES.map((value) => (
           <button
             key={value}
             type="button"
             className={cn(
-              'btn-secondary h-8 text-[11px]',
-              kind === value && 'ring-2 ring-accent',
+              'rounded-lg border px-2 py-2 text-left text-xs font-medium',
+              lane === value ? LANE_TONE[value].buttonActive : LANE_TONE[value].button,
             )}
-            onClick={() => onKind(value)}
+            onClick={() => setLane(value)}
           >
-            {value === 'comment' ? 'Comment' : 'Question'}
+            {value === 'content' ? 'Content' : 'Action / tech lead'}
           </button>
         ))}
       </div>
-      <textarea
-        value={text}
-        onChange={(e) => onText(e.target.value)}
-        placeholder={
-          kind === 'question'
-            ? `Question on ${LANE_DEFS[lane].title}…`
-            : `Note on ${LANE_DEFS[lane].title}…`
-        }
-        className="mt-2 min-h-[72px] w-full resize-y rounded-lg border border-ink-200 bg-white px-2.5 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
-      />
+      {lane && (
+        <>
+          <div className="mt-2 flex gap-1.5">
+            {(['comment', 'question'] as const).map((value) => (
+              <button
+                key={value}
+                type="button"
+                className={cn(
+                  'rounded-md px-2 py-1 text-[11px] ring-1 ring-ink-200',
+                  kind === value ? 'bg-ink-900 text-white ring-ink-900' : 'bg-white text-ink-600',
+                )}
+                onClick={() => setKind(value)}
+              >
+                {value === 'comment' ? 'Comment' : 'Question'}
+              </button>
+            ))}
+          </div>
+          <textarea
+            ref={inputRef}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                keep();
+              }
+            }}
+            placeholder={
+              kind === 'question'
+                ? `Question on ${LANE_DEFS[lane].title}… Enter to save`
+                : `Note on ${LANE_DEFS[lane].title}… Enter to save`
+            }
+            className="mt-2 min-h-[72px] w-full resize-y rounded-lg border border-ink-200 bg-ink-50/50 px-2.5 py-2 text-sm focus:border-accent focus:bg-white focus:outline-none focus:ring-2 focus:ring-accent/20"
+          />
+          <div className="mt-2 flex items-center justify-between gap-2">
+            <p className="text-[11px] text-ink-400">Enter saves · Shift+Enter new line</p>
+            <button type="button" className="btn-primary h-8 px-3 text-xs" onClick={keep}>
+              Save
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }

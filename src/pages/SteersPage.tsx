@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { Download, Upload } from 'lucide-react';
+import { GutterNotes } from '../components/GutterNotes';
+import { HowThisWorks } from '../components/HowThisWorks';
 import { SpanNoteComposer } from '../components/SpanNoteComposer';
 import { SteerCaseQueue } from '../components/SteerCaseQueue';
 import { SteerCaseView } from '../components/SteerCaseView';
 import { SteerScorePanel } from '../components/SteerScorePanel';
-import { SteerThreads } from '../components/SteerThreads';
 import type { PendingSpan } from '../components/HighlightableText';
 import { useSteers } from '../hooks/useSteers';
 import { useToast } from '../hooks/useToast';
@@ -46,11 +47,7 @@ export function SteersPage() {
   const [focusedNoteId, setFocusedNoteId] = useState<string | null>(null);
   const casesInput = useRef<HTMLInputElement>(null);
   const labelsInput = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (!pending) return;
-    document.getElementById('span-composer')?.scrollIntoView({ block: 'nearest' });
-  }, [pending]);
+  const caseBodyRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     document.querySelector(`[data-case-id="${activeId}"]`)?.scrollIntoView({ block: 'nearest' });
@@ -111,6 +108,7 @@ export function SteersPage() {
     updateReview({
       ...activeReview,
       highlights: activeReview.highlights.filter((h) => h.id !== id),
+      notes: activeReview.notes.filter((note) => note.highlightId !== id),
     });
   };
 
@@ -138,7 +136,7 @@ export function SteersPage() {
     if (added) focusNote(added.id);
     setPending(null);
     window.getSelection()?.removeAllRanges();
-    push('Span kept on the right', 'success');
+    push('Comment saved next to the span', 'success');
   };
 
   const readFile = async (file: File) => JSON.parse(await file.text()) as unknown;
@@ -150,12 +148,11 @@ export function SteersPage() {
           Eval dashboard
         </h1>
         <p className="mt-2 text-[15px] leading-relaxed text-ink-600">
-          Seed cases are already here. Scores and notes save in this browser. Export JSON is a
-          backup, or a way to move the board. Import only if you have a file to restore.
-          Pass and Fail live only on <strong>Content / understanding</strong> and{' '}
-          <strong>Action / tech lead</strong>. Highlight a span to leave notes on one or both.
+          Score each case, then keep going. There is no Process button. A span comment is enough
+          when something should change now. Broader patterns wait for a pile of scored cases.
         </p>
       </section>
+      <HowThisWorks />
 
       <div className="flex flex-wrap items-center gap-2">
         <button type="button" className="btn-secondary" onClick={() => casesInput.current?.click()}>
@@ -255,8 +252,8 @@ export function SteersPage() {
         </span>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-[220px_minmax(0,1fr)] lg:grid-cols-[240px_minmax(0,1fr)_300px] xl:grid-cols-[260px_minmax(0,1fr)_340px]">
-        <div className="min-w-0 md:row-span-2 lg:row-span-1">
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[240px_minmax(0,1fr)]">
+        <div className="min-w-0">
         <SteerCaseQueue
           cases={orderedCases}
           reviews={reviews}
@@ -272,70 +269,70 @@ export function SteersPage() {
           }}
         />
         </div>
-        <SteerCaseView
-          steer={activeCase}
-          highlights={activeReview.highlights}
-          revisions={activeReview.revisions}
-          onSelect={(span) => {
-            setPending(span);
-            window.getSelection()?.removeAllRanges();
-          }}
-          onHighlightClick={(highlight) => {
-            const note = activeReview.notes.find((item) => item.highlightId === highlight.id);
-            if (note) focusNote(note.id);
-            setPending(null);
-          }}
-          onRevisionClick={(revision) => {
-            focusNote(revision.questionId);
-            setPending(null);
-          }}
-        />
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
         <SteerScorePanel
           review={activeReview}
-          pendingSlot={
-            pending ? (
-              <SpanNoteComposer
-                span={pending}
-                onCancel={() => setPending(null)}
-                onSave={addHighlight}
-              />
-            ) : null
-          }
           reuseByLane={{
             content: usedLabelsForLane(Object.values(reviews), 'content'),
             action: usedLabelsForLane(Object.values(reviews), 'action'),
           }}
           onLaneChange={onLaneChange}
-          onRemoveHighlight={onRemoveHighlight}
-          onFocusHighlight={(highlight) => {
-            const note = activeReview.notes.find((item) => item.highlightId === highlight.id);
-            if (note) focusNote(note.id);
-          }}
         />
-        <SteerThreads
-          review={activeReview}
-          author={author}
-          focusedNoteId={focusedNoteId}
-          onChangeNotes={(notes) => updateReview({ ...activeReview, notes })}
-          onEnrich={(note, newText) => {
-            if (!note.section) return;
-            const revision = createRevisionFromQuestion(note, newText, activeCase[note.section]);
-            const threaded = addThreadReply(
-              note,
-              'oscar',
-              `Updated the steer: struck “${revision.oldText}” and added “${revision.newText}”.`,
-            );
-            updateReview({
-              ...activeReview,
-              notes: activeReview.notes.map((item) => (item.id === note.id ? threaded : item)),
-              revisions: [...activeReview.revisions, revision],
-            });
-            push('Visible revision applied', 'success');
-          }}
-        />
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
+          <div ref={caseBodyRef} className="min-w-0">
+            <SteerCaseView
+              steer={activeCase}
+              highlights={activeReview.highlights}
+              revisions={activeReview.revisions}
+              onSelect={(span) => {
+                setPending(span);
+                window.getSelection()?.removeAllRanges();
+              }}
+              onHighlightClick={(highlight) => {
+                const note = activeReview.notes.find((item) => item.highlightId === highlight.id);
+                if (note) focusNote(note.id);
+                setPending(null);
+              }}
+              onRevisionClick={(revision) => {
+                focusNote(revision.questionId);
+                setPending(null);
+              }}
+            />
+          </div>
+          <GutterNotes
+            review={activeReview}
+            author={author}
+            focusedNoteId={focusedNoteId}
+            bodyRef={caseBodyRef}
+            onFocus={focusNote}
+            onChangeNotes={(notes) => updateReview({ ...activeReview, notes })}
+            onRemoveHighlight={onRemoveHighlight}
+            onEnrich={(note, newText) => {
+              if (!note.section) return;
+              const revision = createRevisionFromQuestion(note, newText, activeCase[note.section]);
+              const threaded = addThreadReply(
+                note,
+                'oscar',
+                `Updated the steer: struck “${revision.oldText}” and added “${revision.newText}”.`,
+              );
+              updateReview({
+                ...activeReview,
+                notes: activeReview.notes.map((item) => (item.id === note.id ? threaded : item)),
+                revisions: [...activeReview.revisions, revision],
+              });
+              push('Visible revision applied', 'success');
+            }}
+          />
+        </div>
         </div>
       </div>
+      {pending && (
+        <SpanNoteComposer
+          span={pending}
+          onCancel={() => setPending(null)}
+          onSave={addHighlight}
+        />
+      )}
 
     </div>
   );

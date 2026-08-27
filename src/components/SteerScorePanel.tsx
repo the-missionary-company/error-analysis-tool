@@ -1,72 +1,35 @@
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import { CHIP_DEFS, LANE_DEFS, addLaneLabel, removeLaneLabel } from '../lib/steers';
+import { LANE_TONE } from '../lib/laneStyles';
 import { cn, formatDate } from '../lib/utils';
-import type { LaneScore, PassFail, ScoreLane, SteerHighlight, SteerReview } from '../types/steers';
+import type { LaneScore, PassFail, ScoreLane, SteerReview } from '../types/steers';
 
 const LANES: ScoreLane[] = ['content', 'action'];
 
 export function SteerScorePanel({
   review,
   reuseByLane,
-  pendingSlot,
   onLaneChange,
-  onRemoveHighlight,
-  onFocusHighlight,
 }: {
   review: SteerReview;
   reuseByLane: Record<ScoreLane, string[]>;
-  pendingSlot?: ReactNode;
   onLaneChange: (lane: ScoreLane, next: LaneScore) => void;
-  onRemoveHighlight: (id: string) => void;
-  onFocusHighlight: (highlight: SteerHighlight) => void;
 }) {
   return (
-    <aside className="space-y-4 lg:sticky lg:top-[4.5rem]">
-      {pendingSlot}
-      {LANES.map((lane) => (
-        <LaneCard
-          key={lane}
-          lane={lane}
-          score={review[lane]}
-          reuse={reuseByLane[lane]}
-          onChange={(next) => onLaneChange(lane, next)}
-        />
-      ))}
-
-      {review.highlights.length > 0 && (
-        <section className="card p-4">
-          <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-400">
-            Highlights ({review.highlights.length})
-          </div>
-          <ul className="space-y-3">
-            {review.highlights.map((h) => (
-              <li key={h.id} className="rounded-lg bg-ink-50/80 px-3 py-2.5">
-                <button
-                  type="button"
-                  className="w-full text-left"
-                  onClick={() => onFocusHighlight(h)}
-                >
-                  <p className="text-[11px] font-medium text-ink-400">{h.section}</p>
-                  <p className="mt-1 text-sm italic text-ink-800">“{h.text}”</p>
-                  {h.comment && <p className="mt-1 text-sm text-ink-600">{h.comment}</p>}
-                </button>
-                <button
-                  type="button"
-                  className="mt-2 text-xs text-ink-400 hover:text-fail"
-                  onClick={() => onRemoveHighlight(h.id)}
-                >
-                  Remove
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
+    <aside className="card sticky top-[4.5rem] z-20 space-y-3 p-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {LANES.map((lane) => (
+          <LaneCard
+            key={lane}
+            lane={lane}
+            score={review[lane]}
+            reuse={reuseByLane[lane]}
+            onChange={(next) => onLaneChange(lane, next)}
+          />
+        ))}
+      </div>
       {review.updatedAt && (
-        <p className="px-1 text-xs text-ink-400">
-          Saved locally {formatDate(review.updatedAt)}
-        </p>
+        <p className="px-1 text-[11px] text-ink-400">Saved locally {formatDate(review.updatedAt)}</p>
       )}
     </aside>
   );
@@ -83,13 +46,15 @@ function LaneCard({
   reuse: string[];
   onChange: (next: LaneScore) => void;
 }) {
+  const [open, setOpen] = useState(false);
   const def = LANE_DEFS[lane];
   return (
-    <section className="card p-4">
-      <div className="text-sm font-semibold text-ink-950">{def.title}</div>
-      <p className="mt-1 text-sm font-medium leading-snug text-ink-800">{def.question}</p>
-      <p className="mt-1 text-xs leading-relaxed text-ink-500">{def.hint}</p>
-      <div className="mt-3 grid grid-cols-2 gap-2">
+    <section className={cn('rounded-lg border bg-white px-3 py-2.5', LANE_TONE[lane].bar)}>
+      <div className="text-sm font-semibold text-ink-950">
+        {lane === 'content' ? 'Content / understanding' : 'Action / tech lead'}
+      </div>
+      <p className="mt-0.5 text-xs leading-snug text-ink-500">{def.question}</p>
+      <div className="mt-2 grid grid-cols-2 gap-2">
         <PassFailButton
           value="pass"
           active={score.passFail === 'pass'}
@@ -111,22 +76,33 @@ function LaneCard({
           }
         />
       </div>
-      <LaneLabelEditor
-        lane={lane}
-        labels={score.labels}
-        reuse={reuse}
-        onChange={(labels) => onChange({ ...score, labels })}
-      />
-      <label className="mt-3 block text-xs font-medium text-ink-500" htmlFor={`${lane}-comment`}>
-        {def.title} comment
-      </label>
-      <textarea
-        id={`${lane}-comment`}
-        value={score.comment}
-        onChange={(e) => onChange({ ...score, comment: e.target.value })}
-        placeholder={def.placeholder}
-        className="mt-1 min-h-[110px] w-full resize-y rounded-lg border border-ink-200 bg-ink-50/50 px-3 py-2.5 text-sm leading-relaxed text-ink-900 placeholder:text-ink-400 focus:border-accent focus:bg-white focus:outline-none focus:ring-2 focus:ring-accent/20"
-      />
+      <button
+        type="button"
+        className="mt-2 text-[11px] font-medium text-ink-500 hover:text-ink-800"
+        onClick={() => setOpen((v) => !v)}
+      >
+        {open ? 'Hide labels and case comment' : 'Labels and case comment'}
+      </button>
+      {open && (
+        <>
+          <LaneLabelEditor
+            lane={lane}
+            labels={score.labels}
+            reuse={reuse}
+            onChange={(labels) => onChange({ ...score, labels })}
+          />
+          <label className="mt-3 block text-xs font-medium text-ink-500" htmlFor={`${lane}-comment`}>
+            {def.title} comment
+          </label>
+          <textarea
+            id={`${lane}-comment`}
+            value={score.comment}
+            onChange={(e) => onChange({ ...score, comment: e.target.value })}
+            placeholder={def.placeholder}
+            className="mt-1 min-h-[72px] w-full resize-y rounded-lg border border-ink-200 bg-ink-50/50 px-3 py-2 text-sm leading-relaxed text-ink-900 placeholder:text-ink-400 focus:border-accent focus:bg-white focus:outline-none focus:ring-2 focus:ring-accent/20"
+          />
+        </>
+      )}
     </section>
   );
 }
@@ -247,7 +223,7 @@ function PassFailButton({
       onClick={onClick}
       className={cn(
         pass ? 'btn-pass' : 'btn-fail',
-        'h-11 text-base',
+        'h-9 text-sm',
         active && (pass ? 'ring-2 ring-pass ring-offset-1' : 'ring-2 ring-fail ring-offset-1'),
       )}
     >

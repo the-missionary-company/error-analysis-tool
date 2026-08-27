@@ -1,6 +1,8 @@
 import { useRef } from 'react';
 import { applyBodySegments } from '../lib/steers';
+import { LANE_TONE } from '../lib/laneStyles';
 import { rangeOffsetsInRoot } from '../lib/selection';
+import { cn } from '../lib/utils';
 import type { SteerHighlight, SteerRevision, SteerSection } from '../types/steers';
 
 export interface PendingSpan {
@@ -99,8 +101,17 @@ export function HighlightableText({
           return (
             <mark
               key={`${segment.highlight.id}-${i}`}
-              className="cursor-pointer rounded-sm bg-sky-100 px-0.5 text-sky-950 underline decoration-dotted underline-offset-2"
-              title="Highlighted span"
+              data-highlight-id={segment.highlight.id}
+              data-lane={segment.highlight.lane}
+              className={cn(
+                'cursor-pointer rounded-sm px-0.5 underline decoration-dotted underline-offset-2',
+                LANE_TONE[segment.highlight.lane].mark,
+              )}
+              title={
+                segment.highlight.lane === 'content'
+                  ? 'Content / understanding'
+                  : 'Action / tech lead'
+              }
               onClick={(event) => {
                 event.stopPropagation();
                 onHighlightClick(segment.highlight!);
