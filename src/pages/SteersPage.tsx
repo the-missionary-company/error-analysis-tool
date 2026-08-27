@@ -7,7 +7,7 @@ import type { PendingSpan } from '../components/HighlightableText';
 import { useSteers } from '../hooks/useSteers';
 import { useToast } from '../hooks/useToast';
 import { downloadText } from '../lib/storage';
-import { newHighlightId, parseSteerCases, parseSteerPayload, parseSteerReviews, reviewIsEmpty } from '../lib/steers';
+import { newHighlightId, parseSteerPayload, parseSteerReviews, reviewIsEmpty } from '../lib/steers';
 import { cn } from '../lib/utils';
 import type { LaneScore, ScoreLane, SteerChipId, SteerHighlight } from '../types/steers';
 
@@ -136,21 +136,22 @@ export function SteersPage() {
             const file = e.target.files?.[0];
             e.target.value = '';
             if (!file) return;
-            try {
-              const parsed = await readFile(file);
-              let cases;
-              try {
-                cases = parseSteerCases(parsed);
-              } catch {
-                const payload = parseSteerPayload(parsed);
-                cases = payload.cases;
-                if (payload.reviews.length) importReviews(payload.reviews);
-              }
-              if (!cases.length) throw new Error('No steer cases in file');
-              const next = importCases(cases);
-              push(`Loaded ${cases.length} case${cases.length === 1 ? '' : 's'}`, 'success');
-              if (!next.find((c) => c.id === activeId) && next[0]) setActiveId(next[0].id);
-            } catch (err) {
+                try {
+                  const parsed = await readFile(file);
+                  const { cases, reviews: incomingReviews } = parseSteerPayload(parsed);
+                  if (incomingReviews.length) importReviews(incomingReviews);
+                  if (cases.length) {
+                    const next = importCases(cases);
+                    if (!next.find((c) => c.id === activeId) && next[0]) setActiveId(next[0].id);
+                  }
+                  const parts = [
+                    cases.length ? `${cases.length} case${cases.length === 1 ? '' : 's'}` : null,
+                    incomingReviews.length
+                      ? `${incomingReviews.length} labeled case${incomingReviews.length === 1 ? '' : 's'}`
+                      : null,
+                  ].filter(Boolean);
+                  push(`Loaded ${parts.join(' and ')}`, 'success');
+                } catch (err) {
               push(err instanceof Error ? err.message : 'Import failed', 'error');
             }
           }}

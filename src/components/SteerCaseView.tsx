@@ -27,7 +27,7 @@ export function SteerCaseView({
         <h2 className="mt-1 text-xl font-semibold leading-snug text-ink-950">{steer.title}</h2>
         <div className="mt-3 flex flex-wrap gap-2 text-xs">
           <MetaChip label="Session" value={steer.session} />
-          <MetaChip label="Stamp" value={steer.stamp} tone="hold" />
+          <MetaChip label="Stamp" value={steer.stamp} tone={steer.stamp === 'HOLD' ? 'hold' : undefined} />
           {steer.yourCall && <MetaChip label="Your call" value={steer.yourCall} />}
           <MetaChip label="When" value={steer.when} />
         </div>

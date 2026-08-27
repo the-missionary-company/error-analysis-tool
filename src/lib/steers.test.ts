@@ -8,6 +8,7 @@ import {
   findSpanOffsets,
   mergeCases,
   parseSteerCases,
+  parseSteerPayload,
   parseSteerReviews,
   reviewIsEmpty,
 } from './steers';
@@ -167,6 +168,36 @@ describe('exportSteerBoardJSON', () => {
     ]);
     expect(parseSteerCases(json)).toHaveLength(1);
     expect(parseSteerReviews(json)).toHaveLength(1);
+  });
+
+  it('Load-cases path restores labels from a board export, not only cases', () => {
+    const json = exportSteerBoardJSON(SEED_STEERS, [
+      {
+        ...emptyReview('will-not-green-production-migration'),
+        content: { passFail: 'pass', comment: 'Closed the gap.' },
+        action: { passFail: 'fail', comment: 'Need a living instruction.' },
+        highlights: [
+          {
+            id: 'h1',
+            section: 'choice',
+            start: 0,
+            end: 7,
+            text: '2. Does',
+            lane: 'action',
+            passFail: 'pass',
+            comment: 'Did not type secrets.',
+          },
+        ],
+        chips: ['cathedral-ceremony'],
+      },
+    ]);
+    const loaded = parseSteerPayload(json);
+    expect(loaded.cases).toHaveLength(1);
+    expect(loaded.reviews).toHaveLength(1);
+    expect(loaded.reviews[0].content.passFail).toBe('pass');
+    expect(loaded.reviews[0].action.passFail).toBe('fail');
+    expect(loaded.reviews[0].highlights[0].text).toBe('2. Does');
+    expect(loaded.reviews[0].chips).toEqual(['cathedral-ceremony']);
   });
 });
 

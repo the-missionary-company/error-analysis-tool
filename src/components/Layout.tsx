@@ -1,9 +1,12 @@
-import { Link, NavLink, Outlet } from 'react-router-dom';
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { Keyboard, Layers3 } from 'lucide-react';
 import { ToastViewport } from './Toast';
 import { cn } from '../lib/utils';
 
 export function Layout() {
+  const { pathname } = useLocation();
+  const onHub = pathname.startsWith('/datasets') || pathname.startsWith('/annotate') || pathname.startsWith('/taxonomy');
+
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-40 border-b border-ink-200/80 bg-white/80 backdrop-blur-md">
@@ -41,10 +44,12 @@ export function Layout() {
             >
               Hub + A1
             </NavLink>
-            <span className="hidden items-center gap-1.5 px-2 text-ink-400 sm:flex" title="Keyboard-first">
-              <Keyboard className="h-3.5 w-3.5" />
-              <span className="text-xs">1/2 · j/k · ⌘S</span>
-            </span>
+            {onHub && (
+              <span className="hidden items-center gap-1.5 px-2 text-ink-400 sm:flex" title="Keyboard-first">
+                <Keyboard className="h-3.5 w-3.5" />
+                <span className="text-xs">1/2 · j/k · ⌘S</span>
+              </span>
+            )}
             <a
               href="https://hamel.dev/"
               target="_blank"
