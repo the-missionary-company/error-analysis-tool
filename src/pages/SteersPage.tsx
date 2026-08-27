@@ -8,7 +8,7 @@ import { SteerThreads } from '../components/SteerThreads';
 import type { PendingSpan } from '../components/HighlightableText';
 import { useSteers } from '../hooks/useSteers';
 import { useToast } from '../hooks/useToast';
-import { loadAuthor, saveAuthor } from '../lib/steerStorage';
+import { loadAuthor, loadCaseSort, saveAuthor, saveCaseSort } from '../lib/steerStorage';
 import { downloadText } from '../lib/storage';
 import {
   AUTHOR_DEFS,
@@ -18,8 +18,10 @@ import {
   createRevisionFromQuestion,
   parseSteerPayload,
   parseSteerReviews,
+  sortCases,
   usedLabelsForLane,
 } from '../lib/steers';
+import type { CaseSort } from '../types/steers';
 import { cn } from '../lib/utils';
 import type { Author, LaneScore, NoteKind, ScoreLane } from '../types/steers';
 
@@ -38,7 +40,9 @@ export function SteersPage() {
   } = useSteers();
   const { push } = useToast();
   const [pending, setPending] = useState<PendingSpan | null>(null);
+  const [sort, setSort] = useState<CaseSort>(() => loadCaseSort());
   const [author, setAuthor] = useState<Author>(() => loadAuthor());
+  const orderedCases = sortCases(cases, sort);
   const [focusedNoteId, setFocusedNoteId] = useState<string | null>(null);
   const casesInput = useRef<HTMLInputElement>(null);
   const labelsInput = useRef<HTMLInputElement>(null);
@@ -63,7 +67,7 @@ export function SteersPage() {
         setPending(null);
         return;
       }
-      const ids = cases.map((item) => item.id);
+      const ids = orderedCases.map((item) => item.id);
       const index = ids.indexOf(activeId);
       if (e.key === 'j' || e.key === 'ArrowDown') {
         e.preventDefault();
@@ -85,7 +89,7 @@ export function SteersPage() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [activeId, cases, reviews, setActiveId]);
+  }, [activeId, orderedCases, reviews, setActiveId]);
 
   if (!activeCase) {
     return (
@@ -253,9 +257,14 @@ export function SteersPage() {
 
       <div className="grid gap-5 xl:grid-cols-[260px_minmax(0,1fr)_340px]">
         <SteerCaseQueue
-          cases={cases}
+          cases={orderedCases}
           reviews={reviews}
           activeId={activeId}
+          sort={sort}
+          onSortChange={(next) => {
+            setSort(next);
+            saveCaseSort(next);
+          }}
           onSelect={(id) => {
             setActiveId(id);
             setPending(null);

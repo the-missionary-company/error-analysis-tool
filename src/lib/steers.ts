@@ -1,5 +1,7 @@
 import type {
   Author,
+  CaseSort,
+  CaseSortField,
   LaneScore,
   NoteKind,
   PassFail,
@@ -260,13 +262,38 @@ function parseCase(value: unknown, index: number): SteerCase {
   const contextLabel = readString(obj, 'contextLabel');
   const choiceLabel = readString(obj, 'choiceLabel');
   const notionUrl = readString(obj, 'notionUrl');
+  const timestamp = readString(obj, 'timestamp');
+  const rawNumber = obj.number;
   if (yourCall) parsed.yourCall = yourCall;
   if (tooAggressive) parsed.tooAggressive = tooAggressive;
   if (yourCallBody) parsed.yourCallBody = yourCallBody;
   if (contextLabel) parsed.contextLabel = contextLabel;
   if (choiceLabel) parsed.choiceLabel = choiceLabel;
   if (notionUrl) parsed.notionUrl = notionUrl;
+  if (timestamp) parsed.timestamp = timestamp;
+  if (typeof rawNumber === 'number' && Number.isFinite(rawNumber)) parsed.number = rawNumber;
   return parsed;
+}
+
+export const DEFAULT_CASE_SORT: CaseSort = { field: 'number', direction: 'asc' };
+
+export function sortCases(cases: SteerCase[], sort: CaseSort): SteerCase[] {
+  const dir = sort.direction === 'asc' ? 1 : -1;
+  return [...cases].sort((a, b) => {
+    const primary = compareSortField(a, b, sort.field);
+    if (primary !== 0) return primary * dir;
+    return ((a.number ?? Number.POSITIVE_INFINITY) - (b.number ?? Number.POSITIVE_INFINITY)) * dir;
+  });
+}
+
+function compareSortField(a: SteerCase, b: SteerCase, field: CaseSortField): number {
+  if (field === 'number') {
+    return (a.number ?? Number.POSITIVE_INFINITY) - (b.number ?? Number.POSITIVE_INFINITY);
+  }
+  if (field === 'timestamp') {
+    return (a.timestamp ?? '').localeCompare(b.timestamp ?? '');
+  }
+  return a[field].localeCompare(b[field]);
 }
 
 export function parseSteerCases(input: unknown): SteerCase[] {

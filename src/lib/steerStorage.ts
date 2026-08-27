@@ -1,7 +1,6 @@
 import { SEED_STEERS } from '../data/steerSeed';
-import type { SteerCase, SteerReview } from '../types/steers';
-import { mergeCases, parseSteerReviews } from './steers';
-import type { Author } from '../types/steers';
+import type { Author, CaseSort, SteerCase, SteerReview } from '../types/steers';
+import { DEFAULT_CASE_SORT, mergeCases, parseSteerReviews } from './steers';
 
 export interface KeyValueStore {
   getItem(key: string): string | null;
@@ -13,6 +12,7 @@ const KEYS = {
   reviews: 'ea.steers.reviews',
   author: 'ea.steers.author',
   active: 'ea.steers.active',
+  sort: 'ea.steers.sort',
 } as const;
 
 function defaultStore(): KeyValueStore {
@@ -92,6 +92,21 @@ export function loadActiveId(store: KeyValueStore = defaultStore()): string | nu
 
 export function saveActiveId(id: string, store: KeyValueStore = defaultStore()) {
   store.setItem(KEYS.active, id);
+}
+
+const SORT_FIELDS = new Set(['timestamp', 'number', 'stamp', 'session']);
+
+export function loadCaseSort(store: KeyValueStore = defaultStore()): CaseSort {
+  const raw = readJSON<Partial<CaseSort> | null>(store, KEYS.sort, null);
+  if (!raw || !SORT_FIELDS.has(String(raw.field))) return DEFAULT_CASE_SORT;
+  return {
+    field: raw.field as CaseSort['field'],
+    direction: raw.direction === 'desc' ? 'desc' : 'asc',
+  };
+}
+
+export function saveCaseSort(sort: CaseSort, store: KeyValueStore = defaultStore()) {
+  writeJSON(store, KEYS.sort, sort);
 }
 
 export function importSteerReviews(

@@ -20,6 +20,7 @@ import {
   reviewIsEmpty,
   attachSpanNotes,
   caseProgress,
+  sortCases,
 } from './steers';
 
 function expectEmptyScores(caseId: string) {
@@ -36,14 +37,15 @@ function expectEmptyScores(caseId: string) {
 
 describe('seed cases', () => {
   it('includes the production-migration HOLD steer with no invented scores', () => {
-    expect(SEED_STEERS).toHaveLength(6);
-    const seed = SEED_STEERS[0];
-    expect(seed.id).toBe('will-not-green-production-migration');
+    expect(SEED_STEERS).toHaveLength(8);
+    const seed = SEED_STEERS.find((item) => item.id === 'will-not-green-production-migration');
+    expect(seed).toBeDefined();
+    expect(seed!.id).toBe('will-not-green-production-migration');
     expect(seed.title).toBe('3. Will not green a production migration to make a check pretty');
-    expect(seed.session).toBe('Capture');
-    expect(seed.stamp).toBe('HOLD');
-    expect(seed.yourCall).toBe('Softer');
-    expect(seed.when).toBe('2026-08-27');
+    expect(seed!.session).toBe('Capture');
+    expect(seed!.stamp).toBe('HOLD');
+    expect(seed!.yourCall).toBe('Softer');
+    expect(seed!.when).toBe('2026-08-27');
     expect(seed.notionUrl).toBe(
       'https://app.notion.com/p/3c9efde7642b81ea8bcee31574c844f3',
     );
@@ -53,7 +55,31 @@ describe('seed cases', () => {
     expect(seed.options).toContain('HOLD (what Oscar did)');
     expect(seed.choice).toContain('Does not type secrets');
     expect(seed.choice).toContain('CH-810 SQL');
-    expectEmptyScores(seed.id);
+    expectEmptyScores(seed!.id);
+  });
+
+  it('includes steer 1 Sync type-religion body verbatim with empty scores', () => {
+    const seed = SEED_STEERS.find((item) => item.id === 'sync-was-becoming-a-type-religion');
+    expect(seed?.number).toBe(1);
+    expect(seed?.timestamp).toBe('2026-08-27T02:47:44Z');
+    expect(seed?.contextLabel).toBe('Steer');
+    expect(seed?.problem).toBe('');
+    expect(seed?.options).toBe('');
+    expect(seed?.choice).toBe('');
+    expect(seed?.context).toContain('Oscar architecture cut, not a status check');
+    expect(seed?.context).toContain('sharepoint_folder');
+    expectEmptyScores(seed!.id);
+  });
+
+  it('includes steer 2 pigeon-count body verbatim with empty scores', () => {
+    const seed = SEED_STEERS.find((item) => item.id === 'capture-counted-pigeons-on-vercel');
+    expect(seed?.number).toBe(2);
+    expect(seed?.timestamp).toBe('2026-08-27T02:47:44Z');
+    expect(seed?.problem).toBe('');
+    expect(seed?.options).toBe('');
+    expect(seed?.choice).toBe('');
+    expect(seed?.context).toContain('2,111-attempt ignored-build scan');
+    expectEmptyScores(seed!.id);
   });
 
   it('includes steer 10 parked-Capture body verbatim with empty scores', () => {
@@ -233,6 +259,8 @@ Sam 27 Aug 2026, 15:08 Seoul.`,
 
   it('queues steers 10–14 together after the HOLD seed', () => {
     expect(SEED_STEERS.map((item) => item.id)).toEqual([
+      'sync-was-becoming-a-type-religion',
+      'capture-counted-pigeons-on-vercel',
       'will-not-green-production-migration',
       'parked-capture-after-child-finished',
       'tracer-keep-moving-as-apply-auth',
@@ -296,6 +324,11 @@ describe('parseSteerCases', () => {
     );
     expect(cases[0].contextLabel).toBe('Background');
     expect(cases[0].choiceLabel).toBe('Choice');
+    const withMeta = parseSteerCases({
+      cases: [{ ...valid, number: 1, timestamp: '2026-08-27T02:47:44Z' }],
+    });
+    expect(withMeta[0].number).toBe(1);
+    expect(withMeta[0].timestamp).toBe('2026-08-27T02:47:44Z');
   });
 
   it('rejects traces-shaped JSON so Hub/A1 imports stay separate', () => {
@@ -398,7 +431,7 @@ describe('exportSteerBoardJSON', () => {
     };
     const parsed = JSON.parse(exportSteerBoardJSON(SEED_STEERS, [review]));
     expect(parsed.kind).toBe('oscar-steer-board');
-    expect(parsed.cases[0].id).toBe('will-not-green-production-migration');
+    expect(parsed.cases[0].id).toBe('sync-was-becoming-a-type-religion');
     expect(parsed.reviews[0].caseId).toBe(review.caseId);
     expect(parsed.reviews[0].content.passFail).toBe('pass');
     expect(parsed.reviews[0].action.passFail).toBe('fail');
@@ -412,7 +445,7 @@ describe('exportSteerBoardJSON', () => {
     const json = exportSteerBoardJSON(SEED_STEERS, [
       { ...emptyReview('will-not-green-production-migration') },
     ]);
-    expect(parseSteerCases(json)).toHaveLength(6);
+    expect(parseSteerCases(json)).toHaveLength(8);
     expect(parseSteerReviews(json)).toHaveLength(1);
   });
 
@@ -438,7 +471,7 @@ describe('exportSteerBoardJSON', () => {
       },
     ]);
     const loaded = parseSteerPayload(json);
-    expect(loaded.cases).toHaveLength(6);
+    expect(loaded.cases).toHaveLength(8);
     expect(loaded.reviews).toHaveLength(1);
     expect(loaded.reviews[0].content.passFail).toBe('pass');
     expect(loaded.reviews[0].action.passFail).toBe('fail');
@@ -465,9 +498,9 @@ describe('mergeCases', () => {
       choice: 'ch',
     };
     const merged = mergeCases(SEED_STEERS, [imported, extra]);
-    expect(merged).toHaveLength(7);
+    expect(merged).toHaveLength(9);
     expect(merged[0].title).toBe('Updated title from Oscar');
-    expect(merged[6].id).toBe('new-case');
+    expect(merged[8].id).toBe('new-case');
   });
 });
 
@@ -748,5 +781,30 @@ describe('span notes and case progress', () => {
         action: { passFail: 'fail', comment: '', labels: [] },
       }),
     ).toBe('scored');
+  });
+});
+
+describe('sortCases', () => {
+  const cases = [
+    { ...SEED_STEERS[1], number: 2, timestamp: '2026-08-27T02:47:44Z', stamp: 'CUT', session: 'Capture' },
+    { ...SEED_STEERS[0], number: 1, timestamp: '2026-08-27T03:00:00Z', stamp: 'HOLD', session: 'Sync' },
+  ];
+
+  it('defaults to number ascending', () => {
+    const sorted = sortCases(cases, { field: 'number', direction: 'asc' });
+    expect(sorted.map((c) => c.number)).toEqual([1, 2]);
+  });
+
+  it('sorts timestamp then number', () => {
+    const sorted = sortCases(cases, { field: 'timestamp', direction: 'asc' });
+    expect(sorted.map((c) => c.id)).toEqual([
+      'capture-counted-pigeons-on-vercel',
+      'sync-was-becoming-a-type-religion',
+    ]);
+  });
+
+  it('sorts session descending', () => {
+    const sorted = sortCases(cases, { field: 'session', direction: 'desc' });
+    expect(sorted.map((c) => c.session)).toEqual(['Sync', 'Capture']);
   });
 });

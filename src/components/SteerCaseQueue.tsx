@@ -1,19 +1,30 @@
 import { useMemo, useState } from 'react';
 import { caseProgress, type CaseProgress } from '../lib/steers';
 import { cn } from '../lib/utils';
-import type { SteerCase, SteerReview } from '../types/steers';
+import type { CaseSort, CaseSortField, SteerCase, SteerReview } from '../types/steers';
 
 type Filter = 'all' | 'open' | 'scored';
+
+const SORT_FIELDS: { id: CaseSortField; label: string }[] = [
+  { id: 'timestamp', label: 'Timestamp' },
+  { id: 'number', label: 'Number' },
+  { id: 'stamp', label: 'Stamp' },
+  { id: 'session', label: 'Session' },
+];
 
 export function SteerCaseQueue({
   cases,
   reviews,
   activeId,
+  sort,
+  onSortChange,
   onSelect,
 }: {
   cases: SteerCase[];
   reviews: Record<string, SteerReview>;
   activeId: string;
+  sort: CaseSort;
+  onSortChange: (sort: CaseSort) => void;
   onSelect: (id: string) => void;
 }) {
   const [query, setQuery] = useState('');
@@ -63,6 +74,30 @@ export function SteerCaseQueue({
               {value}
             </button>
           ))}
+        </div>
+        <div className="mt-2">
+          <p className="text-[11px] font-medium text-ink-400">Sort</p>
+          <div className="mt-1 grid grid-cols-2 gap-1">
+            {SORT_FIELDS.map((field) => (
+              <button
+                key={field.id}
+                type="button"
+                className={cn(
+                  'rounded-md px-2 py-1 text-[11px]',
+                  sort.field === field.id ? 'bg-ink-900 text-white' : 'bg-ink-50 text-ink-600 hover:bg-ink-100',
+                )}
+                onClick={() =>
+                  onSortChange({
+                    field: field.id,
+                    direction: sort.field === field.id && sort.direction === 'asc' ? 'desc' : 'asc',
+                  })
+                }
+              >
+                {field.label}
+                {sort.field === field.id ? (sort.direction === 'asc' ? ' ↑' : ' ↓') : ''}
+              </button>
+            ))}
+          </div>
         </div>
         <p className="mt-2 text-[11px] text-ink-400">j / k move · n next open</p>
       </div>

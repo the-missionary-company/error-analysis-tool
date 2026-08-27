@@ -25,12 +25,22 @@ export interface SteerHighlight {
   comment: string;
 }
 
+export type CaseSortField = 'timestamp' | 'number' | 'stamp' | 'session';
+export type CaseSortDirection = 'asc' | 'desc';
+
+export interface CaseSort {
+  field: CaseSortField;
+  direction: CaseSortDirection;
+}
+
 export interface SteerCase {
   id: string;
   title: string;
   session: string;
   stamp: string;
   when: string;
+  number?: number;
+  timestamp?: string;
   yourCall?: string;
   tooAggressive?: string;
   yourCallBody?: string;

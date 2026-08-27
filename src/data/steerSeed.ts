@@ -2,6 +2,55 @@ import type { SteerCase } from '../types/steers';
 
 export const SEED_STEERS: SteerCase[] = [
   {
+    id: 'sync-was-becoming-a-type-religion',
+    number: 1,
+    title: '1. Sync was becoming a type religion',
+    session: 'Sync',
+    stamp: 'CUT',
+    tooAggressive: 'Open',
+    yourCall: 'Open',
+    when: '2026-08-27',
+    timestamp: '2026-08-27T02:47:44Z',
+    notionUrl: 'https://app.notion.com/p/3c9efde7642b8172bb1dd7c64d608497',
+    contextLabel: 'Steer',
+    context: `**Session:** Sync W2 \`d22a0c2c\`. About 10:32 Seoul. POST 201.
+**What they were doing:** Capture still held the gate. Their thoughts: add focused Outlook scheduler coverage, then tighten \`sharepoint_folder\` vs \`file\` so identity-list helpers accept adapter kinds.
+**Problem:** Sync is a plaque, not a hose. A type religion plus a new test chapel is a second product.
+**Options:**
+1. Leave them. Three typecheck errors might be real. Cathedral grows.
+2. Cut the suite. Smallest cast if compile is broken. Minutes.
+3. Hard-stop Sync. Too aggressive if the already-started slice is real plaque work.
+**I chose 2.** They stripped the extra plumbing. Later PR #1027, two files, 170/170, no scheduler.
+**Exact POST:**
+> Oscar architecture cut, not a status check. Stop the type-boundary ceremony (adapter kind sharepoint_folder vs persisted resource kind file) and do not add a new Outlook scheduler test harness or extra test structure. That is over-engineering. If the three typecheck errors are real compile breaks in the slice already in flight, fix them with the smallest cast/union and move on. Do not generalize identity-list helpers. Do not invent coverage. Finish only the already-started provider-free control-plane slice needed for smoke. No Master List UI, no fleet, no Wave C, no new test architecture. Capture session-done is still the unlock. Keep authorized work moving under that fence.
+**Comment here:** Keep / Softer / Harder / Never.`,
+    problem: '',
+    options: '',
+    choice: '',
+  },
+  {
+    id: 'capture-counted-pigeons-on-vercel',
+    number: 2,
+    title: '2. Capture counted pigeons on Vercel',
+    session: 'Capture',
+    stamp: 'CUT',
+    tooAggressive: 'Open',
+    yourCall: 'Open',
+    when: '2026-08-27',
+    timestamp: '2026-08-27T02:47:44Z',
+    notionUrl: 'https://app.notion.com/p/3c9efde7642b8163b2caee1dc97f4512',
+    contextLabel: 'Steer',
+    context: `**Session:** Capture \`b16ff819\`. Oscar told you about this in chat around 10:32.
+**Honesty:** I did not find a Vorflux POST that cuts the Vercel hunt. Score the intent if you want. Do not score a POST I cannot find.
+**What they were doing:** By 09:06 they had already run a 2,111-attempt ignored-build scan, found no example, and still listed "characterize Vercel ignored-build" as remaining work.
+**Problem:** Session-done does not get a letter from counting pigeons.
+**Closest fences that did POST:** morning status check (no new prod migrations, no Clerk) and the 09:38 keep-moving (no new prod migration). Neither names Vercel or 2,111.
+**Comment here:** Keep / Softer / Harder / Never.`,
+    problem: '',
+    options: '',
+    choice: '',
+  },
+  {
     id: 'will-not-green-production-migration',
     title: '3. Will not green a production migration to make a check pretty',
     session: 'Capture',

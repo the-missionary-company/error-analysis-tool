@@ -30,11 +30,13 @@ export function SteerCaseView({
         <p className="text-xs font-semibold uppercase tracking-wide text-ink-400">Steer</p>
         <h2 className="mt-1 text-xl font-semibold leading-snug text-ink-950">{steer.title}</h2>
         <div className="mt-3 flex flex-wrap gap-2 text-xs">
+          {steer.number != null && <MetaChip label="Number" value={String(steer.number)} />}
           <MetaChip label="Session" value={steer.session} />
           <MetaChip label="Stamp" value={steer.stamp} tone={steer.stamp === 'HOLD' ? 'hold' : undefined} />
           {steer.tooAggressive && <MetaChip label="Too aggressive?" value={steer.tooAggressive} />}
           {steer.yourCall && <MetaChip label="Your call" value={steer.yourCall} />}
           <MetaChip label="When" value={steer.when} />
+          {steer.timestamp && <MetaChip label="Timestamp" value={steer.timestamp} />}
         </div>
         {steer.notionUrl && (
           <a
@@ -49,22 +51,26 @@ export function SteerCaseView({
         )}
       </header>
 
-      {SECTIONS.map(({ key, label }) => (
-        <section key={key} className="card p-5">
-          <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-400">
-            {key === 'context' ? steer.contextLabel ?? label : key === 'choice' ? steer.choiceLabel ?? label : label}
-          </div>
-          <HighlightableText
-            text={steer[key]}
-            section={key}
-            highlights={highlights}
-            revisions={revisions}
-            onSelect={onSelect}
-            onHighlightClick={onHighlightClick}
-            onRevisionClick={onRevisionClick}
-          />
-        </section>
-      ))}
+      {SECTIONS.map(({ key, label }) => {
+        const text = steer[key];
+        if (!text.trim()) return null;
+        return (
+          <section key={key} className="card p-5">
+            <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-400">
+              {key === 'context' ? steer.contextLabel ?? label : key === 'choice' ? steer.choiceLabel ?? label : label}
+            </div>
+            <HighlightableText
+              text={text}
+              section={key}
+              highlights={highlights}
+              revisions={revisions}
+              onSelect={onSelect}
+              onHighlightClick={onHighlightClick}
+              onRevisionClick={onRevisionClick}
+            />
+          </section>
+        );
+      })}
 
       {steer.yourCallBody && (
         <section className="card p-5">
