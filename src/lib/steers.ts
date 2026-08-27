@@ -81,6 +81,68 @@ export function emptyReview(caseId: string): SteerReview {
   };
 }
 
+export type CaseProgress = 'unscored' | 'open' | 'scored';
+
+export function caseProgress(review?: SteerReview | null): CaseProgress {
+  if (!review) return 'unscored';
+  if (review.content.passFail && review.action.passFail) return 'scored';
+  if (reviewIsEmpty(review)) return 'unscored';
+  return 'open';
+}
+
+export interface SpanLaneNote {
+  kind: NoteKind;
+  text: string;
+}
+
+export function attachSpanNotes(input: {
+  review: SteerReview;
+  span: { section: SteerSection; start: number; end: number; text: string };
+  author: Author;
+  content?: SpanLaneNote;
+  action?: SpanLaneNote;
+}): SteerReview {
+  const highlightId = newHighlightId();
+  const notes = [...input.review.notes];
+  const add = (lane: ScoreLane, note?: SpanLaneNote) => {
+    const text = note?.text.trim() ?? '';
+    if (!text || !note) return;
+    notes.push({
+      id: newId('n'),
+      kind: note.kind,
+      lane,
+      author: input.author,
+      text,
+      createdAt: new Date().toISOString(),
+      replies: [],
+      highlightId,
+      section: input.span.section,
+      start: input.span.start,
+      end: input.span.end,
+      spanText: input.span.text,
+    });
+  };
+  add('content', input.content);
+  add('action', input.action);
+  const contentText = input.content?.text.trim() ?? '';
+  const actionText = input.action?.text.trim() ?? '';
+  const highlight: SteerHighlight = {
+    id: highlightId,
+    section: input.span.section,
+    start: input.span.start,
+    end: input.span.end,
+    text: input.span.text,
+    lane: contentText ? 'content' : 'action',
+    passFail: null,
+    comment: [contentText, actionText].filter(Boolean).join('\n'),
+  };
+  return {
+    ...input.review,
+    highlights: [...input.review.highlights, highlight],
+    notes,
+  };
+}
+
 export function reviewIsEmpty(review: SteerReview): boolean {
   return (
     review.content.passFail === null &&

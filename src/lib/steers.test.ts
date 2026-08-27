@@ -18,6 +18,8 @@ import {
   parseSteerPayload,
   parseSteerReviews,
   reviewIsEmpty,
+  attachSpanNotes,
+  caseProgress,
 } from './steers';
 
 function expectEmptyScores(caseId: string) {
@@ -707,5 +709,44 @@ describe('enrich revisions', () => {
     const restored = parseSteerReviews(parsed)[0];
     expect(restored.notes[0].spanText).toBe('Agents');
     expect(restored.revisions[0].newText).toBe('Some agents');
+  });
+});
+
+describe('span notes and case progress', () => {
+  it('attaches Content and Action notes to one span without a span Pass/Fail', () => {
+    const next = attachSpanNotes({
+      review: emptyReview('c1'),
+      span: { section: 'context', start: 0, end: 7, text: 'Capture' },
+      author: 'sam',
+      content: { kind: 'comment', text: 'Clear enough.' },
+      action: { kind: 'question', text: 'Why park here?' },
+    });
+    expect(next.highlights).toHaveLength(1);
+    expect(next.highlights[0].passFail).toBeNull();
+    expect(next.highlights[0].text).toBe('Capture');
+    expect(next.notes).toHaveLength(2);
+    expect(next.notes.map((n) => n.lane)).toEqual(['content', 'action']);
+    expect(next.notes[0].kind).toBe('comment');
+    expect(next.notes[1].kind).toBe('question');
+    expect(next.notes[0].highlightId).toBe(next.highlights[0].id);
+    expect(next.notes[1].highlightId).toBe(next.highlights[0].id);
+  });
+
+  it('treats both scores marked as scored, and a started case as open', () => {
+    expect(caseProgress(undefined)).toBe('unscored');
+    expect(caseProgress(emptyReview('c1'))).toBe('unscored');
+    expect(
+      caseProgress({
+        ...emptyReview('c1'),
+        content: { passFail: 'pass', comment: '', labels: [] },
+      }),
+    ).toBe('open');
+    expect(
+      caseProgress({
+        ...emptyReview('c1'),
+        content: { passFail: 'pass', comment: '', labels: [] },
+        action: { passFail: 'fail', comment: '', labels: [] },
+      }),
+    ).toBe('scored');
   });
 });

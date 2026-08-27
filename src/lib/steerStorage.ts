@@ -12,6 +12,7 @@ const KEYS = {
   cases: 'ea.steers.cases',
   reviews: 'ea.steers.reviews',
   author: 'ea.steers.author',
+  active: 'ea.steers.active',
 } as const;
 
 function defaultStore(): KeyValueStore {
@@ -83,6 +84,14 @@ export function loadAuthor(store: KeyValueStore = defaultStore()): Author {
 
 export function saveAuthor(author: Author, store: KeyValueStore = defaultStore()) {
   store.setItem(KEYS.author, author);
+}
+
+export function loadActiveId(store: KeyValueStore = defaultStore()): string | null {
+  return store.getItem(KEYS.active);
+}
+
+export function saveActiveId(id: string, store: KeyValueStore = defaultStore()) {
+  store.setItem(KEYS.active, id);
 }
 
 export function importSteerReviews(

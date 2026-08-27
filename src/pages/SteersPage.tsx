@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Download, Upload } from 'lucide-react';
+import { SpanNoteComposer } from '../components/SpanNoteComposer';
+import { SteerCaseQueue } from '../components/SteerCaseQueue';
 import { SteerCaseView } from '../components/SteerCaseView';
-import { SteerHighlightPopover } from '../components/SteerHighlightPopover';
 import { SteerScorePanel } from '../components/SteerScorePanel';
 import { SteerThreads } from '../components/SteerThreads';
 import type { PendingSpan } from '../components/HighlightableText';
@@ -12,16 +13,15 @@ import { downloadText } from '../lib/storage';
 import {
   AUTHOR_DEFS,
   addThreadReply,
+  attachSpanNotes,
+  caseProgress,
   createRevisionFromQuestion,
-  newHighlightId,
-  newId,
   parseSteerPayload,
   parseSteerReviews,
-  reviewIsEmpty,
   usedLabelsForLane,
 } from '../lib/steers';
 import { cn } from '../lib/utils';
-import type { Author, LaneScore, NoteKind, PassFail, ScoreLane, SteerNote } from '../types/steers';
+import type { Author, LaneScore, NoteKind, ScoreLane } from '../types/steers';
 
 export function SteersPage() {
   const {
@@ -44,12 +44,48 @@ export function SteersPage() {
   const labelsInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    if (!pending) return;
+    document.getElementById('span-composer')?.scrollIntoView({ block: 'nearest' });
+  }, [pending]);
+
+  useEffect(() => {
+    document.querySelector(`[data-case-id="${activeId}"]`)?.scrollIntoView({ block: 'nearest' });
+  }, [activeId]);
+
+  useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setPending(null);
+      const target = e.target as HTMLElement | null;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+        if (e.key === 'Escape') setPending(null);
+        return;
+      }
+      if (e.key === 'Escape') {
+        setPending(null);
+        return;
+      }
+      const ids = cases.map((item) => item.id);
+      const index = ids.indexOf(activeId);
+      if (e.key === 'j' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        const next = ids[Math.min(ids.length - 1, index + 1)];
+        if (next) setActiveId(next);
+      }
+      if (e.key === 'k' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        const prev = ids[Math.max(0, index - 1)];
+        if (prev) setActiveId(prev);
+      }
+      if (e.key === 'n') {
+        e.preventDefault();
+        const open = ids.filter((id) => caseProgress(reviews[id]) !== 'scored');
+        if (!open.length) return;
+        const from = open.find((id) => ids.indexOf(id) > index) ?? open[0];
+        setActiveId(from);
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, []);
+  }, [activeId, cases, reviews, setActiveId]);
 
   if (!activeCase) {
     return (
@@ -82,50 +118,23 @@ export function SteersPage() {
   };
 
   const addHighlight = (input: {
-    lane: ScoreLane;
-    passFail: PassFail;
-    kind: NoteKind;
-    text: string;
+    content?: { kind: NoteKind; text: string };
+    action?: { kind: NoteKind; text: string };
   }) => {
     if (!pending) return;
-    const highlightId = newHighlightId();
-    const highlight = {
-      id: highlightId,
-      section: pending.section,
-      start: pending.start,
-      end: pending.end,
-      text: pending.text,
-      lane: input.lane,
-      passFail: input.passFail,
-      comment: input.text,
-    };
-    const notes = [...activeReview.notes];
-    if (input.text) {
-      const note: SteerNote = {
-        id: newId('n'),
-        kind: input.kind,
-        lane: input.lane,
-        author,
-        text: input.text,
-        createdAt: new Date().toISOString(),
-        replies: [],
-        highlightId,
-        section: pending.section,
-        start: pending.start,
-        end: pending.end,
-        spanText: pending.text,
-      };
-      notes.push(note);
-      focusNote(note.id);
-    }
-    updateReview({
-      ...activeReview,
-      highlights: [...activeReview.highlights, highlight],
-      notes,
+    const next = attachSpanNotes({
+      review: activeReview,
+      span: pending,
+      author,
+      content: input.content,
+      action: input.action,
     });
+    updateReview(next);
+    const added = next.notes[next.notes.length - 1];
+    if (added) focusNote(added.id);
     setPending(null);
     window.getSelection()?.removeAllRanges();
-    push(input.kind === 'question' ? 'Question attached to span' : 'Highlight saved', 'success');
+    push('Span kept on the right', 'success');
   };
 
   const readFile = async (file: File) => JSON.parse(await file.text()) as unknown;
@@ -137,12 +146,10 @@ export function SteersPage() {
           Eval dashboard
         </h1>
         <p className="mt-2 text-[15px] leading-relaxed text-ink-600">
-          Same case, two independent scores. <strong>Content / understanding</strong> is how
-          Oscar sent the message: did Sam understand the write-up, and did he understand what
-          the agents are doing? <strong>Action / tech lead</strong> is how Oscar acted as the
-          tech lead. Pass one and Fail the other if that is what happened. Do not share one
-          Pass/Fail across both. Each score has its own labels so cases can be differentiated.
-          Labels persist in this browser and in the JSON you export.
+          Seed cases are already here. Scores and notes save in this browser. Export JSON is a
+          backup, or a way to move the board. Import only if you have a file to restore.
+          Pass and Fail live only on <strong>Content / understanding</strong> and{' '}
+          <strong>Action / tech lead</strong>. Highlight a span to leave notes on one or both.
         </p>
       </section>
 
@@ -244,46 +251,24 @@ export function SteersPage() {
         </span>
       </div>
 
-      {cases.length > 1 && (
-        <nav className="flex flex-wrap gap-2">
-          {cases.map((item) => {
-            const review = reviews[item.id];
-            const scored = review && !reviewIsEmpty(review);
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setActiveId(item.id)}
-                className={cn(
-                  'rounded-lg border px-3 py-2 text-left text-sm transition',
-                  item.id === activeId
-                    ? 'border-accent bg-accent-soft text-ink-950'
-                    : 'border-ink-200 bg-white text-ink-700 hover:bg-ink-50',
-                )}
-              >
-                <span className="block max-w-[220px] truncate font-medium">{item.title}</span>
-                <span className="text-[11px] text-ink-400">
-                  {item.stamp} · {scored ? 'labeled' : 'unscored'}
-                </span>
-              </button>
-            );
-          })}
-        </nav>
-      )}
-
-      <div className="rounded-xl border border-sky-200 bg-sky-50 px-3.5 py-2.5 text-sm text-sky-950">
-        Highlight a span, then leave a <strong>comment</strong> (a note) or a{' '}
-        <strong>question</strong> (a thread). Questions stay on that span. Oscar replies in the
-        thread, or updates the steer with a visible revision: old text is struck, new text is
-        highlighted. Each score still has its own Pass or Fail, labels, and comment.
-      </div>
-
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="grid gap-5 xl:grid-cols-[260px_minmax(0,1fr)_340px]">
+        <SteerCaseQueue
+          cases={cases}
+          reviews={reviews}
+          activeId={activeId}
+          onSelect={(id) => {
+            setActiveId(id);
+            setPending(null);
+          }}
+        />
         <SteerCaseView
           steer={activeCase}
           highlights={activeReview.highlights}
           revisions={activeReview.revisions}
-          onSelect={setPending}
+          onSelect={(span) => {
+            setPending(span);
+            window.getSelection()?.removeAllRanges();
+          }}
           onHighlightClick={(highlight) => {
             const note = activeReview.notes.find((item) => item.highlightId === highlight.id);
             if (note) focusNote(note.id);
@@ -297,6 +282,15 @@ export function SteersPage() {
         <div className="space-y-4">
         <SteerScorePanel
           review={activeReview}
+          pendingSlot={
+            pending ? (
+              <SpanNoteComposer
+                span={pending}
+                onCancel={() => setPending(null)}
+                onSave={addHighlight}
+              />
+            ) : null
+          }
           reuseByLane={{
             content: usedLabelsForLane(Object.values(reviews), 'content'),
             action: usedLabelsForLane(Object.values(reviews), 'action'),
@@ -332,22 +326,6 @@ export function SteersPage() {
         </div>
       </div>
 
-      {pending && (
-        <>
-          <button
-            type="button"
-            className="fixed inset-0 z-40 cursor-default bg-ink-950/10"
-            aria-label="Dismiss highlight popover"
-            onClick={() => setPending(null)}
-          />
-          <SteerHighlightPopover
-            span={pending}
-            authorLabel={AUTHOR_DEFS[author].label}
-            onCancel={() => setPending(null)}
-            onSave={addHighlight}
-          />
-        </>
-      )}
     </div>
   );
 }

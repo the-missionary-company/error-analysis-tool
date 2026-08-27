@@ -2,8 +2,10 @@ import { useCallback, useMemo, useState } from 'react';
 import { SEED_STEERS } from '../data/steerSeed';
 import {
   importSteerReviews,
+  loadActiveId,
   loadSteerCases,
   loadSteerReviews,
+  saveActiveId,
   saveImportedCases,
   saveSteerReview,
 } from '../lib/steerStorage';
@@ -13,7 +15,16 @@ import type { SteerCase, SteerReview } from '../types/steers';
 export function useSteers() {
   const [cases, setCases] = useState<SteerCase[]>(() => loadSteerCases());
   const [reviews, setReviews] = useState<Record<string, SteerReview>>(() => loadSteerReviews());
-  const [activeId, setActiveId] = useState<string>(() => loadSteerCases()[0]?.id ?? SEED_STEERS[0].id);
+  const [activeId, setActiveIdState] = useState<string>(() => {
+    const cases = loadSteerCases();
+    const saved = loadActiveId();
+    if (saved && cases.some((item) => item.id === saved)) return saved;
+    return cases[0]?.id ?? SEED_STEERS[0].id;
+  });
+  const setActiveId = useCallback((id: string) => {
+    saveActiveId(id);
+    setActiveIdState(id);
+  }, []);
 
   const activeCase = useMemo(
     () => cases.find((item) => item.id === activeId) ?? cases[0] ?? null,

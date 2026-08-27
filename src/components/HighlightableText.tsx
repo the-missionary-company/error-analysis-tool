@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { applyBodySegments, LANE_DEFS } from '../lib/steers';
+import { applyBodySegments } from '../lib/steers';
 import { rangeOffsetsInRoot } from '../lib/selection';
 import type { SteerHighlight, SteerRevision, SteerSection } from '../types/steers';
 
@@ -100,7 +100,7 @@ export function HighlightableText({
             <mark
               key={`${segment.highlight.id}-${i}`}
               className="cursor-pointer rounded-sm bg-sky-100 px-0.5 text-sky-950 underline decoration-dotted underline-offset-2"
-              title={`${LANE_DEFS[segment.highlight.lane].title} ${segment.highlight.passFail ?? 'unscored'}`}
+              title="Highlighted span"
               onClick={(event) => {
                 event.stopPropagation();
                 onHighlightClick(segment.highlight!);

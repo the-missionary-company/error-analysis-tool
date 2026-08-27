@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { CHIP_DEFS, LANE_DEFS, addLaneLabel, removeLaneLabel } from '../lib/steers';
 import { cn, formatDate } from '../lib/utils';
 import type { LaneScore, PassFail, ScoreLane, SteerHighlight, SteerReview } from '../types/steers';
@@ -8,18 +8,21 @@ const LANES: ScoreLane[] = ['content', 'action'];
 export function SteerScorePanel({
   review,
   reuseByLane,
+  pendingSlot,
   onLaneChange,
   onRemoveHighlight,
   onFocusHighlight,
 }: {
   review: SteerReview;
   reuseByLane: Record<ScoreLane, string[]>;
+  pendingSlot?: ReactNode;
   onLaneChange: (lane: ScoreLane, next: LaneScore) => void;
   onRemoveHighlight: (id: string) => void;
   onFocusHighlight: (highlight: SteerHighlight) => void;
 }) {
   return (
     <aside className="space-y-4 lg:sticky lg:top-[4.5rem]">
+      {pendingSlot}
       {LANES.map((lane) => (
         <LaneCard
           key={lane}
@@ -43,10 +46,7 @@ export function SteerScorePanel({
                   className="w-full text-left"
                   onClick={() => onFocusHighlight(h)}
                 >
-                  <p className="text-[11px] font-medium text-ink-400">
-                    {LANE_DEFS[h.lane].title} · {h.section}
-                    {h.passFail ? ` · ${h.passFail}` : ''}
-                  </p>
+                  <p className="text-[11px] font-medium text-ink-400">{h.section}</p>
                   <p className="mt-1 text-sm italic text-ink-800">“{h.text}”</p>
                   {h.comment && <p className="mt-1 text-sm text-ink-600">{h.comment}</p>}
                 </button>
