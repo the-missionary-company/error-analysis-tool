@@ -15,7 +15,7 @@ import type {
   SteerReview,
   SteerSection,
   ThreadReply,
-} from '../types/steers';
+} from '../types/steers.js';
 
 export const LANE_DEFS: Record<
   ScoreLane,

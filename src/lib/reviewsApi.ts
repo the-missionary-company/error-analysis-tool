@@ -1,9 +1,9 @@
-import { SEED_STEER_IDS } from '../data/seedCaseIds';
-import type { Author, NoteKind, ScoreLane, SteerNote, SteerReview, SteerSection } from '../types/steers';
-import { addThreadReply, attachSpanNotes, emptyReview, newId, parseSteerReviews } from './steers';
-import { authorizeReviewsRequest, jsonResponse } from './evalGate';
+import { SEED_STEER_IDS } from '../data/seedCaseIds.js';
+import type { Author, NoteKind, ScoreLane, SteerNote, SteerReview, SteerSection } from '../types/steers.js';
+import { addThreadReply, attachSpanNotes, emptyReview, newId, parseSteerReviews } from './steers.js';
+import { authorizeReviewsRequest, jsonResponse } from './evalGate.js';
 
-export { gateEvalDashboardRequest, isReviewsApiPath } from './evalGate';
+export { gateEvalDashboardRequest, isReviewsApiPath } from './evalGate.js';
 
 export const REVIEWS_BLOB_PATH = 'steer-reviews.json';
 

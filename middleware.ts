@@ -1,4 +1,4 @@
-import { gateEvalDashboardRequest } from './src/lib/evalGate';
+import { gateEvalDashboardRequest } from './src/lib/evalGate.js';
 
 export const config = {
   matcher: ['/((?!_vercel).*)'],

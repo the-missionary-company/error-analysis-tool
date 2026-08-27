@@ -1,7 +1,7 @@
 import { get, put } from '@vercel/blob';
-import type { SteerReview } from '../types/steers';
-import { PersistNotConfigured, REVIEWS_BLOB_PATH, type ReviewsPersist } from './reviewsApi';
-import { parseSteerReviews } from './steers';
+import type { SteerReview } from '../types/steers.js';
+import { PersistNotConfigured, REVIEWS_BLOB_PATH, type ReviewsPersist } from './reviewsApi.js';
+import { parseSteerReviews } from './steers.js';
 
 export function createBlobReviewsPersist(
   env: Record<string, string | undefined> = process.env,

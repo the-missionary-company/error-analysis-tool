@@ -1,4 +1,4 @@
-import { hasAuthCookie, isPublicPath, passwordMatches } from './evalAuth';
+import { hasAuthCookie, isPublicPath, passwordMatches } from './evalAuth.js';
 
 export function isReviewsApiPath(pathname: string): boolean {
   const path = (pathname.split('?')[0] ?? pathname).replace(/\/$/, '') || '/';
