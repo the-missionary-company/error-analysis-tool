@@ -11,12 +11,20 @@ export function parseBearerPassword(header: string | null | undefined): string |
   return match?.[1];
 }
 
+function headerValue(request: Request, name: string): string | null {
+  try {
+    return request.headers.get(name);
+  } catch {
+    return null;
+  }
+}
+
 export async function authorizeReviewsRequest(
   request: Request,
   env: Record<string, string | undefined>,
 ): Promise<boolean> {
-  if (hasAuthCookie(request.headers.get('cookie'))) return true;
-  const password = parseBearerPassword(request.headers.get('authorization'));
+  if (hasAuthCookie(headerValue(request, 'cookie'))) return true;
+  const password = parseBearerPassword(headerValue(request, 'authorization'));
   return passwordMatches(password, env);
 }
 
