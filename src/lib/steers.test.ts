@@ -37,7 +37,7 @@ function expectEmptyScores(caseId: string) {
 
 describe('seed cases', () => {
   it('rewrites every steer as Background / Problem / Options / Choice with empty scores', () => {
-    expect(SEED_STEERS).toHaveLength(17);
+    expect(SEED_STEERS).toHaveLength(22);
     for (const seed of SEED_STEERS) {
       expect(seed.contextLabel).toBe('Background');
       expect(seed.choiceLabel).toBe('Choice');
@@ -298,7 +298,66 @@ C. Ask Sam whether tests are required this time. Pro: he decides the diligence. 
     expectEmptyScores(seed!.id);
   });
 
-  it('queues steers 1–17 in Notion order', () => {
+  it('includes steers 18-22 before-guide bodies verbatim with markdown links and empty scores', () => {
+    const tracer = SEED_STEERS.find(
+      (item) => item.id === 'before-guide-tracer-defer-polish-vs-remaining-ch-757',
+    );
+    expect(tracer?.number).toBe(18);
+    expect(tracer?.stamp).toBe('CUT');
+    expect(tracer?.timestamp).toBe('2026-08-27T11:52:26Z');
+    expect(tracer?.context).toContain(
+      '[CH-757](https://linear.app/the-missionary-company/issue/CH-757/answer-engine-tracer-bullet-approved-better-implementation-package)',
+    );
+    expect(tracer?.context).toContain(
+      '[#1042](https://github.com/the-missionary-company/central-hub/pull/1042)',
+    );
+    expect(tracer?.choice).toContain(
+      '[#1029](https://github.com/the-missionary-company/central-hub/pull/1029)',
+    );
+    expect(tracer?.choice).toContain('A, then stop');
+    expectEmptyScores(tracer!.id);
+
+    const capture = SEED_STEERS.find(
+      (item) => item.id === 'before-guide-capture-ken-bugs-vs-stolen-adapters',
+    );
+    expect(capture?.number).toBe(19);
+    expect(capture?.context).toContain(
+      '[CH-807](https://linear.app/the-missionary-company/issue/CH-807/generic-capture-review-core)',
+    );
+    expect(capture?.choice).toContain('KEEP Ken behavioral bugs and finish Narrow');
+    expectEmptyScores(capture!.id);
+
+    const sync = SEED_STEERS.find(
+      (item) => item.id === 'before-guide-sync-1018-reverse-check-vs-invented-w3',
+    );
+    expect(sync?.number).toBe(20);
+    expect(sync?.stamp).toBe('KEEP');
+    expect(sync?.context).toContain(
+      '[#1018](https://github.com/the-missionary-company/central-hub/pull/1018)',
+    );
+    expect(sync?.choice).toContain('KEEP the reverse-check they already started');
+    expectEmptyScores(sync!.id);
+
+    const fireflies = SEED_STEERS.find(
+      (item) => item.id === 'before-guide-fireflies-one-resolver-vs-the-rest-of-ch-802',
+    );
+    expect(fireflies?.number).toBe(21);
+    expect(fireflies?.context).toContain('resolveRegistryValidatedTarget');
+    expect(fireflies?.choice).toContain('FIREFLIES_CAPTURE_REVIEW_ENABLED');
+    expectEmptyScores(fireflies!.id);
+
+    const calendar = SEED_STEERS.find(
+      (item) => item.id === 'before-guide-calendar-ch-827-pr-a-vs-shared-registry',
+    );
+    expect(calendar?.number).toBe(22);
+    expect(calendar?.context).toContain(
+      '[CH-827](https://linear.app/the-missionary-company/issue/CH-827/foundation-cal-01-exact-providersource-kind-registry-handoff)',
+    );
+    expect(calendar?.choice).toContain('KEEP CH-827 PR A as written');
+    expectEmptyScores(calendar!.id);
+  });
+
+  it('queues steers 1–22 in Notion order', () => {
     expect(SEED_STEERS.map((item) => item.id)).toEqual([
       'sync-was-becoming-a-type-religion',
       'capture-counted-pigeons-on-vercel',
@@ -317,6 +376,11 @@ C. Ask Sam whether tests are required this time. Pro: he decides the diligence. 
       'the-vitest-sweep-is-the-agent-making-itself-feel-safe',
       'i-parked-tracer-after-cutting-the-chapel',
       'calendar-wrote-a-verification-plan-instead-of-code',
+      'before-guide-tracer-defer-polish-vs-remaining-ch-757',
+      'before-guide-capture-ken-bugs-vs-stolen-adapters',
+      'before-guide-sync-1018-reverse-check-vs-invented-w3',
+      'before-guide-fireflies-one-resolver-vs-the-rest-of-ch-802',
+      'before-guide-calendar-ch-827-pr-a-vs-shared-registry',
     ]);
   });
 
@@ -495,7 +559,7 @@ describe('exportSteerBoardJSON', () => {
     const json = exportSteerBoardJSON(SEED_STEERS, [
       { ...emptyReview('will-not-green-production-migration') },
     ]);
-    expect(parseSteerCases(json)).toHaveLength(17);
+    expect(parseSteerCases(json)).toHaveLength(22);
     expect(parseSteerReviews(json)).toHaveLength(1);
   });
 
@@ -521,7 +585,7 @@ describe('exportSteerBoardJSON', () => {
       },
     ]);
     const loaded = parseSteerPayload(json);
-    expect(loaded.cases).toHaveLength(17);
+    expect(loaded.cases).toHaveLength(22);
     expect(loaded.reviews).toHaveLength(1);
     expect(loaded.reviews[0].content.passFail).toBe('pass');
     expect(loaded.reviews[0].action.passFail).toBe('fail');
@@ -548,9 +612,9 @@ describe('mergeCases', () => {
       choice: 'ch',
     };
     const merged = mergeCases(SEED_STEERS, [imported, extra]);
-    expect(merged).toHaveLength(18);
+    expect(merged).toHaveLength(23);
     expect(merged[0].title).toBe('Updated title from Oscar');
-    expect(merged[17].id).toBe('new-case');
+    expect(merged[22].id).toBe('new-case');
   });
 });
 
