@@ -255,7 +255,8 @@ export function SteersPage() {
         </span>
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[260px_minmax(0,1fr)_340px]">
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-[220px_minmax(0,1fr)] lg:grid-cols-[240px_minmax(0,1fr)_300px] xl:grid-cols-[260px_minmax(0,1fr)_340px]">
+        <div className="min-w-0 md:row-span-2 lg:row-span-1">
         <SteerCaseQueue
           cases={orderedCases}
           reviews={reviews}
@@ -270,6 +271,7 @@ export function SteersPage() {
             setPending(null);
           }}
         />
+        </div>
         <SteerCaseView
           steer={activeCase}
           highlights={activeReview.highlights}

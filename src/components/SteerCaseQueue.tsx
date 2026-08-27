@@ -46,7 +46,7 @@ export function SteerCaseQueue({
   }, [cases, filter, query, reviews]);
 
   return (
-    <aside className="flex max-h-[min(70vh,40rem)] flex-col rounded-xl border border-ink-200 bg-white lg:max-h-[calc(100vh-7rem)] lg:sticky lg:top-[4.5rem]">
+    <aside className="flex max-h-[min(50vh,22rem)] flex-col rounded-xl border border-ink-200 bg-white md:max-h-[calc(100vh-7rem)] md:sticky md:top-[4.5rem]">
       <div className="border-b border-ink-100 px-3 py-2.5">
         <div className="flex items-baseline justify-between gap-2">
           <h2 className="text-sm font-semibold text-ink-950">Cases</h2>
@@ -60,13 +60,13 @@ export function SteerCaseQueue({
           placeholder="Search title, session, stamp"
           className="mt-2 w-full rounded-lg border border-ink-200 px-2.5 py-1.5 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
         />
-        <div className="mt-2 grid grid-cols-3 gap-1">
+        <div className="mt-2 flex flex-wrap gap-1">
           {(['all', 'open', 'scored'] as const).map((value) => (
             <button
               key={value}
               type="button"
               className={cn(
-                'rounded-md px-2 py-1 text-[11px] capitalize',
+                'rounded-md px-2 py-1 text-[11px] capitalize md:flex-1',
                 filter === value ? 'bg-ink-900 text-white' : 'bg-ink-50 text-ink-600 hover:bg-ink-100',
               )}
               onClick={() => setFilter(value)}
