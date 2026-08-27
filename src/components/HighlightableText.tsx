@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { applyHighlightSegments } from '../lib/steers';
+import { applyHighlightSegments, LANE_DEFS } from '../lib/steers';
 import { rangeOffsetsInRoot } from '../lib/selection';
 import { cn } from '../lib/utils';
 import type { ScoreLane, SteerHighlight, SteerSection } from '../types/steers';
@@ -77,7 +77,7 @@ export function HighlightableText({
               'cursor-pointer rounded-sm px-0.5 decoration-clone underline decoration-dotted underline-offset-2',
               laneClass(segment.highlight.lane, segment.highlight.passFail),
             )}
-            title={`${segment.highlight.lane} ${segment.highlight.passFail ?? 'unscored'}`}
+            title={`${LANE_DEFS[segment.highlight.lane].title} ${segment.highlight.passFail ?? 'unscored'}`}
             onClick={(event) => {
               event.stopPropagation();
               onHighlightClick(segment.highlight!);
