@@ -27,4 +27,9 @@ export const SEED_STEER_IDS = [
   'finish-path-sync-dark-1018-then-close-w2',
   'finish-path-fireflies-default-off-copy-path-flag-later',
   'finish-path-calendar-isolated-registry-af-cal-02-later',
+  'plan-verdict-tracer-cut-defer-park-on-annotations',
+  'plan-verdict-capture-ken-bugs-only-no-adapters',
+  'plan-verdict-sync-reverse-check-1018-then-close-w2',
+  'plan-verdict-fireflies-cut-leftover-seam-cathedral',
+  'plan-verdict-calendar-cut-shared-registry-idle-after-w3',
 ] as const;
