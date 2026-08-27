@@ -6,6 +6,8 @@ import {
   PersistNotConfigured,
   appendReplyToReviews,
   gateEvalDashboardRequest,
+  appendCommentToReviews,
+  handleReviewsCommentRequest,
   handleReviewsReplyRequest,
   handleReviewsRequest,
   mergeReviewsByUpdatedAt,
@@ -264,6 +266,141 @@ describe('handleReviewsRequest', () => {
     );
     expect(res.status).toBe(503);
     expect(await res.json()).toEqual({ error: 'reviews persist is not configured' });
+  });
+});
+
+describe('appendCommentToReviews', () => {
+  it('adds an Oscar note without changing Sam scores', () => {
+    const existing = review({
+      caseId: 'sync-was-becoming-a-type-religion',
+      updatedAt: '2026-08-10T00:00:00.000Z',
+      content: { passFail: 'pass', comment: 'Clear.', labels: [] },
+      action: { passFail: 'fail', comment: 'Too hard.', labels: ['one-way door'] },
+    });
+    const result = appendCommentToReviews([existing], {
+      caseId: 'sync-was-becoming-a-type-religion',
+      author: 'oscar',
+      text: 'I will cut the type chapel.',
+      lane: 'action',
+      kind: 'comment',
+    });
+    expect(result).not.toBeNull();
+    expect(result!.review.content).toEqual(existing.content);
+    expect(result!.review.action).toEqual(existing.action);
+    expect(result!.review.notes).toHaveLength(1);
+    expect(result!.note.author).toBe('oscar');
+    expect(result!.note.text).toBe('I will cut the type chapel.');
+    expect(result!.note.lane).toBe('action');
+    expect(result!.note.id).toMatch(/^n-/);
+    expect(result!.note.createdAt).toMatch(/^\d{4}-/);
+  });
+
+  it('attaches a span highlight when section and spanText are given', () => {
+    const existing = review({ caseId: 'sync-was-becoming-a-type-religion' });
+    const result = appendCommentToReviews([existing], {
+      caseId: 'sync-was-becoming-a-type-religion',
+      author: 'oscar',
+      text: 'This sentence is the cut.',
+      lane: 'content',
+      kind: 'comment',
+      section: 'choice',
+      spanText: 'I posted the cut',
+      start: 3,
+      end: 19,
+    });
+    expect(result!.review.highlights).toHaveLength(1);
+    expect(result!.review.highlights[0].text).toBe('I posted the cut');
+    expect(result!.note.highlightId).toBe(result!.review.highlights[0].id);
+    expect(result!.note.spanText).toBe('I posted the cut');
+    expect(result!.note.section).toBe('choice');
+  });
+
+  it('opens a new empty review for a seed case and rejects an unknown case', () => {
+    const created = appendCommentToReviews([], {
+      caseId: 'finish-path-tracer-smoke-after-annotations-trial-later',
+      author: 'oscar',
+      text: 'On it.',
+      lane: 'content',
+    });
+    expect(created?.review.content.passFail).toBeNull();
+    expect(created?.review.action.passFail).toBeNull();
+    expect(
+      appendCommentToReviews([], {
+        caseId: 'not-a-steer',
+        author: 'oscar',
+        text: 'Nope.',
+        lane: 'content',
+      }),
+    ).toBeNull();
+  });
+});
+
+describe('handleReviewsCommentRequest', () => {
+  const env = { EVAL_DASHBOARD_PASSWORD: 'board-secret', BLOB_READ_WRITE_TOKEN: 'token' };
+
+  it('lets Oscar post a comment with Bearer auth', async () => {
+    const persist = memoryPersist([
+      review({
+        caseId: 'sync-was-becoming-a-type-religion',
+        updatedAt: '2026-08-10T00:00:00.000Z',
+        content: { passFail: 'fail', comment: 'Sam score', labels: [] },
+      }),
+    ]);
+    const res = await handleReviewsCommentRequest(
+      new Request('https://x/api/reviews/comment', {
+        method: 'POST',
+        headers: {
+          Authorization: 'Bearer board-secret',
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          caseId: 'sync-was-becoming-a-type-religion',
+          text: 'Will fix the plaque.',
+          lane: 'content',
+        }),
+      }),
+      env,
+      persist,
+    );
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { review: SteerReview; note: { author: string; text: string } };
+    expect(body.note.author).toBe('oscar');
+    expect(body.note.text).toBe('Will fix the plaque.');
+    const saved = await persist.read();
+    expect(saved[0].content.passFail).toBe('fail');
+    expect(saved[0].content.comment).toBe('Sam score');
+    expect(saved[0].notes[0].text).toBe('Will fix the plaque.');
+  });
+
+  it('404s an unknown case and 401s without auth', async () => {
+    const persist = memoryPersist();
+    const missing = await handleReviewsCommentRequest(
+      new Request('https://x/api/reviews/comment', {
+        method: 'POST',
+        headers: {
+          Authorization: 'Bearer board-secret',
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({ caseId: 'missing-case', text: 'Hi', lane: 'action' }),
+      }),
+      env,
+      persist,
+    );
+    expect(missing.status).toBe(404);
+    const denied = await handleReviewsCommentRequest(
+      new Request('https://x/api/reviews/comment', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          caseId: 'sync-was-becoming-a-type-religion',
+          text: 'Hi',
+          lane: 'action',
+        }),
+      }),
+      env,
+      persist,
+    );
+    expect(denied.status).toBe(401);
   });
 });
 

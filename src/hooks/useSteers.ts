@@ -41,17 +41,22 @@ export function useSteers() {
 
   useEffect(() => {
     let cancelled = false;
-    void (async () => {
+    const pull = async (uploadUnion: boolean) => {
       const remote = await fetchRemoteReviews();
       if (cancelled || !remote) return;
       const local = loadSteerReviews();
       const merged = mergeReviewsByUpdatedAt(Object.values(local), remote);
       saveAllSteerReviews(Object.fromEntries(merged.map((item) => [item.caseId, item])));
       if (!cancelled) setReviews(loadSteerReviews());
-      void putRemoteReviews(merged);
-    })();
+      if (uploadUnion) void putRemoteReviews(merged);
+    };
+    void pull(true);
+    const timer = window.setInterval(() => {
+      void pull(false);
+    }, 15000);
     return () => {
       cancelled = true;
+      window.clearInterval(timer);
     };
   }, []);
 

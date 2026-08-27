@@ -1,5 +1,6 @@
-import type { Author, SteerReview } from '../types/steers';
-import { addThreadReply, parseSteerReviews } from './steers';
+import { SEED_STEERS } from '../data/steerSeed';
+import type { Author, NoteKind, ScoreLane, SteerNote, SteerReview, SteerSection } from '../types/steers';
+import { addThreadReply, attachSpanNotes, emptyReview, newId, parseSteerReviews } from './steers';
 import { hasAuthCookie, isPublicPath, passwordMatches } from './evalAuth';
 
 export const REVIEWS_BLOB_PATH = 'steer-reviews.json';
@@ -88,6 +89,96 @@ export function parseReviewsWritePayload(input: unknown): SteerReview[] {
     return parseSteerReviews({ reviews: [(input as { review: unknown }).review] });
   }
   return parseSteerReviews(input);
+}
+
+const LANES: ScoreLane[] = ['content', 'action'];
+const SECTIONS: SteerSection[] = ['context', 'problem', 'options', 'choice'];
+
+export interface AppendCommentInput {
+  caseId: string;
+  author: Author;
+  text: string;
+  lane: ScoreLane;
+  kind?: NoteKind;
+  highlightId?: string;
+  section?: SteerSection;
+  start?: number;
+  end?: number;
+  spanText?: string;
+}
+
+function knownCase(caseId: string, reviews: SteerReview[]): boolean {
+  return reviews.some((item) => item.caseId === caseId) || SEED_STEERS.some((item) => item.id === caseId);
+}
+
+export function appendCommentToReviews(
+  reviews: SteerReview[],
+  input: AppendCommentInput,
+): { review: SteerReview; note: SteerNote } | null {
+  const text = input.text.trim();
+  if (!text || !knownCase(input.caseId, reviews)) return null;
+  const current = reviews.find((item) => item.caseId === input.caseId) ?? emptyReview(input.caseId);
+  const kind: NoteKind = input.kind === 'question' ? 'question' : 'comment';
+
+  if (input.highlightId) {
+    const highlight = current.highlights.find((item) => item.id === input.highlightId);
+    if (!highlight) return null;
+    const note: SteerNote = {
+      id: newId('n'),
+      kind,
+      lane: input.lane,
+      author: input.author,
+      text,
+      createdAt: new Date().toISOString(),
+      replies: [],
+      highlightId: highlight.id,
+      section: highlight.section,
+      start: highlight.start,
+      end: highlight.end,
+      spanText: highlight.text,
+    };
+    return {
+      review: {
+        ...current,
+        notes: [...current.notes, note],
+        updatedAt: new Date().toISOString(),
+      },
+      note,
+    };
+  }
+
+  if (input.section && input.spanText?.trim()) {
+    const spanText = input.spanText.trim();
+    const start = typeof input.start === 'number' ? input.start : 0;
+    const end = typeof input.end === 'number' ? input.end : start + spanText.length;
+    const next = attachSpanNotes({
+      review: current,
+      span: { section: input.section, start, end, text: spanText },
+      author: input.author,
+      content: input.lane === 'content' ? { kind, text } : undefined,
+      action: input.lane === 'action' ? { kind, text } : undefined,
+    });
+    const note = next.notes[next.notes.length - 1];
+    return { review: { ...next, updatedAt: new Date().toISOString() }, note };
+  }
+
+  const note: SteerNote = {
+    id: newId('n'),
+    kind,
+    lane: input.lane,
+    author: input.author,
+    text,
+    createdAt: new Date().toISOString(),
+    replies: [],
+  };
+  return {
+    review: {
+      ...current,
+      notes: [...current.notes, note],
+      updatedAt: new Date().toISOString(),
+    },
+    note,
+  };
 }
 
 export function appendReplyToReviews(
@@ -189,5 +280,51 @@ export async function handleReviewsReplyRequest(
     return jsonResponse(200, { review: result.review });
   } catch (error) {
     return persistError(error) ?? jsonResponse(400, { error: 'invalid reply payload' });
+  }
+}
+
+export async function handleReviewsCommentRequest(
+  request: Request,
+  env: Record<string, string | undefined>,
+  persist: ReviewsPersist,
+): Promise<Response> {
+  if (!(await authorizeReviewsRequest(request, env))) {
+    return jsonResponse(401, { error: 'unauthorized' });
+  }
+  if (request.method !== 'POST') {
+    return jsonResponse(405, { error: 'method not allowed' });
+  }
+  try {
+    const body = (await request.json()) as Record<string, unknown>;
+    if (typeof body.caseId !== 'string' || typeof body.text !== 'string' || !body.text.trim()) {
+      return jsonResponse(400, { error: 'caseId and text are required' });
+    }
+    if (!LANES.includes(body.lane as ScoreLane)) {
+      return jsonResponse(400, { error: 'lane must be content or action' });
+    }
+    const existing = await persist.read();
+    const result = appendCommentToReviews(existing, {
+      caseId: body.caseId,
+      author: body.author === 'sam' ? 'sam' : 'oscar',
+      text: body.text,
+      lane: body.lane as ScoreLane,
+      kind: body.kind === 'question' ? 'question' : 'comment',
+      highlightId: typeof body.highlightId === 'string' ? body.highlightId : undefined,
+      section: SECTIONS.includes(body.section as SteerSection)
+        ? (body.section as SteerSection)
+        : undefined,
+      start: typeof body.start === 'number' ? body.start : undefined,
+      end: typeof body.end === 'number' ? body.end : undefined,
+      spanText: typeof body.spanText === 'string' ? body.spanText : undefined,
+    });
+    if (!result) {
+      const exists = knownCase(body.caseId, existing);
+      return jsonResponse(404, { error: exists ? 'highlight not found' : 'case not found' });
+    }
+    const reviews = mergeReviewsByUpdatedAt(existing, [result.review]);
+    await persist.write(reviews);
+    return jsonResponse(200, { review: result.review, note: result.note });
+  } catch (error) {
+    return persistError(error) ?? jsonResponse(400, { error: 'invalid comment payload' });
   }
 }

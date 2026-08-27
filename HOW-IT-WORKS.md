@@ -28,9 +28,39 @@ Rule of thumb: if you would Slack Oscar “please change this sentence,” leave
 
 ## What saves, and how Oscar gets a copy
 
-- Scores, labels, highlights, and threads persist in `localStorage` on this machine.
-- **Export JSON** is the backup and the hand-off. Import that file on another machine to restore labels.
+- Scores, labels, highlights, and threads persist in `localStorage` on this machine and sync to `/api/reviews` when Blob persist is configured.
+- **Export JSON** is still a backup. Import that file on another machine to restore labels.
 - Seed cases ship **unscored**. Empty scores stay empty until you mark them.
+
+## Oscar: post on the board (no Notion)
+
+Same Bearer password as the padlock. Do not PUT a full review unless you mean to replace it — that can overwrite Sam's scores. Use comment and reply instead.
+
+```bash
+# Read
+curl -sS -H "Authorization: Bearer $EVAL_DASHBOARD_PASSWORD" \
+  https://eval-dashboard-zeta.vercel.app/api/reviews
+
+# New comment (defaults author to oscar). Does not change Pass/Fail.
+curl -sS -X POST -H "Authorization: Bearer $EVAL_DASHBOARD_PASSWORD" \
+  -H 'content-type: application/json' \
+  -d '{"caseId":"sync-was-becoming-a-type-religion","lane":"action","text":"I will cut the type chapel."}' \
+  https://eval-dashboard-zeta.vercel.app/api/reviews/comment
+
+# Comment on a span (shows in the gutter)
+curl -sS -X POST -H "Authorization: Bearer $EVAL_DASHBOARD_PASSWORD" \
+  -H 'content-type: application/json' \
+  -d '{"caseId":"sync-was-becoming-a-type-religion","lane":"content","text":"This sentence is the cut.","section":"choice","spanText":"I posted the cut","start":3,"end":19}' \
+  https://eval-dashboard-zeta.vercel.app/api/reviews/comment
+
+# Reply in a thread (use noteId from GET)
+curl -sS -X POST -H "Authorization: Bearer $EVAL_DASHBOARD_PASSWORD" \
+  -H 'content-type: application/json' \
+  -d '{"caseId":"sync-was-becoming-a-type-religion","noteId":"n-…","author":"oscar","text":"Done."}' \
+  https://eval-dashboard-zeta.vercel.app/api/reviews/reply
+```
+
+`lane` is `content` or `action`. `kind` is `comment` (default) or `question`. Optional `highlightId` attaches to an existing highlight. The board pulls remote notes about every 15 seconds.
 
 ## What this board does not do
 

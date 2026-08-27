@@ -5,6 +5,7 @@ import react from '@vitejs/plugin-react';
 import { loginOutcome, parsePasswordFromBody } from './src/lib/evalAuth';
 import {
   gateEvalDashboardRequest,
+  handleReviewsCommentRequest,
   handleReviewsReplyRequest,
   handleReviewsRequest,
   isReviewsApiPath,
@@ -72,7 +73,9 @@ function applyEvalDashboardGate(server: ViteDevServer | PreviewServer) {
       const persist = createBlobReviewsPersist(process.env);
       const response = path.startsWith('/api/reviews/reply')
         ? await handleReviewsReplyRequest(request, process.env, persist)
-        : await handleReviewsRequest(request, process.env, persist);
+        : path.startsWith('/api/reviews/comment')
+          ? await handleReviewsCommentRequest(request, process.env, persist)
+          : await handleReviewsRequest(request, process.env, persist);
       await writeWebResponse(res, response);
       return;
     }
