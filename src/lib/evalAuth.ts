@@ -35,6 +35,33 @@ export function hasAuthCookie(cookieHeader: string | null | undefined): boolean 
   });
 }
 
+export function parsePasswordFromBody(contentType: string | null | undefined, raw: string): unknown {
+  const type = contentType ?? '';
+  if (type.includes('application/json')) {
+    try {
+      return (JSON.parse(raw) as { password?: unknown }).password;
+    } catch {
+      return undefined;
+    }
+  }
+  return new URLSearchParams(raw).get('password');
+}
+
+export async function loginOutcome(
+  password: unknown,
+  env: Record<string, string | undefined>,
+  options: { secure: boolean },
+): Promise<{ status: 302; location: string; cookie?: string }> {
+  if (await passwordMatches(password, env)) {
+    return {
+      status: 302,
+      location: '/',
+      cookie: sessionCookieHeader(options),
+    };
+  }
+  return { status: 302, location: '/login?error=1' };
+}
+
 export function sessionCookieHeader(options: { secure: boolean }): string {
   const parts = [
     `${AUTH_COOKIE_NAME}=${AUTH_COOKIE_VALUE}`,

@@ -5,6 +5,8 @@ import {
   EXPECTED_PASSWORD_SHA256,
   hasAuthCookie,
   isPublicPath,
+  loginOutcome,
+  parsePasswordFromBody,
   passwordMatches,
   sessionCookieHeader,
 } from './evalAuth';
@@ -56,5 +58,21 @@ describe('evalAuth', () => {
     expect(sessionCookieHeader({ secure: false })).not.toContain('Secure');
     expect(hasAuthCookie('eval_dashboard=1')).toBe(true);
     expect(hasAuthCookie('other=1')).toBe(false);
+  });
+
+  it('redirects a good login to / with a cookie and a bad login back to /login', async () => {
+    const denied = await loginOutcome('nope', {}, { secure: true });
+    expect(denied).toEqual({ status: 302, location: '/login?error=1' });
+
+    const allowed = await loginOutcome('gate', { EVAL_DASHBOARD_PASSWORD: 'gate' }, { secure: true });
+    expect(allowed.status).toBe(302);
+    expect(allowed.location).toBe('/');
+    expect(allowed.cookie).toContain('eval_dashboard=1');
+    expect(allowed.cookie).toContain('Secure');
+
+    expect(parsePasswordFromBody('application/json', '{"password":"x"}')).toBe('x');
+    expect(
+      parsePasswordFromBody('application/x-www-form-urlencoded', 'password=x'),
+    ).toBe('x');
   });
 });

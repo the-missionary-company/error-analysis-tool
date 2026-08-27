@@ -2,12 +2,7 @@ import { readFileSync } from 'node:fs';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { defineConfig, type PreviewServer, type ViteDevServer } from 'vite';
 import react from '@vitejs/plugin-react';
-import {
-  hasAuthCookie,
-  isPublicPath,
-  passwordMatches,
-  sessionCookieHeader,
-} from './src/lib/evalAuth';
+import { hasAuthCookie, isPublicPath, loginOutcome, parsePasswordFromBody } from './src/lib/evalAuth';
 
 function readBody(req: IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -32,23 +27,12 @@ function applyEvalDashboardGate(server: ViteDevServer | PreviewServer) {
 
     if (req.method === 'POST' && path === '/api/login') {
       const raw = await readBody(req);
-      let password: unknown;
-      try {
-        password = (JSON.parse(raw) as { password?: unknown }).password;
-      } catch {
-        password = undefined;
-      }
-      const ok = await passwordMatches(password, process.env);
-      if (!ok) {
-        res.statusCode = 401;
-        res.setHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify({ ok: false }));
-        return;
-      }
-      res.statusCode = 200;
-      res.setHeader('Content-Type', 'application/json');
-      res.setHeader('Set-Cookie', sessionCookieHeader({ secure: false }));
-      res.end(JSON.stringify({ ok: true }));
+      const password = parsePasswordFromBody(req.headers['content-type'], raw);
+      const result = await loginOutcome(password, process.env, { secure: false });
+      res.statusCode = result.status;
+      res.setHeader('Location', result.location);
+      if (result.cookie) res.setHeader('Set-Cookie', result.cookie);
+      res.end();
       return;
     }
 

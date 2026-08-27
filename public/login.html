@@ -63,7 +63,7 @@
     </style>
   </head>
   <body>
-    <form id="login-form">
+    <form method="post" action="/api/login">
       <h1>Eval dashboard</h1>
       <p>Shared password. This is a padlock, not a vault.</p>
       <p id="error" class="error" hidden>Wrong password.</p>
@@ -72,23 +72,9 @@
       <button type="submit">Open</button>
     </form>
     <script>
-      const params = new URLSearchParams(location.search);
-      const error = document.getElementById('error');
-      if (params.get('error')) error.hidden = false;
-      document.getElementById('login-form').addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const password = document.getElementById('password').value;
-        const response = await fetch('/api/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ password }),
-        });
-        if (response.ok || response.redirected) {
-          location.assign('/');
-          return;
-        }
-        error.hidden = false;
-      });
+      if (new URLSearchParams(location.search).get('error')) {
+        document.getElementById('error').hidden = false;
+      }
     </script>
   </body>
 </html>
