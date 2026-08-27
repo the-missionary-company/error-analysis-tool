@@ -37,7 +37,7 @@ function expectEmptyScores(caseId: string) {
 
 describe('seed cases', () => {
   it('includes the production-migration HOLD steer with no invented scores', () => {
-    expect(SEED_STEERS).toHaveLength(8);
+    expect(SEED_STEERS).toHaveLength(15);
     const seed = SEED_STEERS.find((item) => item.id === 'will-not-green-production-migration');
     expect(seed).toBeDefined();
     expect(seed!.id).toBe('will-not-green-production-migration');
@@ -49,12 +49,16 @@ describe('seed cases', () => {
     expect(seed.notionUrl).toBe(
       'https://app.notion.com/p/3c9efde7642b81ea8bcee31574c844f3',
     );
-    expect(seed.context).toContain('CH-807');
-    expect(seed.context).toContain('58 missing catalog objects');
-    expect(seed.problem).toContain('schema change in production');
-    expect(seed.options).toContain('HOLD (what Oscar did)');
-    expect(seed.choice).toContain('Does not type secrets');
-    expect(seed.choice).toContain('CH-810 SQL');
+    expect(seed!.number).toBe(3);
+    expect(seed!.timestamp).toBe('2026-08-27T02:47:44Z');
+    expect(seed!.tooAggressive).toBe('No');
+    expect(seed!.context).toContain('CH-807 is the job of making that same tray');
+    expect(seed!.context).toContain('58 catalog objects are missing');
+    expect(seed!.problem).toContain('schema change in production');
+    expect(seed!.problem).toContain('one-way door');
+    expect(seed!.options).toContain('HOLD (what I did)');
+    expect(seed!.choice).toContain('I do not type secrets');
+    expect(seed!.choice).toContain('20260826130000_capture_provider_free_canary_nonce_ledger.sql');
     expectEmptyScores(seed!.id);
   });
 
@@ -82,6 +86,36 @@ describe('seed cases', () => {
     expectEmptyScores(seed!.id);
   });
 
+  it('keeps steers 4-9 as full context bodies with empty Problem/Options/Choice', () => {
+    for (const id of [
+      'calendar-stays-planning',
+      'capture-ran-the-whole-test-house',
+      'i-over-kicked-hold-children-at-11-11',
+      'idle-keep-moving-vs-sitting-still',
+      'morning-remaining-work-ask-on-all-five',
+      'overnight-calendar-kick-may-have-invited-a-draft',
+    ]) {
+      const seed = SEED_STEERS.find((item) => item.id === id);
+      expect(seed?.problem).toBe('');
+      expect(seed?.options).toBe('');
+      expect(seed?.choice).toBe('');
+      expect(seed?.context.length).toBeGreaterThan(80);
+      expectEmptyScores(seed!.id);
+    }
+    expect(SEED_STEERS.find((item) => item.id === 'calendar-stays-planning')?.context).toContain(
+      'AF-CAL-01',
+    );
+    expect(SEED_STEERS.find((item) => item.id === 'capture-ran-the-whole-test-house')?.context).toContain(
+      '16-failure archaeology',
+    );
+    expect(SEED_STEERS.find((item) => item.id === 'i-over-kicked-hold-children-at-11-11')?.context).toContain(
+      'Score the 11:11 kick',
+    );
+    expect(
+      SEED_STEERS.find((item) => item.id === 'overnight-calendar-kick-may-have-invited-a-draft')?.context,
+    ).toContain('Do not wait for a plan Approve click from me');
+  });
+
   it('includes steer 10 parked-Capture body verbatim with empty scores', () => {
     const seed = SEED_STEERS.find((item) => item.id === 'parked-capture-after-child-finished');
     expect(seed).toBeDefined();
@@ -91,6 +125,8 @@ describe('seed cases', () => {
     expect(seed?.tooAggressive).toBe('Yes');
     expect(seed?.yourCall).toBe('Open');
     expect(seed?.when).toBe('2026-08-27');
+    expect(seed?.number).toBe(10);
+    expect(seed?.timestamp).toBe('2026-08-27T04:37:42Z');
     expect(seed?.notionUrl).toBe(
       'https://app.notion.com/p/3c9efde7642b8130a934e01f8669bac3',
     );
@@ -132,6 +168,8 @@ I am folding that into the living instruction. I am asking Capture that question
     expect(seed?.tooAggressive).toBe('Yes');
     expect(seed?.yourCall).toBe('Open');
     expect(seed?.when).toBe('2026-08-27');
+    expect(seed?.number).toBe(11);
+    expect(seed?.timestamp).toBe('2026-08-27T04:37:52Z');
     expect(seed?.notionUrl).toBe(
       'https://app.notion.com/p/3c9efde7642b8168bcc4e513f0c0a805',
     );
@@ -166,6 +204,8 @@ Score this on the eval board. Content is this page. Action is the blank check pl
     expect(seed?.tooAggressive).toBe('Yes');
     expect(seed?.yourCall).toBe('Open');
     expect(seed?.when).toBe('2026-08-27');
+    expect(seed?.number).toBe(12);
+    expect(seed?.timestamp).toBe('2026-08-27T05:12:14Z');
     expect(seed?.notionUrl).toBe(
       'https://app.notion.com/p/3c9efde7642b8105ac55ded3d1c095a0',
     );
@@ -201,6 +241,8 @@ I have to tell those apart. You will not label them for me. AWAITING after a chu
     expect(seed?.tooAggressive).toBe('Open');
     expect(seed?.yourCall).toBe('Open');
     expect(seed?.when).toBe('2026-08-27');
+    expect(seed?.number).toBe(13);
+    expect(seed?.timestamp).toBe('2026-08-27T05:57:00Z');
     expect(seed?.notionUrl).toBe(
       'https://app.notion.com/p/3c9efde7642b81b9a3c8f6385dd48589',
     );
@@ -234,6 +276,8 @@ Sam 27 Aug 2026, 14:53–14:56 Seoul.`,
     expect(seed?.tooAggressive).toBe('Open');
     expect(seed?.yourCall).toBe('Open');
     expect(seed?.when).toBe('2026-08-27');
+    expect(seed?.number).toBe(14);
+    expect(seed?.timestamp).toBe('2026-08-27T06:08:41Z');
     expect(seed?.notionUrl).toBe(
       'https://app.notion.com/p/3c9efde7642b815b911ee833e2d4a501',
     );
@@ -257,16 +301,60 @@ Sam 27 Aug 2026, 15:08 Seoul.`,
     expectEmptyScores(seed!.id);
   });
 
-  it('queues steers 10–14 together after the HOLD seed', () => {
+  it('includes steer 15 Vitest-sweep body verbatim with empty scores', () => {
+    const seed = SEED_STEERS.find(
+      (item) => item.id === 'the-vitest-sweep-is-the-agent-making-itself-feel-safe',
+    );
+    expect(seed).toBeDefined();
+    expect(seed?.title).toBe('15 The Vitest sweep is the agent making itself feel safe');
+    expect(seed?.session).toBe('Capture');
+    expect(seed?.stamp).toBe('CUT');
+    expect(seed?.tooAggressive).toBe('Open');
+    expect(seed?.yourCall).toBe('Open');
+    expect(seed?.when).toBe('2026-08-27');
+    expect(seed?.number).toBe(15);
+    expect(seed?.timestamp).toBe('2026-08-27T06:27:50Z');
+    expect(seed?.notionUrl).toBe(
+      'https://app.notion.com/p/3c9efde7642b81ba8422f3abf2db116d',
+    );
+    expect(seed?.contextLabel).toBe('Background');
+    expect(seed?.choiceLabel).toBe('Choice');
+    expect(seed?.context).toBe(
+      `Capture is still \`closed/6\`. Ken cannot review tonight until the fake canary walks and we turn the tray back on. HMAC is already on the attended host. The one dirty preflight was not a surprise: the nonce ledger and one alias receipt already exist at \`closed/6\`, because that SQL was already applied. Oscar told the session to name that one fact, treat it as applied, and run the fake Meeting walk.
+The session did classify the ledger correctly. Then it ran six Vitest files, 54 tests, all for the #1017 canary package. Then it said the next step was the exact #1017 merge-and-deploy path, and only after that the single walk.
+That is the agent's head. It does not think the job is "one fake Meeting." It thinks the job is "do not be the agent that ships a dirty canary." It just hit \`ch810_preflight_not_clean\`. The proof it knows how to generate is every test that belongs to this PR. Merge, then deploy, feels like the honest path after steer 11, when keep-moving got treated as apply auth. From inside the session, 54 tests is diligence. It cannot see Ken tonight. It can see a test file.`,
+    );
+    expect(seed?.problem).toBe(
+      `Diligence that does not move the fence is over-engineering. The remaining work that completes this project is the walk, the rollback, and reopen. The suite does not reopen anything. After the one dirty fact is classified, more unit tests are the agent making itself feel safe. Sam is waiting. He already said there will be bugs and those are later.`,
+    );
+    expect(seed?.options).toBe(
+      `A. Let it finish the suite, merge #1017 to green, deploy, then walk. Pro: its checklist is complete. Con: this is how the afternoon dies, and Ken sits in front of "Capture is offline." LOE: another pile of ceremony on a two-way door.
+B. CUT the sweep. Deploy only if the walk actually needs that PR on production. Walk. Rollback. Reopen. Pro: matches the remaining work. Con: a real failure might have lived in a file it never ran. LOE: the canary we already have.
+C. Ask Sam whether tests are required this time. Pro: he decides the diligence. Con: he already said get through this so Capture can come back on. LOE: his time.`,
+    );
+    expect(seed?.choice).toBe(
+      `B. The useful thought was "nonce ledger already applied." The 54 tests after that were not a canary. I cut them. Search-icon and the other UI bugs stay later.`,
+    );
+    expectEmptyScores(seed!.id);
+  });
+
+  it('queues steers 1–15 in Notion order', () => {
     expect(SEED_STEERS.map((item) => item.id)).toEqual([
       'sync-was-becoming-a-type-religion',
       'capture-counted-pigeons-on-vercel',
       'will-not-green-production-migration',
+      'calendar-stays-planning',
+      'capture-ran-the-whole-test-house',
+      'i-over-kicked-hold-children-at-11-11',
+      'idle-keep-moving-vs-sitting-still',
+      'morning-remaining-work-ask-on-all-five',
+      'overnight-calendar-kick-may-have-invited-a-draft',
       'parked-capture-after-child-finished',
       'tracer-keep-moving-as-apply-auth',
       'task-done-is-not-project-done',
       'held-the-undoable-dress-rehearsal',
       'do-the-hmac-and-the-cheap-smoke-yourself',
+      'the-vitest-sweep-is-the-agent-making-itself-feel-safe',
     ]);
   });
 
@@ -445,7 +533,7 @@ describe('exportSteerBoardJSON', () => {
     const json = exportSteerBoardJSON(SEED_STEERS, [
       { ...emptyReview('will-not-green-production-migration') },
     ]);
-    expect(parseSteerCases(json)).toHaveLength(8);
+    expect(parseSteerCases(json)).toHaveLength(15);
     expect(parseSteerReviews(json)).toHaveLength(1);
   });
 
@@ -471,7 +559,7 @@ describe('exportSteerBoardJSON', () => {
       },
     ]);
     const loaded = parseSteerPayload(json);
-    expect(loaded.cases).toHaveLength(8);
+    expect(loaded.cases).toHaveLength(15);
     expect(loaded.reviews).toHaveLength(1);
     expect(loaded.reviews[0].content.passFail).toBe('pass');
     expect(loaded.reviews[0].action.passFail).toBe('fail');
@@ -498,9 +586,9 @@ describe('mergeCases', () => {
       choice: 'ch',
     };
     const merged = mergeCases(SEED_STEERS, [imported, extra]);
-    expect(merged).toHaveLength(9);
+    expect(merged).toHaveLength(16);
     expect(merged[0].title).toBe('Updated title from Oscar');
-    expect(merged[8].id).toBe('new-case');
+    expect(merged[15].id).toBe('new-case');
   });
 });
 
