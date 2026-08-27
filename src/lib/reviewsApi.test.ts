@@ -464,6 +464,14 @@ describe('vercel.json', () => {
       readFileSync(new URL('../../vercel.json', import.meta.url), 'utf8'),
     ) as { rewrites: { source: string; destination: string }[] };
     expect(vercel.rewrites).toContainEqual({
+      source: '/api/reviews/comment',
+      destination: '/api/reviews-comment',
+    });
+    expect(vercel.rewrites).toContainEqual({
+      source: '/api/reviews/reply',
+      destination: '/api/reviews-reply',
+    });
+    expect(vercel.rewrites).toContainEqual({
       source: '/api/(.*)',
       destination: '/api/$1',
     });

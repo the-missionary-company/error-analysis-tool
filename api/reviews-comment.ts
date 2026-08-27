@@ -1,5 +1,5 @@
-import { handleReviewsCommentRequest } from '../../src/lib/reviewsApi';
-import { createBlobReviewsPersist } from '../../src/lib/reviewsBlob';
+import { handleReviewsCommentRequest } from '../src/lib/reviewsApi';
+import { createBlobReviewsPersist } from '../src/lib/reviewsBlob';
 
 export const config = { runtime: 'edge' };
 
