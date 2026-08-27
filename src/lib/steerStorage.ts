@@ -1,6 +1,7 @@
 import { SEED_STEERS } from '../data/steerSeed';
 import type { SteerCase, SteerReview } from '../types/steers';
 import { mergeCases, parseSteerReviews } from './steers';
+import type { Author } from '../types/steers';
 
 export interface KeyValueStore {
   getItem(key: string): string | null;
@@ -10,6 +11,7 @@ export interface KeyValueStore {
 const KEYS = {
   cases: 'ea.steers.cases',
   reviews: 'ea.steers.reviews',
+  author: 'ea.steers.author',
 } as const;
 
 function defaultStore(): KeyValueStore {
@@ -73,6 +75,14 @@ export function saveAllSteerReviews(
   store: KeyValueStore = defaultStore(),
 ) {
   writeJSON(store, KEYS.reviews, reviews);
+}
+
+export function loadAuthor(store: KeyValueStore = defaultStore()): Author {
+  return store.getItem(KEYS.author) === 'oscar' ? 'oscar' : 'sam';
+}
+
+export function saveAuthor(author: Author, store: KeyValueStore = defaultStore()) {
+  store.setItem(KEYS.author, author);
 }
 
 export function importSteerReviews(

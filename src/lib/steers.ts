@@ -1,13 +1,18 @@
 import type {
+  Author,
   LaneScore,
+  NoteKind,
   PassFail,
   ScoreLane,
   SteerBoardFile,
   SteerCase,
   SteerChipId,
   SteerHighlight,
+  SteerNote,
+  SteerRevision,
   SteerReview,
   SteerSection,
+  ThreadReply,
 } from '../types/steers';
 
 export const LANE_DEFS: Record<
@@ -29,6 +34,11 @@ export const LANE_DEFS: Record<
     hint: 'Its own Pass or Fail. Do not reuse the Content / understanding score.',
     placeholder: 'How Oscar should have acted as tech lead — or why this call stands.',
   },
+};
+
+export const AUTHOR_DEFS: Record<Author, { id: Author; label: string }> = {
+  sam: { id: 'sam', label: 'Sam' },
+  oscar: { id: 'oscar', label: 'Oscar' },
 };
 
 export const CHIP_DEFS: { id: SteerChipId; label: string }[] = [
@@ -65,6 +75,8 @@ export function emptyReview(caseId: string): SteerReview {
     action: emptyLaneScore(),
     highlights: [],
     chips: [],
+    notes: [],
+    revisions: [],
     updatedAt: '',
   };
 }
@@ -78,7 +90,9 @@ export function reviewIsEmpty(review: SteerReview): boolean {
     review.highlights.length === 0 &&
     review.chips.length === 0 &&
     review.content.labels.length === 0 &&
-    review.action.labels.length === 0
+    review.action.labels.length === 0 &&
+    review.notes.length === 0 &&
+    review.revisions.length === 0
   );
 }
 
@@ -243,6 +257,62 @@ function parseHighlight(value: unknown, index: number): SteerHighlight {
   };
 }
 
+function parseAuthor(value: unknown): Author {
+  return value === 'oscar' ? 'oscar' : 'sam';
+}
+
+function parseNoteKind(value: unknown): NoteKind {
+  return value === 'question' ? 'question' : 'comment';
+}
+
+function parseReply(value: unknown, index: number): ThreadReply {
+  const obj = asRecord(value) ?? {};
+  return {
+    id: typeof obj.id === 'string' && obj.id ? obj.id : `r-${index + 1}`,
+    author: parseAuthor(obj.author),
+    text: typeof obj.text === 'string' ? obj.text : '',
+    createdAt: typeof obj.createdAt === 'string' ? obj.createdAt : '',
+  };
+}
+
+function parseNote(value: unknown, index: number): SteerNote {
+  const obj = asRecord(value) ?? {};
+  const start = typeof obj.start === 'number' && Number.isFinite(obj.start) ? obj.start : undefined;
+  const end = typeof obj.end === 'number' && Number.isFinite(obj.end) ? obj.end : undefined;
+  const note: SteerNote = {
+    id: typeof obj.id === 'string' && obj.id ? obj.id : `n-${index + 1}`,
+    kind: parseNoteKind(obj.kind),
+    lane: parseLane(obj.lane),
+    author: parseAuthor(obj.author),
+    text: typeof obj.text === 'string' ? obj.text : '',
+    createdAt: typeof obj.createdAt === 'string' ? obj.createdAt : '',
+    replies: Array.isArray(obj.replies) ? obj.replies.map(parseReply) : [],
+  };
+  if (typeof obj.highlightId === 'string' && obj.highlightId) note.highlightId = obj.highlightId;
+  if (SECTIONS.includes(obj.section as SteerSection)) note.section = obj.section as SteerSection;
+  if (start !== undefined) note.start = start;
+  if (end !== undefined) note.end = end;
+  if (typeof obj.spanText === 'string') note.spanText = obj.spanText;
+  return note;
+}
+
+function parseRevision(value: unknown, index: number): SteerRevision {
+  const obj = asRecord(value) ?? {};
+  const oldText = typeof obj.oldText === 'string' ? obj.oldText : '';
+  const start = typeof obj.start === 'number' && Number.isFinite(obj.start) ? obj.start : 0;
+  const end = typeof obj.end === 'number' && Number.isFinite(obj.end) ? obj.end : start + oldText.length;
+  return {
+    id: typeof obj.id === 'string' && obj.id ? obj.id : `rev-${index + 1}`,
+    questionId: typeof obj.questionId === 'string' ? obj.questionId : '',
+    section: parseSection(obj.section),
+    oldText,
+    newText: typeof obj.newText === 'string' ? obj.newText : '',
+    start,
+    end,
+    createdAt: typeof obj.createdAt === 'string' ? obj.createdAt : '',
+  };
+}
+
 function parseReview(value: unknown): SteerReview {
   const obj = asRecord(value);
   if (!obj || typeof obj.caseId !== 'string' || !obj.caseId) {
@@ -252,12 +322,16 @@ function parseReview(value: unknown): SteerReview {
   const chips = Array.isArray(obj.chips)
     ? obj.chips.map(parseChip).filter((c): c is SteerChipId => c !== null)
     : [];
+  const notes = Array.isArray(obj.notes) ? obj.notes.map(parseNote) : [];
+  const revisions = Array.isArray(obj.revisions) ? obj.revisions.map(parseRevision) : [];
   return {
     caseId: obj.caseId,
     content: parseLaneScore(obj.content),
     action: parseLaneScore(obj.action),
     highlights,
     chips,
+    notes,
+    revisions,
     updatedAt: typeof obj.updatedAt === 'string' ? obj.updatedAt : '',
   };
 }
@@ -352,8 +426,155 @@ export function applyHighlightSegments(
   return segments;
 }
 
+export function newId(prefix: string): string {
+  return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+}
+
 export function newHighlightId(): string {
-  return `h-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+  return newId('h');
+}
+
+export function addThreadReply(note: SteerNote, author: Author, text: string): SteerNote {
+  const trimmed = text.trim();
+  if (!trimmed) return note;
+  return {
+    ...note,
+    replies: [
+      ...note.replies,
+      {
+        id: newId('r'),
+        author,
+        text: trimmed,
+        createdAt: new Date().toISOString(),
+      },
+    ],
+  };
+}
+
+export function createRevisionFromQuestion(
+  question: SteerNote,
+  newText: string,
+  original: string,
+): SteerRevision {
+  const replacement = newText.trim();
+  const oldText = question.spanText ?? '';
+  const offsets = findSpanOffsets(original, oldText, {
+    start: question.start ?? 0,
+    end: question.end ?? oldText.length,
+    text: oldText,
+  }) ?? { start: question.start ?? 0, end: question.end ?? oldText.length, text: oldText };
+  return {
+    id: newId('rev'),
+    questionId: question.id,
+    section: question.section ?? 'context',
+    oldText: offsets.text,
+    newText: replacement,
+    start: offsets.start,
+    end: offsets.end,
+    createdAt: new Date().toISOString(),
+  };
+}
+
+export type BodySegmentRole = 'plain' | 'highlight' | 'struck' | 'replacement';
+
+export interface BodySegment {
+  text: string;
+  role: BodySegmentRole;
+  highlight?: SteerHighlight;
+  revision?: SteerRevision;
+}
+
+export function applyBodySegments(
+  text: string,
+  highlights: SteerHighlight[],
+  revisions: SteerRevision[],
+): BodySegment[] {
+  const resolvedRevisions = revisions
+    .map((revision) => {
+      const offsets = findSpanOffsets(text, revision.oldText, {
+        start: revision.start,
+        end: revision.end,
+        text: revision.oldText,
+      });
+      return offsets
+        ? { ...revision, start: offsets.start, end: offsets.end, oldText: offsets.text }
+        : null;
+    })
+    .filter((revision): revision is SteerRevision => revision !== null)
+    .sort((a, b) => a.start - b.start || a.end - b.end);
+
+  const resolvedHighlights = highlights
+    .map((h) => {
+      const offsets = findSpanOffsets(text, h.text, { start: h.start, end: h.end, text: h.text });
+      return offsets ? { ...h, ...offsets } : null;
+    })
+    .filter((h): h is SteerHighlight => h !== null);
+
+  const segments: BodySegment[] = [];
+  let cursor = 0;
+  for (const revision of resolvedRevisions) {
+    const start = Math.max(0, Math.min(text.length, revision.start));
+    const end = Math.max(start, Math.min(text.length, revision.end));
+    if (start < cursor) continue;
+    if (start > cursor) {
+      segments.push(...sliceWithHighlights(text, cursor, start, resolvedHighlights));
+    }
+    const highlight = resolvedHighlights.find((h) => h.start < end && h.end > start);
+    segments.push({
+      text: text.slice(start, end),
+      role: 'struck',
+      highlight,
+      revision,
+    });
+    if (revision.newText) {
+      segments.push({
+        text: revision.newText,
+        role: 'replacement',
+        revision,
+      });
+    }
+    cursor = end;
+  }
+  if (cursor < text.length) {
+    segments.push(...sliceWithHighlights(text, cursor, text.length, resolvedHighlights));
+  }
+  if (segments.length === 0) segments.push({ text, role: 'plain' });
+  return segments;
+}
+
+function sliceWithHighlights(
+  text: string,
+  from: number,
+  to: number,
+  highlights: SteerHighlight[],
+): BodySegment[] {
+  const slice = text.slice(from, to);
+  const inner = highlights
+    .filter((h) => h.start < to && h.end > from)
+    .map((h) => ({
+      ...h,
+      start: Math.max(h.start, from) - from,
+      end: Math.min(h.end, to) - from,
+    }))
+    .filter((h) => h.end > h.start)
+    .sort((a, b) => a.start - b.start);
+  if (!inner.length) return [{ text: slice, role: 'plain' }];
+  const parts: BodySegment[] = [];
+  let cursor = 0;
+  for (const highlight of inner) {
+    if (highlight.start < cursor) continue;
+    if (highlight.start > cursor) {
+      parts.push({ text: slice.slice(cursor, highlight.start), role: 'plain' });
+    }
+    parts.push({
+      text: slice.slice(highlight.start, highlight.end),
+      role: 'highlight',
+      highlight,
+    });
+    cursor = highlight.end;
+  }
+  if (cursor < slice.length) parts.push({ text: slice.slice(cursor), role: 'plain' });
+  return parts;
 }
 
 export function parseSteerPayload(input: unknown): { cases: SteerCase[]; reviews: SteerReview[] } {

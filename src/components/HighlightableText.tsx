@@ -1,8 +1,7 @@
 import { useRef } from 'react';
-import { applyHighlightSegments, LANE_DEFS } from '../lib/steers';
+import { applyBodySegments, LANE_DEFS } from '../lib/steers';
 import { rangeOffsetsInRoot } from '../lib/selection';
-import { cn } from '../lib/utils';
-import type { ScoreLane, SteerHighlight, SteerSection } from '../types/steers';
+import type { SteerHighlight, SteerRevision, SteerSection } from '../types/steers';
 
 export interface PendingSpan {
   section: SteerSection;
@@ -17,30 +16,25 @@ interface Props {
   text: string;
   section: SteerSection;
   highlights: SteerHighlight[];
+  revisions: SteerRevision[];
   onSelect: (span: PendingSpan) => void;
   onHighlightClick: (highlight: SteerHighlight) => void;
-}
-
-function laneClass(lane: ScoreLane, passFail: SteerHighlight['passFail']) {
-  if (passFail === 'fail') {
-    return lane === 'action' ? 'bg-red-100 text-red-950 decoration-red-400' : 'bg-amber-100 text-amber-950 decoration-amber-400';
-  }
-  if (passFail === 'pass') {
-    return lane === 'action' ? 'bg-emerald-100 text-emerald-950 decoration-emerald-400' : 'bg-sky-100 text-sky-950 decoration-sky-400';
-  }
-  return 'bg-ink-100 text-ink-900 decoration-ink-300';
+  onRevisionClick: (revision: SteerRevision) => void;
 }
 
 export function HighlightableText({
   text,
   section,
   highlights,
+  revisions,
   onSelect,
   onHighlightClick,
+  onRevisionClick,
 }: Props) {
   const rootRef = useRef<HTMLDivElement>(null);
-  const scoped = highlights.filter((h) => h.section === section);
-  const segments = applyHighlightSegments(text, scoped);
+  const scopedHighlights = highlights.filter((h) => h.section === section);
+  const scopedRevisions = revisions.filter((r) => r.section === section);
+  const segments = applyBodySegments(text, scopedHighlights, scopedRevisions);
 
   return (
     <div
@@ -69,26 +63,55 @@ export function HighlightableText({
         });
       }}
     >
-      {segments.map((segment, i) =>
-        segment.highlight ? (
-          <mark
-            key={`${segment.highlight.id}-${i}`}
-            className={cn(
-              'cursor-pointer rounded-sm px-0.5 decoration-clone underline decoration-dotted underline-offset-2',
-              laneClass(segment.highlight.lane, segment.highlight.passFail),
-            )}
-            title={`${LANE_DEFS[segment.highlight.lane].title} ${segment.highlight.passFail ?? 'unscored'}`}
-            onClick={(event) => {
-              event.stopPropagation();
-              onHighlightClick(segment.highlight!);
-            }}
-          >
-            {segment.text}
-          </mark>
-        ) : (
-          <span key={`t-${i}`}>{segment.text}</span>
-        ),
-      )}
+      {segments.map((segment, i) => {
+        if (segment.role === 'struck') {
+          return (
+            <s
+              key={`s-${i}`}
+              className="mr-1 rounded-sm bg-fail-soft px-0.5 text-ink-500 decoration-ink-700"
+              title="Previous text — not deleted"
+              onClick={(event) => {
+                event.stopPropagation();
+                if (segment.revision) onRevisionClick(segment.revision);
+              }}
+            >
+              {segment.text}
+            </s>
+          );
+        }
+        if (segment.role === 'replacement') {
+          return (
+            <mark
+              key={`r-${i}`}
+              data-role="replacement"
+              className="cursor-pointer rounded-sm bg-emerald-100 px-0.5 text-emerald-950"
+              title="Revision — new text"
+              onClick={(event) => {
+                event.stopPropagation();
+                if (segment.revision) onRevisionClick(segment.revision);
+              }}
+            >
+              {segment.text}
+            </mark>
+          );
+        }
+        if (segment.highlight) {
+          return (
+            <mark
+              key={`${segment.highlight.id}-${i}`}
+              className="cursor-pointer rounded-sm bg-sky-100 px-0.5 text-sky-950 underline decoration-dotted underline-offset-2"
+              title={`${LANE_DEFS[segment.highlight.lane].title} ${segment.highlight.passFail ?? 'unscored'}`}
+              onClick={(event) => {
+                event.stopPropagation();
+                onHighlightClick(segment.highlight!);
+              }}
+            >
+              {segment.text}
+            </mark>
+          );
+        }
+        return <span key={`t-${i}`}>{segment.text}</span>;
+      })}
     </div>
   );
 }

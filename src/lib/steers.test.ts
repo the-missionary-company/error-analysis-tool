@@ -5,6 +5,9 @@ import {
   LANE_DEFS,
   applyHighlightSegments,
   addLaneLabel,
+  addThreadReply,
+  applyBodySegments,
+  createRevisionFromQuestion,
   emptyReview,
   exportSteerBoardJSON,
   findSpanOffsets,
@@ -42,6 +45,8 @@ describe('seed case', () => {
     expect(review.action).toEqual({ passFail: null, comment: '', labels: [] });
     expect(review.highlights).toEqual([]);
     expect(review.chips).toEqual([]);
+    expect(review.notes).toEqual([]);
+    expect(review.revisions).toEqual([]);
     expect(reviewIsEmpty(review)).toBe(true);
   });
 });
@@ -335,5 +340,153 @@ describe('optional chips', () => {
       'cathedral-ceremony',
     ]);
     expect(CHIP_DEFS.every((c) => c.label.length > 0)).toBe(true);
+  });
+});
+
+describe('comments vs question threads', () => {
+  it('treats a comment as a note that does not require a reply', () => {
+    const [review] = parseSteerReviews([
+      {
+        caseId: 'c1',
+        notes: [
+          {
+            id: 'n1',
+            kind: 'comment',
+            lane: 'content',
+            author: 'sam',
+            text: 'This sentence is clear.',
+          },
+        ],
+      },
+    ]);
+    expect(review.notes[0].kind).toBe('comment');
+    expect(review.notes[0].replies).toEqual([]);
+    expect(review.notes[0].author).toBe('sam');
+  });
+
+  it('persists a question thread with Oscar replies and keeps the highlight span', () => {
+    const [review] = parseSteerReviews([
+      {
+        caseId: 'c1',
+        notes: [
+          {
+            id: 'q1',
+            kind: 'question',
+            lane: 'content',
+            author: 'sam',
+            text: 'What does two-way mean here?',
+            highlightId: 'h1',
+            section: 'options',
+            start: 17,
+            end: 28,
+            spanText: 'PR unmerged',
+            replies: [{ author: 'oscar', text: 'Two-way means Capture work can still finish.' }],
+          },
+        ],
+      },
+    ]);
+    const question = review.notes[0];
+    expect(question.kind).toBe('question');
+    expect(question.highlightId).toBe('h1');
+    expect(question.spanText).toBe('PR unmerged');
+    expect(question.start).toBe(17);
+    expect(question.end).toBe(28);
+    expect(question.replies[0].author).toBe('oscar');
+    expect(question.replies[0].text).toContain('Two-way');
+
+    const withReply = addThreadReply(question, 'sam', 'Got it.');
+    expect(withReply.replies).toHaveLength(2);
+    expect(withReply.replies[1].author).toBe('sam');
+    expect(question.replies).toHaveLength(1);
+  });
+});
+
+describe('enrich revisions', () => {
+  it('records a visible revision without rewriting the original case text', () => {
+    const original = 'Leave check red, PR unmerged, child parked.';
+    const question = {
+      id: 'q1',
+      kind: 'question' as const,
+      lane: 'content' as const,
+      author: 'sam' as const,
+      text: 'What does two-way mean here?',
+      createdAt: '',
+      replies: [],
+      section: 'options' as const,
+      start: 17,
+      end: 28,
+      spanText: 'PR unmerged',
+    };
+    const revision = createRevisionFromQuestion(question, 'PR stays unmerged on purpose', original);
+    expect(revision.questionId).toBe('q1');
+    expect(revision.oldText).toBe('PR unmerged');
+    expect(revision.newText).toBe('PR stays unmerged on purpose');
+    expect(revision.start).toBe(17);
+    expect(revision.end).toBe(28);
+    expect(original).toBe('Leave check red, PR unmerged, child parked.');
+
+    const segments = applyBodySegments(original, [], [revision]);
+    const roles = segments.map((s) => s.role);
+    expect(roles).toContain('struck');
+    expect(roles).toContain('replacement');
+    expect(segments.find((s) => s.role === 'struck')?.text).toBe('PR unmerged');
+    expect(segments.find((s) => s.role === 'replacement')?.text).toBe('PR stays unmerged on purpose');
+    const originalReconstructed = segments
+      .filter((s) => s.role !== 'replacement')
+      .map((s) => s.text)
+      .join('');
+    expect(originalReconstructed).toBe(original);
+  });
+
+  it('round-trips notes and revisions through the board JSON', () => {
+    const review = {
+      ...emptyReview('c1'),
+      notes: [
+        {
+          id: 'q1',
+          kind: 'question' as const,
+          lane: 'content' as const,
+          author: 'sam' as const,
+          text: 'Clarify the one-way door.',
+          createdAt: '2026-08-27T12:00:00.000Z',
+          replies: [
+            {
+              id: 'r1',
+              author: 'oscar' as const,
+              text: 'Applying the migration is one-way.',
+              createdAt: '2026-08-27T12:05:00.000Z',
+            },
+          ],
+          highlightId: 'h1',
+          section: 'problem' as const,
+          start: 0,
+          end: 6,
+          spanText: 'Agents',
+        },
+      ],
+      revisions: [
+        {
+          id: 'rev1',
+          questionId: 'q1',
+          section: 'problem' as const,
+          oldText: 'Agents',
+          newText: 'Some agents',
+          start: 0,
+          end: 6,
+          createdAt: '2026-08-27T12:06:00.000Z',
+        },
+      ],
+    };
+    const parsed = JSON.parse(exportSteerBoardJSON(SEED_STEERS, [review]));
+    expect(parsed.reviews[0].notes[0].kind).toBe('question');
+    expect(parsed.reviews[0].notes[0].replies[0].author).toBe('oscar');
+    expect(parsed.reviews[0].revisions[0]).toMatchObject({
+      oldText: 'Agents',
+      newText: 'Some agents',
+      questionId: 'q1',
+    });
+    const restored = parseSteerReviews(parsed)[0];
+    expect(restored.notes[0].spanText).toBe('Agents');
+    expect(restored.revisions[0].newText).toBe('Some agents');
   });
 });

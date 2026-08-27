@@ -42,6 +42,8 @@ Do **not** collapse Content / understanding and Action / tech lead into one Pass
 
 Labels are per score. Type a new one or reuse one already used on that score. Content labels stay on Content; Action labels stay on Action.
 
+A **comment** is a note and does not require a reply. A **question** is a thread (Sam vs Oscar). When a question came from a highlight, it stays attached to that span. If Oscar updates the steer from a question, the old span is struck through and the replacement is highlighted. The JSON stores `{ oldText, newText, questionId, offsets }` — the original case text is not silently rewritten.
+
 Sam can Pass content and Fail action, or the reverse.
 
 Optional chips (not the score): jumped to options; taught the feature instead of the development story; too thin to decide; cathedral / extra ceremony.
@@ -94,6 +96,32 @@ Export writes:
           "lane": "action",
           "passFail": "fail",
           "comment": "..."
+        }
+      ],
+      "notes": [
+        {
+          "id": "q1",
+          "kind": "question",
+          "lane": "content",
+          "author": "sam",
+          "text": "What does two-way mean here?",
+          "replies": [{ "id": "r1", "author": "oscar", "text": "Capture work can still finish." }],
+          "highlightId": "h1",
+          "section": "options",
+          "start": 17,
+          "end": 28,
+          "spanText": "PR unmerged"
+        }
+      ],
+      "revisions": [
+        {
+          "id": "rev1",
+          "questionId": "q1",
+          "section": "options",
+          "oldText": "PR unmerged",
+          "newText": "PR stays unmerged on purpose",
+          "start": 17,
+          "end": 28
         }
       ],
       "chips": ["too-thin-to-decide"],

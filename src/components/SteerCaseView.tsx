@@ -1,5 +1,5 @@
 import { ExternalLink } from 'lucide-react';
-import type { SteerCase, SteerHighlight, SteerSection } from '../types/steers';
+import type { SteerCase, SteerHighlight, SteerRevision, SteerSection } from '../types/steers';
 import { HighlightableText, type PendingSpan } from './HighlightableText';
 
 const SECTIONS: { key: SteerSection; label: string }[] = [
@@ -12,13 +12,17 @@ const SECTIONS: { key: SteerSection; label: string }[] = [
 export function SteerCaseView({
   steer,
   highlights,
+  revisions,
   onSelect,
   onHighlightClick,
+  onRevisionClick,
 }: {
   steer: SteerCase;
   highlights: SteerHighlight[];
+  revisions: SteerRevision[];
   onSelect: (span: PendingSpan) => void;
   onHighlightClick: (highlight: SteerHighlight) => void;
+  onRevisionClick: (revision: SteerRevision) => void;
 }) {
   return (
     <article className="space-y-4">
@@ -53,8 +57,10 @@ export function SteerCaseView({
             text={steer[key]}
             section={key}
             highlights={highlights}
+            revisions={revisions}
             onSelect={onSelect}
             onHighlightClick={onHighlightClick}
+            onRevisionClick={onRevisionClick}
           />
         </section>
       ))}

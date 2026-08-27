@@ -117,6 +117,56 @@ describe('steerStorage', () => {
     expect(loaded.action.passFail).toBe('fail');
   });
 
+  it('persists a question thread and a visible revision', () => {
+    const store = memoryStore();
+    saveSteerReview(
+      {
+        ...emptyReview('c1'),
+        notes: [
+          {
+            id: 'q1',
+            kind: 'question',
+            lane: 'content',
+            author: 'sam',
+            text: 'What does two-way mean?',
+            createdAt: '2026-08-27T12:00:00.000Z',
+            replies: [
+              {
+                id: 'r1',
+                author: 'oscar',
+                text: 'Capture can still finish.',
+                createdAt: '2026-08-27T12:01:00.000Z',
+              },
+            ],
+            highlightId: 'h1',
+            section: 'options',
+            start: 17,
+            end: 28,
+            spanText: 'PR unmerged',
+          },
+        ],
+        revisions: [
+          {
+            id: 'rev1',
+            questionId: 'q1',
+            section: 'options',
+            oldText: 'PR unmerged',
+            newText: 'PR stays unmerged on purpose',
+            start: 17,
+            end: 28,
+            createdAt: '2026-08-27T12:02:00.000Z',
+          },
+        ],
+      },
+      store,
+    );
+    const loaded = loadSteerReviews(store).c1;
+    expect(loaded.notes[0].kind).toBe('question');
+    expect(loaded.notes[0].replies[0].author).toBe('oscar');
+    expect(loaded.revisions[0].oldText).toBe('PR unmerged');
+    expect(loaded.revisions[0].newText).toBe('PR stays unmerged on purpose');
+  });
+
   it('imports reviews to restore labels and merges imported cases', () => {
     const store = memoryStore();
     importSteerReviews(

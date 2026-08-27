@@ -39,12 +39,50 @@ export interface SteerCase {
   notionUrl?: string;
 }
 
+export type Author = 'sam' | 'oscar';
+export type NoteKind = 'comment' | 'question';
+
+export interface ThreadReply {
+  id: string;
+  author: Author;
+  text: string;
+  createdAt: string;
+}
+
+export interface SteerNote {
+  id: string;
+  kind: NoteKind;
+  lane: ScoreLane;
+  author: Author;
+  text: string;
+  createdAt: string;
+  replies: ThreadReply[];
+  highlightId?: string;
+  section?: SteerSection;
+  start?: number;
+  end?: number;
+  spanText?: string;
+}
+
+export interface SteerRevision {
+  id: string;
+  questionId: string;
+  section: SteerSection;
+  oldText: string;
+  newText: string;
+  start: number;
+  end: number;
+  createdAt: string;
+}
+
 export interface SteerReview {
   caseId: string;
   content: LaneScore;
   action: LaneScore;
   highlights: SteerHighlight[];
   chips: SteerChipId[];
+  notes: SteerNote[];
+  revisions: SteerRevision[];
   updatedAt: string;
 }
 
