@@ -2,7 +2,8 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
-  base: '/error-analysis-tool/',
+  // Vercel serves this at the domain root. Pages stays blocked.
+  base: '/',
   plugins: [react()],
   server: {
     host: '0.0.0.0',

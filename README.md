@@ -10,9 +10,7 @@ No Phoenix, no Braintrust, no LLM judge, no 1-to-5 stars.
 
 ## Live URL
 
-After GitHub Pages is enabled and this workflow has deployed:
-
-https://the-missionary-company.github.io/error-analysis-tool/
+This ships on **Vercel** at the project domain root. GitHub Pages stays blocked.
 
 ## Stack
 
@@ -26,7 +24,7 @@ npm test
 npm run dev
 ```
 
-The Vite `base` is `/error-analysis-tool/`, so the app is at `http://localhost:5173/error-analysis-tool/`.
+The Vite `base` is `/`, so the app is at `http://localhost:5173/`.
 
 ```bash
 npm run build
@@ -145,6 +143,4 @@ Keyboard shortcuts on Annotate: `1`/`p` Pass, `2`/`f` Fail, `⌘/Ctrl+S` save, `
 
 ## Deploy
 
-`.github/workflows/deploy.yml` runs `npm ci`, `npm run build`, and uploads **`dist`** to GitHub Pages (not the repo root).
-
-In the repo: **Settings → Pages → Source: GitHub Actions**.
+Ship on Vercel. Vite `base` is `/` so assets load at the domain root. GitHub Pages stays blocked. The Pages workflow may still exist; do not treat github.io as the live URL.
