@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { SEED_STEER_IDS } from '../data/seedCaseIds';
 import { SEED_STEERS } from '../data/steerSeed';
 import {
   CHIP_DEFS,
@@ -38,6 +39,7 @@ function expectEmptyScores(caseId: string) {
 describe('seed cases', () => {
   it('rewrites every steer as Background / Problem / Options / Choice with empty scores', () => {
     expect(SEED_STEERS).toHaveLength(27);
+    expect(SEED_STEERS.map((item) => item.id)).toEqual([...SEED_STEER_IDS]);
     for (const seed of SEED_STEERS) {
       expect(seed.contextLabel).toBe('Background');
       expect(seed.choiceLabel).toBe('Choice');
