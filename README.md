@@ -37,8 +37,10 @@ npm run preview
 
 Do **not** collapse Content / understanding and Action / tech lead into one Pass/Fail.
 
-1. **Content / understanding** — How Oscar sent the message. Did Sam understand the write-up, and did he understand what the agents are doing? Pass or Fail + its own comment. A question here means missing information.
-2. **Action / tech lead** — How Oscar acted as the tech lead. Pass or Fail + its own comment.
+1. **Content / understanding** — How Oscar sent the message. Did Sam understand the write-up, and did he understand what the agents are doing? Its own Pass or Fail, its own labels, its own comment. A question here means missing information.
+2. **Action / tech lead** — How Oscar acted as the tech lead. Its own Pass or Fail, its own labels, its own comment.
+
+Labels are per score. Type a new one or reuse one already used on that score. Content labels stay on Content; Action labels stay on Action.
 
 Sam can Pass content and Fail action, or the reverse.
 
@@ -80,8 +82,8 @@ Export writes:
   "reviews": [
     {
       "caseId": "will-not-green-production-migration",
-      "content": { "passFail": "pass", "comment": "..." },
-      "action": { "passFail": "fail", "comment": "..." },
+      "content": { "passFail": "pass", "comment": "...", "labels": ["too thin to decide"] },
+      "action": { "passFail": "fail", "comment": "...", "labels": ["one-way door"] },
       "highlights": [
         {
           "id": "h1",

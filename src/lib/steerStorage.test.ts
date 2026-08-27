@@ -75,6 +75,48 @@ describe('steerStorage', () => {
     expect(loaded.highlights[0].lane).toBe('action');
   });
 
+  it('persists Content labels separately from Action labels', () => {
+    const store = memoryStore();
+    saveSteerReview(
+      {
+        ...emptyReview(SEED_STEERS[0].id),
+        content: {
+          passFail: 'fail',
+          comment: 'Unclear.',
+          labels: ['agents mixed the reds'],
+        },
+        action: {
+          passFail: 'pass',
+          comment: 'HOLD stands.',
+          labels: ['one-way door'],
+        },
+      },
+      store,
+    );
+    const loaded = loadSteerReviews(store)[SEED_STEERS[0].id];
+    expect(loaded.content.labels).toEqual(['agents mixed the reds']);
+    expect(loaded.action.labels).toEqual(['one-way door']);
+    expect(loaded.content.labels).not.toEqual(loaded.action.labels);
+  });
+
+  it('normalizes older reviews that have no labels array', () => {
+    const store = memoryStore({
+      'ea.steers.reviews': JSON.stringify({
+        c1: {
+          caseId: 'c1',
+          content: { passFail: 'pass', comment: 'ok' },
+          action: { passFail: 'fail', comment: 'no' },
+          highlights: [],
+        },
+      }),
+    });
+    const loaded = loadSteerReviews(store).c1;
+    expect(loaded.content.labels).toEqual([]);
+    expect(loaded.action.labels).toEqual([]);
+    expect(loaded.content.passFail).toBe('pass');
+    expect(loaded.action.passFail).toBe('fail');
+  });
+
   it('imports reviews to restore labels and merges imported cases', () => {
     const store = memoryStore();
     importSteerReviews(

@@ -1,6 +1,6 @@
 import { SEED_STEERS } from '../data/steerSeed';
 import type { SteerCase, SteerReview } from '../types/steers';
-import { mergeCases } from './steers';
+import { mergeCases, parseSteerReviews } from './steers';
 
 export interface KeyValueStore {
   getItem(key: string): string | null;
@@ -44,8 +44,19 @@ export function saveImportedCases(incoming: SteerCase[], store: KeyValueStore = 
 export function loadSteerReviews(
   store: KeyValueStore = defaultStore(),
 ): Record<string, SteerReview> {
-  const all = readJSON<Record<string, SteerReview>>(store, KEYS.reviews, {});
-  return all && typeof all === 'object' ? all : {};
+  const all = readJSON<Record<string, unknown>>(store, KEYS.reviews, {});
+  if (!all || typeof all !== 'object') return {};
+  const next: Record<string, SteerReview> = {};
+  for (const [id, raw] of Object.entries(all)) {
+    try {
+      const record = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+      const [review] = parseSteerReviews([{ ...record, caseId: record.caseId ?? id }]);
+      next[id] = review;
+    } catch {
+      // skip a corrupt row rather than break the board
+    }
+  }
+  return next;
 }
 
 export function saveSteerReview(review: SteerReview, store: KeyValueStore = defaultStore()) {
@@ -70,7 +81,8 @@ export function importSteerReviews(
 ): Record<string, SteerReview> {
   const all = { ...loadSteerReviews(store) };
   for (const review of incoming) {
-    all[review.caseId] = review;
+    const [normalized] = parseSteerReviews([review]);
+    all[normalized.caseId] = normalized;
   }
   writeJSON(store, KEYS.reviews, all);
   return all;

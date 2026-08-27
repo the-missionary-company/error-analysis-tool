@@ -4,10 +4,12 @@ import {
   CHIP_DEFS,
   LANE_DEFS,
   applyHighlightSegments,
+  addLaneLabel,
   emptyReview,
   exportSteerBoardJSON,
   findSpanOffsets,
   mergeCases,
+  usedLabelsForLane,
   parseSteerCases,
   parseSteerPayload,
   parseSteerReviews,
@@ -36,8 +38,8 @@ describe('seed case', () => {
 
     const review = emptyReview(seed.id);
     expect(review.caseId).toBe(seed.id);
-    expect(review.content).toEqual({ passFail: null, comment: '' });
-    expect(review.action).toEqual({ passFail: null, comment: '' });
+    expect(review.content).toEqual({ passFail: null, comment: '', labels: [] });
+    expect(review.action).toEqual({ passFail: null, comment: '', labels: [] });
     expect(review.highlights).toEqual([]);
     expect(review.chips).toEqual([]);
     expect(reviewIsEmpty(review)).toBe(true);
@@ -109,6 +111,21 @@ describe('parseSteerReviews', () => {
     expect(reviews[0].content.comment).not.toBe(reviews[0].action.comment);
     expect(reviews[0].highlights[0].lane).toBe('action');
     expect(reviews[0].highlights[0].section).toBe('choice');
+    expect(reviews[0].content.labels).toEqual([]);
+    expect(reviews[0].action.labels).toEqual([]);
+  });
+
+  it('keeps typed labels on the score they belong to', () => {
+    const [review] = parseSteerReviews([
+      {
+        caseId: 'c1',
+        content: { passFail: 'fail', comment: 'Unclear agents.', labels: ['too thin to decide', 'agents mixed the reds'] },
+        action: { passFail: 'pass', comment: 'HOLD stands.', labels: ['one-way door'] },
+      },
+    ]);
+    expect(review.content.labels).toEqual(['too thin to decide', 'agents mixed the reds']);
+    expect(review.action.labels).toEqual(['one-way door']);
+    expect(review.content.labels).not.toEqual(review.action.labels);
   });
 
   it('does not collapse missing scores into pass or fail', () => {
@@ -136,8 +153,8 @@ describe('exportSteerBoardJSON', () => {
   it('writes an obvious schema Sam can hand to Oscar', () => {
     const review = {
       ...emptyReview('will-not-green-production-migration'),
-      content: { passFail: 'pass' as const, comment: 'Closed the gap.' },
-      action: { passFail: 'fail' as const, comment: 'Need a living instruction.' },
+      content: { passFail: 'pass' as const, comment: 'Closed the gap.', labels: ['closed the gap'] },
+      action: { passFail: 'fail' as const, comment: 'Need a living instruction.', labels: ['write the instruction'] },
       highlights: [
         {
           id: 'h1',
@@ -159,6 +176,8 @@ describe('exportSteerBoardJSON', () => {
     expect(parsed.reviews[0].caseId).toBe(review.caseId);
     expect(parsed.reviews[0].content.passFail).toBe('pass');
     expect(parsed.reviews[0].action.passFail).toBe('fail');
+    expect(parsed.reviews[0].content.labels).toEqual(['closed the gap']);
+    expect(parsed.reviews[0].action.labels).toEqual(['write the instruction']);
     expect(parsed.reviews[0].highlights[0].text).toBe('Agents');
     expect(parsed.exportedAt).toMatch(/^\d{4}-/);
   });
@@ -268,6 +287,41 @@ describe('lane labels', () => {
     expect(LANE_DEFS.action.question).toBe('How Oscar acted as the tech lead.');
     expect(LANE_DEFS.content.title).not.toBe(LANE_DEFS.action.title);
     expect(Object.keys(LANE_DEFS)).toEqual(['content', 'action']);
+  });
+});
+
+describe('per-score labels', () => {
+  it('adds a typed label to one score without leaking it to the other', () => {
+    const content = addLaneLabel([], '  agents mixed the reds  ');
+    const action = addLaneLabel([], 'one-way door');
+    expect(content).toEqual(['agents mixed the reds']);
+    expect(action).toEqual(['one-way door']);
+    expect(content).not.toContain('one-way door');
+    expect(action).not.toContain('agents mixed the reds');
+  });
+
+  it('reuses a label already used on that score and ignores blanks and duplicates', () => {
+    const once = addLaneLabel(['too thin to decide'], 'Too thin to decide');
+    expect(once).toEqual(['too thin to decide']);
+    expect(addLaneLabel(once, '   ')).toEqual(['too thin to decide']);
+  });
+
+  it('lists reuse options from prior cases on that score only', () => {
+    const reviews = [
+      {
+        ...emptyReview('a'),
+        content: { passFail: 'fail' as const, comment: '', labels: ['too thin to decide'] },
+        action: { passFail: 'pass' as const, comment: '', labels: ['HOLD stands'] },
+      },
+      {
+        ...emptyReview('b'),
+        content: { passFail: 'pass' as const, comment: '', labels: ['closed the gap'] },
+        action: { passFail: 'fail' as const, comment: '', labels: [] },
+      },
+    ];
+    expect(usedLabelsForLane(reviews, 'content')).toEqual(['closed the gap', 'too thin to decide']);
+    expect(usedLabelsForLane(reviews, 'action')).toEqual(['HOLD stands']);
+    expect(usedLabelsForLane(reviews, 'action')).not.toContain('too thin to decide');
   });
 });
 

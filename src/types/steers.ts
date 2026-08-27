@@ -11,6 +11,7 @@ export type SteerChipId =
 export interface LaneScore {
   passFail: PassFail;
   comment: string;
+  labels: string[];
 }
 
 export interface SteerHighlight {

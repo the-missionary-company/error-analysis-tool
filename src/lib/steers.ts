@@ -55,7 +55,7 @@ const LANES: ScoreLane[] = ['content', 'action'];
 const CHIP_IDS = new Set<string>(CHIP_DEFS.map((c) => c.id));
 
 export function emptyLaneScore(): LaneScore {
-  return { passFail: null, comment: '' };
+  return { passFail: null, comment: '', labels: [] };
 }
 
 export function emptyReview(caseId: string): SteerReview {
@@ -76,7 +76,9 @@ export function reviewIsEmpty(review: SteerReview): boolean {
     review.content.comment.trim() === '' &&
     review.action.comment.trim() === '' &&
     review.highlights.length === 0 &&
-    review.chips.length === 0
+    review.chips.length === 0 &&
+    review.content.labels.length === 0 &&
+    review.action.labels.length === 0
   );
 }
 
@@ -107,12 +109,47 @@ function parsePassFail(value: unknown): PassFail {
   return null;
 }
 
+function parseLabelList(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.reduce<string[]>((acc, item) => addLaneLabel(acc, typeof item === 'string' ? item : ''), []);
+}
+
 function parseLaneScore(value: unknown): LaneScore {
   const obj = asRecord(value) ?? {};
   return {
     passFail: parsePassFail(obj.passFail),
     comment: typeof obj.comment === 'string' ? obj.comment : '',
+    labels: parseLabelList(obj.labels),
   };
+}
+
+export function normalizeLabel(raw: string): string | null {
+  const text = raw.trim().replace(/\s+/g, ' ');
+  return text.length ? text : null;
+}
+
+export function addLaneLabel(labels: string[], raw: string): string[] {
+  const next = normalizeLabel(raw);
+  if (!next) return labels;
+  if (labels.some((label) => label.toLowerCase() === next.toLowerCase())) return labels;
+  return [...labels, next];
+}
+
+export function removeLaneLabel(labels: string[], raw: string): string[] {
+  const target = normalizeLabel(raw);
+  if (!target) return labels;
+  return labels.filter((label) => label.toLowerCase() !== target.toLowerCase());
+}
+
+export function usedLabelsForLane(reviews: SteerReview[], lane: ScoreLane): string[] {
+  const seen = new Map<string, string>();
+  for (const review of reviews) {
+    for (const label of review[lane]?.labels ?? []) {
+      const key = label.toLowerCase();
+      if (!seen.has(key)) seen.set(key, label);
+    }
+  }
+  return [...seen.values()].sort((a, b) => a.localeCompare(b));
 }
 
 function isSteerCaseShape(value: unknown): value is Record<string, unknown> {

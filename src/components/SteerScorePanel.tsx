@@ -1,19 +1,20 @@
-import { CHIP_DEFS, LANE_DEFS } from '../lib/steers';
+import { useState } from 'react';
+import { CHIP_DEFS, LANE_DEFS, addLaneLabel, removeLaneLabel } from '../lib/steers';
 import { cn, formatDate } from '../lib/utils';
-import type { LaneScore, PassFail, ScoreLane, SteerChipId, SteerHighlight, SteerReview } from '../types/steers';
+import type { LaneScore, PassFail, ScoreLane, SteerHighlight, SteerReview } from '../types/steers';
 
 const LANES: ScoreLane[] = ['content', 'action'];
 
 export function SteerScorePanel({
   review,
+  reuseByLane,
   onLaneChange,
-  onToggleChip,
   onRemoveHighlight,
   onFocusHighlight,
 }: {
   review: SteerReview;
+  reuseByLane: Record<ScoreLane, string[]>;
   onLaneChange: (lane: ScoreLane, next: LaneScore) => void;
-  onToggleChip: (chip: SteerChipId) => void;
   onRemoveHighlight: (id: string) => void;
   onFocusHighlight: (highlight: SteerHighlight) => void;
 }) {
@@ -24,38 +25,10 @@ export function SteerScorePanel({
           key={lane}
           lane={lane}
           score={review[lane]}
+          reuse={reuseByLane[lane]}
           onChange={(next) => onLaneChange(lane, next)}
         />
       ))}
-
-      <section className="card p-4">
-        <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-ink-400">
-          Optional chips
-        </div>
-        <p className="mb-3 text-xs leading-relaxed text-ink-500">
-          Named misses, not the score. Content / understanding and Action / tech lead stay independent.
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {CHIP_DEFS.map((chip) => {
-            const on = review.chips.includes(chip.id);
-            return (
-              <button
-                key={chip.id}
-                type="button"
-                onClick={() => onToggleChip(chip.id)}
-                className={cn(
-                  'rounded-full px-2.5 py-1 text-left text-xs ring-1 transition',
-                  on
-                    ? 'bg-ink-900 text-white ring-ink-900'
-                    : 'bg-white text-ink-600 ring-ink-200 hover:bg-ink-50',
-                )}
-              >
-                {chip.label}
-              </button>
-            );
-          })}
-        </div>
-      </section>
 
       {review.highlights.length > 0 && (
         <section className="card p-4">
@@ -102,10 +75,12 @@ export function SteerScorePanel({
 function LaneCard({
   lane,
   score,
+  reuse,
   onChange,
 }: {
   lane: ScoreLane;
   score: LaneScore;
+  reuse: string[];
   onChange: (next: LaneScore) => void;
 }) {
   const def = LANE_DEFS[lane];
@@ -136,6 +111,12 @@ function LaneCard({
           }
         />
       </div>
+      <LaneLabelEditor
+        lane={lane}
+        labels={score.labels}
+        reuse={reuse}
+        onChange={(labels) => onChange({ ...score, labels })}
+      />
       <label className="mt-3 block text-xs font-medium text-ink-500" htmlFor={`${lane}-comment`}>
         {def.title} comment
       </label>
@@ -147,6 +128,106 @@ function LaneCard({
         className="mt-1 min-h-[110px] w-full resize-y rounded-lg border border-ink-200 bg-ink-50/50 px-3 py-2.5 text-sm leading-relaxed text-ink-900 placeholder:text-ink-400 focus:border-accent focus:bg-white focus:outline-none focus:ring-2 focus:ring-accent/20"
       />
     </section>
+  );
+}
+
+function LaneLabelEditor({
+  lane,
+  labels,
+  reuse,
+  onChange,
+}: {
+  lane: ScoreLane;
+  labels: string[];
+  reuse: string[];
+  onChange: (labels: string[]) => void;
+}) {
+  const [draft, setDraft] = useState('');
+  const applied = new Set(labels.map((l) => l.toLowerCase()));
+  const reuseOptions = reuse.filter((l) => !applied.has(l.toLowerCase()));
+  const starters = CHIP_DEFS.map((c) => c.label).filter((l) => !applied.has(l.toLowerCase()));
+
+  const add = (raw: string) => {
+    onChange(addLaneLabel(labels, raw));
+    setDraft('');
+  };
+
+  return (
+    <div className="mt-3">
+      <div className="text-xs font-medium text-ink-500">{LANE_DEFS[lane].title} labels</div>
+      <p className="mt-0.5 text-[11px] leading-relaxed text-ink-400">
+        This score only. Type a new one or reuse one already used on {LANE_DEFS[lane].title}.
+      </p>
+      {labels.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {labels.map((label) => (
+            <button
+              key={label}
+              type="button"
+              className="inline-flex items-center gap-1 rounded-full bg-ink-900 px-2.5 py-1 text-left text-xs text-white"
+              onClick={() => onChange(removeLaneLabel(labels, label))}
+              title="Remove from this score"
+            >
+              {label}
+              <span aria-hidden="true" className="text-white/70">
+                ×
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+      <form
+        className="mt-2 flex gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          add(draft);
+        }}
+      >
+        <input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          placeholder="Type a label for this score"
+          className="min-w-0 flex-1 rounded-lg border border-ink-200 px-2.5 py-1.5 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+        />
+        <button type="submit" className="btn-secondary h-9 px-3 text-xs">
+          Add
+        </button>
+      </form>
+      {reuseOptions.length > 0 && (
+        <div className="mt-2">
+          <p className="text-[11px] font-medium text-ink-400">Reuse on this score</p>
+          <div className="mt-1 flex flex-wrap gap-1.5">
+            {reuseOptions.map((label) => (
+              <button
+                key={label}
+                type="button"
+                className="rounded-full bg-white px-2.5 py-1 text-left text-xs text-ink-700 ring-1 ring-ink-200 hover:bg-ink-50"
+                onClick={() => add(label)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      {starters.length > 0 && (
+        <div className="mt-2">
+          <p className="text-[11px] font-medium text-ink-400">Named misses (optional)</p>
+          <div className="mt-1 flex flex-wrap gap-1.5">
+            {starters.map((label) => (
+              <button
+                key={label}
+                type="button"
+                className="rounded-full bg-white px-2.5 py-1 text-left text-xs text-ink-600 ring-1 ring-ink-200 hover:bg-ink-50"
+                onClick={() => add(label)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 

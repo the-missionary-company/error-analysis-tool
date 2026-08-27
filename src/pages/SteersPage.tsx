@@ -7,9 +7,9 @@ import type { PendingSpan } from '../components/HighlightableText';
 import { useSteers } from '../hooks/useSteers';
 import { useToast } from '../hooks/useToast';
 import { downloadText } from '../lib/storage';
-import { newHighlightId, parseSteerPayload, parseSteerReviews, reviewIsEmpty } from '../lib/steers';
+import { newHighlightId, parseSteerPayload, parseSteerReviews, reviewIsEmpty, usedLabelsForLane } from '../lib/steers';
 import { cn } from '../lib/utils';
-import type { LaneScore, ScoreLane, SteerChipId, SteerHighlight } from '../types/steers';
+import type { LaneScore, ScoreLane, SteerHighlight } from '../types/steers';
 
 export function SteersPage() {
   const {
@@ -51,13 +51,6 @@ export function SteersPage() {
 
   const onLaneChange = (lane: ScoreLane, score: LaneScore) => {
     updateReview({ ...activeReview, [lane]: score });
-  };
-
-  const onToggleChip = (chip: SteerChipId) => {
-    const chips = activeReview.chips.includes(chip)
-      ? activeReview.chips.filter((c) => c !== chip)
-      : [...activeReview.chips, chip];
-    updateReview({ ...activeReview, chips });
   };
 
   const onRemoveHighlight = (id: string) => {
@@ -105,7 +98,8 @@ export function SteersPage() {
           Oscar sent the message: did Sam understand the write-up, and did he understand what
           the agents are doing? <strong>Action / tech lead</strong> is how Oscar acted as the
           tech lead. Pass one and Fail the other if that is what happened. Do not share one
-          Pass/Fail across both. Labels persist in this browser and in the JSON you export.
+          Pass/Fail across both. Each score has its own labels so cases can be differentiated.
+          Labels persist in this browser and in the JSON you export.
         </p>
       </section>
 
@@ -218,8 +212,9 @@ export function SteersPage() {
 
       <div className="rounded-xl border border-sky-200 bg-sky-50 px-3.5 py-2.5 text-sm text-sky-950">
         Highlight a span, then mark <strong>Content / understanding</strong> or{' '}
-        <strong>Action / tech lead</strong> — or score the whole case on the right. A question
-        on Content / understanding means missing information. Each lane has its own Pass or Fail.
+        <strong>Action / tech lead</strong> — or score the whole case on the right. Each score
+        has its own Pass or Fail, its own labels, and its own comment. A question on Content /
+        understanding means missing information.
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
@@ -231,8 +226,11 @@ export function SteersPage() {
         />
         <SteerScorePanel
           review={activeReview}
+          reuseByLane={{
+            content: usedLabelsForLane(Object.values(reviews), 'content'),
+            action: usedLabelsForLane(Object.values(reviews), 'action'),
+          }}
           onLaneChange={onLaneChange}
-          onToggleChip={onToggleChip}
           onRemoveHighlight={onRemoveHighlight}
           onFocusHighlight={() => setPending(null)}
         />
