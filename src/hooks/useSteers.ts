@@ -1,11 +1,14 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { SEED_STEERS } from '../data/steerSeed';
+import { fetchRemoteReviews, putRemoteReviews } from '../lib/reviewsClient';
+import { mergeReviewsByUpdatedAt } from '../lib/reviewsApi';
 import {
   importSteerReviews,
   loadActiveId,
   loadSteerCases,
   loadSteerReviews,
   saveActiveId,
+  saveAllSteerReviews,
   saveImportedCases,
   saveSteerReview,
 } from '../lib/steerStorage';
@@ -36,9 +39,28 @@ export function useSteers() {
     return reviews[activeCase.id] ?? emptyReview(activeCase.id);
   }, [activeCase, reviews]);
 
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const remote = await fetchRemoteReviews();
+      if (cancelled || !remote) return;
+      const local = loadSteerReviews();
+      const merged = mergeReviewsByUpdatedAt(Object.values(local), remote);
+      saveAllSteerReviews(Object.fromEntries(merged.map((item) => [item.caseId, item])));
+      if (!cancelled) setReviews(loadSteerReviews());
+      void putRemoteReviews(merged);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const persistReview = useCallback((next: SteerReview) => {
     saveSteerReview(next);
-    setReviews(loadSteerReviews());
+    const saved = loadSteerReviews();
+    setReviews(saved);
+    const review = saved[next.caseId];
+    if (review) void putRemoteReviews(review);
   }, []);
 
   const importCases = useCallback((incoming: SteerCase[]) => {
@@ -52,6 +74,7 @@ export function useSteers() {
     importSteerReviews(incoming);
     const next = loadSteerReviews();
     setReviews(next);
+    void putRemoteReviews(Object.values(next));
     return next;
   }, []);
 

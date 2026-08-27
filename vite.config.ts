@@ -2,7 +2,14 @@ import { readFileSync } from 'node:fs';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { defineConfig, type PreviewServer, type ViteDevServer } from 'vite';
 import react from '@vitejs/plugin-react';
-import { hasAuthCookie, isPublicPath, loginOutcome, parsePasswordFromBody } from './src/lib/evalAuth';
+import { loginOutcome, parsePasswordFromBody } from './src/lib/evalAuth';
+import {
+  gateEvalDashboardRequest,
+  handleReviewsReplyRequest,
+  handleReviewsRequest,
+  isReviewsApiPath,
+} from './src/lib/reviewsApi';
+import { createBlobReviewsPersist } from './src/lib/reviewsBlob';
 
 function readBody(req: IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -11,6 +18,29 @@ function readBody(req: IncomingMessage): Promise<string> {
     req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
     req.on('error', reject);
   });
+}
+
+function incomingToRequest(req: IncomingMessage, url: string, raw?: string): Request {
+  const headers = new Headers();
+  for (const [key, value] of Object.entries(req.headers)) {
+    if (typeof value === 'string') headers.set(key, value);
+    else if (Array.isArray(value)) headers.set(key, value.join(', '));
+  }
+  const method = req.method ?? 'GET';
+  return new Request(new URL(url, 'http://localhost'), {
+    method,
+    headers,
+    body: method === 'GET' || method === 'HEAD' ? undefined : raw,
+  });
+}
+
+async function writeWebResponse(res: ServerResponse, response: Response) {
+  res.statusCode = response.status;
+  response.headers.forEach((value, key) => {
+    if (key.toLowerCase() === 'content-encoding') return;
+    res.setHeader(key, value);
+  });
+  res.end(Buffer.from(await response.arrayBuffer()));
 }
 
 function applyEvalDashboardGate(server: ViteDevServer | PreviewServer) {
@@ -36,14 +66,24 @@ function applyEvalDashboardGate(server: ViteDevServer | PreviewServer) {
       return;
     }
 
-    if (isPublicPath(path) || hasAuthCookie(req.headers.cookie)) {
-      next();
+    if (isReviewsApiPath(path)) {
+      const raw = req.method === 'GET' || req.method === 'HEAD' ? undefined : await readBody(req);
+      const request = incomingToRequest(req, url, raw);
+      const persist = createBlobReviewsPersist(process.env);
+      const response = path.startsWith('/api/reviews/reply')
+        ? await handleReviewsReplyRequest(request, process.env, persist)
+        : await handleReviewsRequest(request, process.env, persist);
+      await writeWebResponse(res, response);
       return;
     }
 
-    res.statusCode = 302;
-    res.setHeader('Location', '/login');
-    res.end();
+    const gate = await gateEvalDashboardRequest(incomingToRequest(req, url), process.env);
+    if (gate) {
+      await writeWebResponse(res, gate);
+      return;
+    }
+
+    next();
   });
 }
 

@@ -1,12 +1,11 @@
-import { hasAuthCookie, isPublicPath } from './src/lib/evalAuth';
+import { gateEvalDashboardRequest } from './src/lib/reviewsApi';
 
 export const config = {
   matcher: ['/((?!_vercel).*)'],
 };
 
-export default function middleware(request: Request): Response | undefined {
-  const { pathname } = new URL(request.url);
-  if (isPublicPath(pathname)) return undefined;
-  if (hasAuthCookie(request.headers.get('cookie'))) return undefined;
-  return Response.redirect(new URL('/login', request.url), 302);
+export default async function middleware(request: Request): Promise<Response | undefined> {
+  return gateEvalDashboardRequest(request, {
+    EVAL_DASHBOARD_PASSWORD: process.env.EVAL_DASHBOARD_PASSWORD,
+  });
 }

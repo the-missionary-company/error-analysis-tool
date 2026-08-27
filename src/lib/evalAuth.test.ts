@@ -45,6 +45,7 @@ describe('evalAuth', () => {
     expect(isPublicPath('/')).toBe(false);
     expect(isPublicPath('/assets/index.js')).toBe(false);
     expect(isPublicPath('/datasets')).toBe(false);
+    expect(isPublicPath('/api/reviews')).toBe(false);
   });
 
   it('sets an httpOnly SameSite=Lax session cookie', () => {
