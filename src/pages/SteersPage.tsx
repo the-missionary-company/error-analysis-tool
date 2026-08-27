@@ -101,9 +101,11 @@ export function SteersPage() {
           Oscar Vorflux steers
         </h1>
         <p className="mt-2 text-[15px] leading-relaxed text-ink-600">
-          Same case, two independent scores. Content is whether the write-up closed the
-          understanding gap. Action is whether Oscar did the right thing. Do not collapse
-          them into one Pass/Fail. Labels persist in this browser and in the JSON you export.
+          Same case, two independent scores. <strong>Content / understanding</strong> is how
+          Oscar sent the message: did Sam understand the write-up, and did he understand what
+          the agents are doing? <strong>Action / tech lead</strong> is how Oscar acted as the
+          tech lead. Pass one and Fail the other if that is what happened. Do not share one
+          Pass/Fail across both. Labels persist in this browser and in the JSON you export.
         </p>
       </section>
 
@@ -215,9 +217,9 @@ export function SteersPage() {
       )}
 
       <div className="rounded-xl border border-sky-200 bg-sky-50 px-3.5 py-2.5 text-sm text-sky-950">
-        Highlight a span in the steer, then mark <strong>Content</strong> or{' '}
-        <strong>Action</strong> — or score the whole case on the right. A Content Fail is a
-        question for the next write-up. An Action Fail is a living instruction.
+        Highlight a span, then mark <strong>Content / understanding</strong> or{' '}
+        <strong>Action / tech lead</strong> — or score the whole case on the right. A question
+        on Content / understanding means missing information. Each lane has its own Pass or Fail.
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">

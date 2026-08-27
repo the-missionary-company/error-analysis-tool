@@ -1,26 +1,8 @@
-import { CHIP_DEFS } from '../lib/steers';
+import { CHIP_DEFS, LANE_DEFS } from '../lib/steers';
 import { cn, formatDate } from '../lib/utils';
 import type { LaneScore, PassFail, ScoreLane, SteerChipId, SteerHighlight, SteerReview } from '../types/steers';
 
-const LANES: {
-  key: ScoreLane;
-  title: string;
-  question: string;
-  hint: string;
-}[] = [
-  {
-    key: 'content',
-    title: 'Content',
-    question: 'Did the write-up close the understanding gap (context, problem, options, choice)?',
-    hint: 'A question here means missing information for the next write-up.',
-  },
-  {
-    key: 'action',
-    title: 'Action',
-    question: 'Did Oscar as tech lead / portfolio orchestrator do the right thing?',
-    hint: 'A fix here is behavior / living instruction.',
-  },
-];
+const LANES: ScoreLane[] = ['content', 'action'];
 
 export function SteerScorePanel({
   review,
@@ -39,12 +21,10 @@ export function SteerScorePanel({
     <aside className="space-y-4 lg:sticky lg:top-[4.5rem]">
       {LANES.map((lane) => (
         <LaneCard
-          key={lane.key}
-          title={lane.title}
-          question={lane.question}
-          hint={lane.hint}
-          score={review[lane.key]}
-          onChange={(next) => onLaneChange(lane.key, next)}
+          key={lane}
+          lane={lane}
+          score={review[lane]}
+          onChange={(next) => onLaneChange(lane, next)}
         />
       ))}
 
@@ -53,7 +33,7 @@ export function SteerScorePanel({
           Optional chips
         </div>
         <p className="mb-3 text-xs leading-relaxed text-ink-500">
-          Named misses, not the score. Content and Action stay independent.
+          Named misses, not the score. Content / understanding and Action / tech lead stay independent.
         </p>
         <div className="flex flex-wrap gap-2">
           {CHIP_DEFS.map((chip) => {
@@ -90,8 +70,8 @@ export function SteerScorePanel({
                   className="w-full text-left"
                   onClick={() => onFocusHighlight(h)}
                 >
-                  <p className="text-[11px] font-medium uppercase tracking-wide text-ink-400">
-                    {h.lane} · {h.section}
+                  <p className="text-[11px] font-medium text-ink-400">
+                    {LANE_DEFS[h.lane].title} · {h.section}
                     {h.passFail ? ` · ${h.passFail}` : ''}
                   </p>
                   <p className="mt-1 text-sm italic text-ink-800">“{h.text}”</p>
@@ -120,23 +100,20 @@ export function SteerScorePanel({
 }
 
 function LaneCard({
-  title,
-  question,
-  hint,
+  lane,
   score,
   onChange,
 }: {
-  title: string;
-  question: string;
-  hint: string;
+  lane: ScoreLane;
   score: LaneScore;
   onChange: (next: LaneScore) => void;
 }) {
+  const def = LANE_DEFS[lane];
   return (
     <section className="card p-4">
-      <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-ink-400">{title}</div>
-      <p className="text-sm font-medium leading-snug text-ink-900">{question}</p>
-      <p className="mt-1 text-xs leading-relaxed text-ink-500">{hint}</p>
+      <div className="text-sm font-semibold text-ink-950">{def.title}</div>
+      <p className="mt-1 text-sm font-medium leading-snug text-ink-800">{def.question}</p>
+      <p className="mt-1 text-xs leading-relaxed text-ink-500">{def.hint}</p>
       <div className="mt-3 grid grid-cols-2 gap-2">
         <PassFailButton
           value="pass"
@@ -159,18 +136,14 @@ function LaneCard({
           }
         />
       </div>
-      <label className="mt-3 block text-xs font-medium text-ink-500" htmlFor={`${title}-comment`}>
-        {title} comment
+      <label className="mt-3 block text-xs font-medium text-ink-500" htmlFor={`${lane}-comment`}>
+        {def.title} comment
       </label>
       <textarea
-        id={`${title}-comment`}
+        id={`${lane}-comment`}
         value={score.comment}
         onChange={(e) => onChange({ ...score, comment: e.target.value })}
-        placeholder={
-          title === 'Content'
-            ? 'What understanding is still missing — or what closed the gap.'
-            : 'What Oscar should do differently — or why this call stands.'
-        }
+        placeholder={def.placeholder}
         className="mt-1 min-h-[110px] w-full resize-y rounded-lg border border-ink-200 bg-ink-50/50 px-3 py-2.5 text-sm leading-relaxed text-ink-900 placeholder:text-ink-400 focus:border-accent focus:bg-white focus:outline-none focus:ring-2 focus:ring-accent/20"
       />
     </section>

@@ -10,6 +10,27 @@ import type {
   SteerSection,
 } from '../types/steers';
 
+export const LANE_DEFS: Record<
+  ScoreLane,
+  { id: ScoreLane; title: string; question: string; hint: string; placeholder: string }
+> = {
+  content: {
+    id: 'content',
+    title: 'Content / understanding',
+    question:
+      'How Oscar sent the message. Did Sam understand the write-up, and did he understand what the agents are doing?',
+    hint: 'A question here means missing information.',
+    placeholder: 'What Sam did not understand in the write-up — or about what the agents are doing.',
+  },
+  action: {
+    id: 'action',
+    title: 'Action / tech lead',
+    question: 'How Oscar acted as the tech lead.',
+    hint: 'Its own Pass or Fail. Do not reuse the Content / understanding score.',
+    placeholder: 'How Oscar should have acted as tech lead — or why this call stands.',
+  },
+};
+
 export const CHIP_DEFS: { id: SteerChipId; label: string }[] = [
   { id: 'jumped-to-options', label: 'jumped to options (no background)' },
   { id: 'taught-the-feature', label: 'taught the feature instead of the development story' },

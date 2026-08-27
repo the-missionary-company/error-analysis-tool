@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { SEED_STEERS } from '../data/steerSeed';
 import {
   CHIP_DEFS,
+  LANE_DEFS,
   applyHighlightSegments,
   emptyReview,
   exportSteerBoardJSON,
@@ -252,6 +253,21 @@ describe('highlight spans', () => {
     const offsets = findSpanOffsets(text, 'Leave check red', { start: 99, end: 104, text: 'Leave check red' });
     expect(offsets?.start).toBe(8);
     expect(text.slice(offsets!.start, offsets!.end)).toBe('Leave check red');
+  });
+});
+
+describe('lane labels', () => {
+  it('names the two scores the way Sam stated them, and keeps them independent', () => {
+    expect(LANE_DEFS.content.title).toBe('Content / understanding');
+    expect(LANE_DEFS.content.question).toContain('How Oscar sent the message');
+    expect(LANE_DEFS.content.question).toContain('Did Sam understand the write-up');
+    expect(LANE_DEFS.content.question).toContain('what the agents are doing');
+    expect(LANE_DEFS.content.hint).toContain('missing information');
+
+    expect(LANE_DEFS.action.title).toBe('Action / tech lead');
+    expect(LANE_DEFS.action.question).toBe('How Oscar acted as the tech lead.');
+    expect(LANE_DEFS.content.title).not.toBe(LANE_DEFS.action.title);
+    expect(Object.keys(LANE_DEFS)).toEqual(['content', 'action']);
   });
 });
 

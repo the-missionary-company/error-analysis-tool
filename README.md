@@ -2,7 +2,7 @@
 
 A production-quality annotation app for Liam's construction-PM products.
 
-**Steers** (default board) — Sam scores Oscar Vorflux write-ups. Same case, two independent scores: **Content** (did the write-up close the understanding gap?) and **Action** (did Oscar do the right thing?). Highlights stay attached to spans. Labels persist in `localStorage` and in a downloadable JSON file.
+**Steers** (default board) — Sam scores Oscar Vorflux write-ups. Same case, two independent scores: **Content / understanding** (how Oscar sent the message — did Sam understand the write-up, and what the agents are doing?) and **Action / tech lead** (how Oscar acted as the tech lead). Highlights stay attached to spans. Labels persist in `localStorage` and in a downloadable JSON file.
 
 **Central Hub** and **A1** — Hamel-style open coding: free-form notes first, binary pass/fail, then cluster into a taxonomy.
 
@@ -35,10 +35,10 @@ npm run preview
 
 ## Steers scoring
 
-Do **not** collapse Content and Action into one Pass/Fail.
+Do **not** collapse Content / understanding and Action / tech lead into one Pass/Fail.
 
-1. **Content** — Did the write-up close the understanding gap (context, problem, options, choice)? Pass or Fail + its own comment. A question here means missing information for the next write-up.
-2. **Action** — Did Oscar as tech lead / portfolio orchestrator do the right thing? Pass or Fail + its own comment. A fix here is behavior / living instruction.
+1. **Content / understanding** — How Oscar sent the message. Did Sam understand the write-up, and did he understand what the agents are doing? Pass or Fail + its own comment. A question here means missing information.
+2. **Action / tech lead** — How Oscar acted as the tech lead. Pass or Fail + its own comment.
 
 Sam can Pass content and Fail action, or the reverse.
 

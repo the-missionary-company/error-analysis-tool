@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { LANE_DEFS } from '../lib/steers';
 import { cn } from '../lib/utils';
 import type { PassFail, ScoreLane } from '../types/steers';
 import type { PendingSpan } from './HighlightableText';
@@ -30,22 +31,22 @@ export function SteerHighlightPopover({
         “{span.text}”
       </p>
       <p className="mt-2 text-[11px] font-medium uppercase tracking-wide text-ink-400">
-        Comment belongs to
+        Comment belongs to one score
       </p>
-      <div className="mt-1 grid grid-cols-2 gap-2">
+      <div className="mt-1 grid grid-cols-1 gap-2">
         <button
           type="button"
-          className={cn('btn-secondary h-9', lane === 'content' && 'ring-2 ring-accent')}
+          className={cn('btn-secondary h-auto min-h-9 py-2 text-left text-xs', lane === 'content' && 'ring-2 ring-accent')}
           onClick={() => setLane('content')}
         >
-          Content
+          {LANE_DEFS.content.title}
         </button>
         <button
           type="button"
-          className={cn('btn-secondary h-9', lane === 'action' && 'ring-2 ring-accent')}
+          className={cn('btn-secondary h-auto min-h-9 py-2 text-left text-xs', lane === 'action' && 'ring-2 ring-accent')}
           onClick={() => setLane('action')}
         >
-          Action
+          {LANE_DEFS.action.title}
         </button>
       </div>
       <div className="mt-2 grid grid-cols-2 gap-2">
@@ -67,11 +68,7 @@ export function SteerHighlightPopover({
       <textarea
         value={comment}
         onChange={(e) => setComment(e.target.value)}
-        placeholder={
-          lane === 'content'
-            ? 'Content note for this span…'
-            : 'Action note for this span…'
-        }
+        placeholder={`${LANE_DEFS[lane].title} note for this span…`}
         className="mt-2 min-h-[72px] w-full resize-y rounded-lg border border-ink-200 px-2.5 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
       />
       <div className="mt-2 flex justify-end gap-2">
