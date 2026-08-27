@@ -38,7 +38,7 @@ function expectEmptyScores(caseId: string) {
 
 describe('seed cases', () => {
   it('rewrites every steer as Background / Problem / Options / Choice with empty scores', () => {
-    expect(SEED_STEERS).toHaveLength(32);
+    expect(SEED_STEERS).toHaveLength(37);
     expect(SEED_STEERS.map((item) => item.id)).toEqual([...SEED_STEER_IDS]);
     for (const seed of SEED_STEERS) {
       expect(seed.contextLabel).toBe('Background');
@@ -574,7 +574,88 @@ C. Ask Sam whether tests are required this time. Pro: he decides the diligence. 
     expectEmptyScores(calendar!.id);
   });
 
-  it('queues steers 1–32 in Notion order', () => {
+  it('includes steers 33-37 after-guide bodies verbatim with empty scores', () => {
+    expect(SEED_STEERS.slice(0, 32).map((item) => item.id)).toEqual([...SEED_STEER_IDS].slice(0, 32));
+
+    const tracer = SEED_STEERS.find(
+      (item) => item.id === 'after-guide-tracer-fort-mill-zero-write-tonight',
+    );
+    expect(tracer?.number).toBe(33);
+    expect(tracer?.title).toBe('33. After-guide Tracer — Fort Mill zero-write tonight');
+    expect(tracer?.session).toBe('Tracer');
+    expect(tracer?.stamp).toBe('KEEP');
+    expect(tracer?.tooAggressive).toBe('Open');
+    expect(tracer?.yourCall).toBe('Open');
+    expect(tracer?.when).toBe('2026-08-27');
+    expect(tracer?.timestamp).toBe('2026-08-27T13:25:00.000Z');
+    expect(tracer?.notionUrl).toBe('https://app.notion.com/p/3c9efde7642b812299edd6f37930f6fc');
+    expect(tracer?.contextLabel).toBe('Background');
+    expect(tracer?.choiceLabel).toBe('Choice');
+    expect(tracer?.context).toContain('`bdacf391-438a-4049-bc91-e450a19326dc`');
+    expect(tracer?.context).toContain('SHAREPOINT_BATCH_CHAIN_*');
+    expect(tracer?.context).toContain('Latest prod deploy is READY.');
+    expect(tracer?.problem).toContain('CH-769 zero-write proof on Fort Mill only.');
+    expect(tracer?.options).toContain('CH-769 Fort Mill zero-write only, stop before any Graph write.');
+    expect(tracer?.options).toContain('D. Full live acceptance including provider writes / trial / Ken.');
+    expect(tracer?.choice).toContain('HOLD trial, Ken email, #1029, fleet, Graph writes.');
+    expectEmptyScores(tracer!.id);
+
+    const capture = SEED_STEERS.find(
+      (item) => item.id === 'after-guide-capture-ken-24h-only-keep-moving',
+    );
+    expect(capture?.number).toBe(34);
+    expect(capture?.title).toBe('34. After-guide Capture — Ken 24h only, keep moving');
+    expect(capture?.session).toBe('Capture');
+    expect(capture?.stamp).toBe('KEEP');
+    expect(capture?.notionUrl).toBe('https://app.notion.com/p/3c9efde7642b818da864eb1b2bc5e05b');
+    expect(capture?.context).toContain('`68d881b2-d506-47e6-bc6c-7d331b6944b1`');
+    expect(capture?.problem).toContain('Parking after a child or a fence was the earlier miss.');
+    expect(capture?.options).toContain('D. CH-838 now.');
+    expect(capture?.choice).toBe('C. KEEP 24h. CUT adapters. CH-838 later.');
+    expectEmptyScores(capture!.id);
+
+    const sync = SEED_STEERS.find((item) => item.id === 'after-guide-sync-close-w2-after-1018-no-w3');
+    expect(sync?.number).toBe(35);
+    expect(sync?.title).toBe('35. After-guide Sync — close W2 after #1018, no W3');
+    expect(sync?.session).toBe('Sync');
+    expect(sync?.stamp).toBe('CUT');
+    expect(sync?.notionUrl).toBe('https://app.notion.com/p/3c9efde7642b817db6b2d38e7ac98c9b');
+    expect(sync?.context).toContain('`3c7c1498-43d5-4cbb-9eea-4fc2a8440392`');
+    expect(sync?.problem).toContain('W3 is an invented wave.');
+    expect(sync?.options).toContain('D. Reopen the Capture-gating story.');
+    expect(sync?.choice).toBe('C. CUT W3. Sync is not gated on Capture session-done anymore.');
+    expectEmptyScores(sync!.id);
+
+    const fireflies = SEED_STEERS.find(
+      (item) => item.id === 'after-guide-fireflies-one-default-off-copy-path',
+    );
+    expect(fireflies?.number).toBe(36);
+    expect(fireflies?.title).toBe('36. After-guide Fireflies — one default-off copy path');
+    expect(fireflies?.session).toBe('Fireflies');
+    expect(fireflies?.stamp).toBe('CUT');
+    expect(fireflies?.notionUrl).toBe('https://app.notion.com/p/3c9efde7642b812c8938dcf3e6a72e11');
+    expect(fireflies?.context).toContain('`6e4b9dab-4cfd-4a92-a234-07450826334e`');
+    expect(fireflies?.problem).toContain('Not a seam cathedral.');
+    expect(fireflies?.options).toContain('D. Live flag on / provider writes.');
+    expect(fireflies?.choice).toBe('C. Flag stays off. CUT seams and rejected wire.');
+    expectEmptyScores(fireflies!.id);
+
+    const calendar = SEED_STEERS.find(
+      (item) => item.id === 'after-guide-calendar-finish-w3-if-isolated-no-registry',
+    );
+    expect(calendar?.number).toBe(37);
+    expect(calendar?.title).toBe('37. After-guide Calendar — finish W3 if isolated, no registry');
+    expect(calendar?.session).toBe('Calendar');
+    expect(calendar?.stamp).toBe('KEEP');
+    expect(calendar?.notionUrl).toBe('https://app.notion.com/p/3c9efde7642b8161b747fb1dfc5b3171');
+    expect(calendar?.context).toContain('`0392438d-fbd1-45dc-a6c6-69f7d73e46c4`');
+    expect(calendar?.problem).toContain('AF-CAL-02 is a one-way door.');
+    expect(calendar?.options).toContain('D. Start AF-CAL-02 / Calendar Approve.');
+    expect(calendar?.choice).toBe('C then idle. HOLD D. CUT B.');
+    expectEmptyScores(calendar!.id);
+  });
+
+  it('queues steers 1–37 in Notion order', () => {
     expect(SEED_STEERS.map((item) => item.id)).toEqual([...SEED_STEER_IDS]);
   });
 
@@ -753,7 +834,7 @@ describe('exportSteerBoardJSON', () => {
     const json = exportSteerBoardJSON(SEED_STEERS, [
       { ...emptyReview('will-not-green-production-migration') },
     ]);
-    expect(parseSteerCases(json)).toHaveLength(32);
+    expect(parseSteerCases(json)).toHaveLength(37);
     expect(parseSteerReviews(json)).toHaveLength(1);
   });
 
@@ -779,7 +860,7 @@ describe('exportSteerBoardJSON', () => {
       },
     ]);
     const loaded = parseSteerPayload(json);
-    expect(loaded.cases).toHaveLength(32);
+    expect(loaded.cases).toHaveLength(37);
     expect(loaded.reviews).toHaveLength(1);
     expect(loaded.reviews[0].content.passFail).toBe('pass');
     expect(loaded.reviews[0].action.passFail).toBe('fail');
@@ -806,9 +887,9 @@ describe('mergeCases', () => {
       choice: 'ch',
     };
     const merged = mergeCases(SEED_STEERS, [imported, extra]);
-    expect(merged).toHaveLength(33);
+    expect(merged).toHaveLength(38);
     expect(merged[0].title).toBe('Updated title from Oscar');
-    expect(merged[32].id).toBe('new-case');
+    expect(merged[37].id).toBe('new-case');
   });
 });
 

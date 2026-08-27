@@ -32,4 +32,9 @@ export const SEED_STEER_IDS = [
   'plan-verdict-sync-reverse-check-1018-then-close-w2',
   'plan-verdict-fireflies-cut-leftover-seam-cathedral',
   'plan-verdict-calendar-cut-shared-registry-idle-after-w3',
+  'after-guide-tracer-fort-mill-zero-write-tonight',
+  'after-guide-capture-ken-24h-only-keep-moving',
+  'after-guide-sync-close-w2-after-1018-no-w3',
+  'after-guide-fireflies-one-default-off-copy-path',
+  'after-guide-calendar-finish-w3-if-isolated-no-registry',
 ] as const;
