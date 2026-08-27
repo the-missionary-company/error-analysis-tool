@@ -55,7 +55,7 @@ export function SpanNoteComposer({
       style={{ left, top }}
       className="fixed z-50 w-[320px] rounded-xl border border-ink-200 bg-white p-3 shadow-soft"
     >
-      <p className="line-clamp-3 text-xs italic text-ink-600">“{span.text}”</p>
+      <p className="line-clamp-3 text-xs italic text-ink-600">“{span.quote || span.text}”</p>
       <p className="mt-2 text-[11px] text-ink-500">Which score is this note for?</p>
       <div className="mt-1.5 grid grid-cols-2 gap-1.5">
         {LANES.map((value) => (

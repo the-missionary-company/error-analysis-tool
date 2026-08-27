@@ -56,7 +56,8 @@ export function SteerCaseView({
         if (!text.trim()) return null;
         return (
           <section key={key} className="card p-5">
-            <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-400">
+            <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-ink-400">
+              <span className="h-1.5 w-1.5 rounded-full bg-ink-300" aria-hidden />
               {key === 'context' ? steer.contextLabel ?? label : key === 'choice' ? steer.choiceLabel ?? label : label}
             </div>
             <HighlightableText
