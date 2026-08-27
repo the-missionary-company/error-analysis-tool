@@ -37,7 +37,7 @@ function expectEmptyScores(caseId: string) {
 
 describe('seed cases', () => {
   it('rewrites every steer as Background / Problem / Options / Choice with empty scores', () => {
-    expect(SEED_STEERS).toHaveLength(22);
+    expect(SEED_STEERS).toHaveLength(27);
     for (const seed of SEED_STEERS) {
       expect(seed.contextLabel).toBe('Background');
       expect(seed.choiceLabel).toBe('Choice');
@@ -357,7 +357,151 @@ C. Ask Sam whether tests are required this time. Pro: he decides the diligence. 
     expectEmptyScores(calendar!.id);
   });
 
-  it('queues steers 1–22 in Notion order', () => {
+  it('includes steers 23-27 finish-path bodies verbatim with How we finish on problem and empty scores', () => {
+    const first22 = SEED_STEERS.slice(0, 22).map((item) => item.id);
+    expect(first22).toEqual([
+      'sync-was-becoming-a-type-religion',
+      'capture-counted-pigeons-on-vercel',
+      'will-not-green-production-migration',
+      'calendar-stays-planning',
+      'capture-ran-the-whole-test-house',
+      'i-over-kicked-hold-children-at-11-11',
+      'idle-keep-moving-vs-sitting-still',
+      'morning-remaining-work-ask-on-all-five',
+      'overnight-calendar-kick-may-have-invited-a-draft',
+      'parked-capture-after-child-finished',
+      'tracer-keep-moving-as-apply-auth',
+      'task-done-is-not-project-done',
+      'held-the-undoable-dress-rehearsal',
+      'do-the-hmac-and-the-cheap-smoke-yourself',
+      'the-vitest-sweep-is-the-agent-making-itself-feel-safe',
+      'i-parked-tracer-after-cutting-the-chapel',
+      'calendar-wrote-a-verification-plan-instead-of-code',
+      'before-guide-tracer-defer-polish-vs-remaining-ch-757',
+      'before-guide-capture-ken-bugs-vs-stolen-adapters',
+      'before-guide-sync-1018-reverse-check-vs-invented-w3',
+      'before-guide-fireflies-one-resolver-vs-the-rest-of-ch-802',
+      'before-guide-calendar-ch-827-pr-a-vs-shared-registry',
+    ]);
+
+    const tracer = SEED_STEERS.find(
+      (item) => item.id === 'finish-path-tracer-smoke-after-annotations-trial-later',
+    );
+    expect(tracer?.number).toBe(23);
+    expect(tracer?.title).toBe('23 Finish path Tracer — smoke after annotations, trial later');
+    expect(tracer?.session).toBe('Tracer');
+    expect(tracer?.stamp).toBe('KEEP');
+    expect(tracer?.tooAggressive).toBe('Open');
+    expect(tracer?.yourCall).toBe('Open');
+    expect(tracer?.when).toBe('2026-08-27');
+    expect(tracer?.timestamp).toBe('2026-08-27T12:09:14Z');
+    expect(tracer?.notionUrl).toBe('https://app.notion.com/p/3c9efde7642b8130a1efc9dcac327785');
+    expect(tracer?.contextLabel).toBe('Background');
+    expect(tracer?.choiceLabel).toBe('Choice');
+    expect(tracer).not.toHaveProperty('howWeFinish');
+    expect(tracer?.context).toContain(
+      '[CH-757](https://linear.app/the-missionary-company/issue/CH-757/answer-engine-tracer-bullet-approved-better-implementation-package)',
+    );
+    expect(tracer?.context).toContain(
+      '[#1042](https://github.com/the-missionary-company/central-hub/pull/1042)',
+    );
+    expect(tracer?.context).toContain(
+      '[CH-782](https://linear.app/the-missionary-company/issue/CH-782/ae-an-01b-secure-annotation-persistence-and-routes)',
+    );
+    expect(tracer?.context).toContain('From inside the session, (4) is a locked door, so it keeps polishing buttons.');
+    expect(tracer?.problem).toContain(
+      'We do not finish Tracer by inventing Defer dialogs. We also do not finish it by starting the trial.',
+    );
+    expect(tracer?.problem).toContain('\nHow we finish\n1. Stop isolated UI. #1044 is the last nit, not remaining work.');
+    expect(tracer?.problem).toContain(
+      '[#1029](https://github.com/the-missionary-company/central-hub/pull/1029) if it is more production SQL stays HOLD.',
+    );
+    expect(tracer?.options).toContain('Guide them onto that finish path.');
+    expect(tracer?.choice).toContain(
+      'A. I tell Tracer: remaining to finish this project is annotations, then your smoke.',
+    );
+    expectEmptyScores(tracer!.id);
+
+    const capture = SEED_STEERS.find(
+      (item) => item.id === 'finish-path-capture-ken-bugs-then-close-adapters-elsewhere',
+    );
+    expect(capture?.number).toBe(24);
+    expect(capture?.title).toBe('24 Finish path Capture — Ken bugs then close, adapters elsewhere');
+    expect(capture?.session).toBe('Capture');
+    expect(capture?.notionUrl).toBe('https://app.notion.com/p/3c9efde7642b810887ccdfde3fe739fd');
+    expect(capture?.context).toContain(
+      '[CH-807](https://linear.app/the-missionary-company/issue/CH-807/generic-capture-review-core)',
+    );
+    expect(capture?.context).toContain(
+      '[CH-704](https://linear.app/the-missionary-company/issue/CH-704/wave-1-implement-general-capture-correction-lifecycle-across-project)',
+    );
+    expect(capture?.problem).toContain(
+      'If we let this tray become those connectors, generalization never closes.',
+    );
+    expect(capture?.problem).toContain('\nHow we finish\n1. KEEP Ken-found behavior and the Narrow handoff.');
+    expect(capture?.choice).toContain('remaining to finish this project is Ken bugs and Narrow');
+    expectEmptyScores(capture!.id);
+
+    const sync = SEED_STEERS.find((item) => item.id === 'finish-path-sync-dark-1018-then-close-w2');
+    expect(sync?.number).toBe(25);
+    expect(sync?.title).toBe('25 Finish path Sync — dark #1018 then close W2');
+    expect(sync?.session).toBe('Sync');
+    expect(sync?.notionUrl).toBe('https://app.notion.com/p/3c9efde7642b81e59200ccf3cfbddd04');
+    expect(sync?.context).toContain(
+      '[#1018](https://github.com/the-missionary-company/central-hub/pull/1018)',
+    );
+    expect(sync?.context).toContain('`cac140dc`');
+    expect(sync?.problem).toContain(
+      'Finishing this project is: get the isolated acceptance stack onto main if it is dark, then stop.',
+    );
+    expect(sync?.problem).toContain('\nHow we finish\n1. Finish the #1018 reverse-check (already started).');
+    expect(sync?.choice).toContain('remaining to finish this project is the #1018 reverse-check');
+    expectEmptyScores(sync!.id);
+
+    const fireflies = SEED_STEERS.find(
+      (item) => item.id === 'finish-path-fireflies-default-off-copy-path-flag-later',
+    );
+    expect(fireflies?.number).toBe(26);
+    expect(fireflies?.title).toBe('26 Finish path Fireflies — default-off copy path, flag later');
+    expect(fireflies?.session).toBe('Fireflies');
+    expect(fireflies?.notionUrl).toBe('https://app.notion.com/p/3c9efde7642b8188b30ce5f8428a45f8');
+    expect(fireflies?.context).toContain(
+      '[CH-799](https://linear.app/the-missionary-company/issue/CH-799/dormant-forecast-only-meetings-fireflies-implementation-increment)',
+    );
+    expect(fireflies?.context).toContain('`FIREFLIES_CAPTURE_REVIEW_ENABLED`');
+    expect(fireflies?.problem).toContain('That is CH-802, and it is real remaining.');
+    expect(fireflies?.problem).toContain(
+      '\nHow we finish\n1. KEEP default-off publication composition that reuses existing functions',
+    );
+    expect(fireflies?.choice).toContain(
+      'remaining to finish this project is the default-off copy-to-inbox composition',
+    );
+    expectEmptyScores(fireflies!.id);
+
+    const calendar = SEED_STEERS.find(
+      (item) => item.id === 'finish-path-calendar-isolated-registry-af-cal-02-later',
+    );
+    expect(calendar?.number).toBe(27);
+    expect(calendar?.title).toBe('27 Finish path Calendar — isolated registry, AF-CAL-02 later');
+    expect(calendar?.session).toBe('Calendar');
+    expect(calendar?.notionUrl).toBe('https://app.notion.com/p/3c9efde7642b81648114cace8047602d');
+    expect(calendar?.context).toContain(
+      '[#1043](https://github.com/the-missionary-company/central-hub/pull/1043)',
+    );
+    expect(calendar?.context).toContain(
+      '[CH-827](https://linear.app/the-missionary-company/issue/CH-827/foundation-cal-01-exact-providersource-kind-registry-handoff)',
+    );
+    expect(calendar?.problem).toContain('PR B (consumers) is the collision with Capture.');
+    expect(calendar?.problem).toContain(
+      '\nHow we finish\n1. KEEP CH-827 PR A only if current SharePoint / Smartsheet callers stay safe without a migration.',
+    );
+    expect(calendar?.choice).toContain(
+      'remaining to finish this isolated project is CH-827 PR A, then park.',
+    );
+    expectEmptyScores(calendar!.id);
+  });
+
+  it('queues steers 1–27 in Notion order', () => {
     expect(SEED_STEERS.map((item) => item.id)).toEqual([
       'sync-was-becoming-a-type-religion',
       'capture-counted-pigeons-on-vercel',
@@ -381,6 +525,11 @@ C. Ask Sam whether tests are required this time. Pro: he decides the diligence. 
       'before-guide-sync-1018-reverse-check-vs-invented-w3',
       'before-guide-fireflies-one-resolver-vs-the-rest-of-ch-802',
       'before-guide-calendar-ch-827-pr-a-vs-shared-registry',
+      'finish-path-tracer-smoke-after-annotations-trial-later',
+      'finish-path-capture-ken-bugs-then-close-adapters-elsewhere',
+      'finish-path-sync-dark-1018-then-close-w2',
+      'finish-path-fireflies-default-off-copy-path-flag-later',
+      'finish-path-calendar-isolated-registry-af-cal-02-later',
     ]);
   });
 
@@ -559,7 +708,7 @@ describe('exportSteerBoardJSON', () => {
     const json = exportSteerBoardJSON(SEED_STEERS, [
       { ...emptyReview('will-not-green-production-migration') },
     ]);
-    expect(parseSteerCases(json)).toHaveLength(22);
+    expect(parseSteerCases(json)).toHaveLength(27);
     expect(parseSteerReviews(json)).toHaveLength(1);
   });
 
@@ -585,7 +734,7 @@ describe('exportSteerBoardJSON', () => {
       },
     ]);
     const loaded = parseSteerPayload(json);
-    expect(loaded.cases).toHaveLength(22);
+    expect(loaded.cases).toHaveLength(27);
     expect(loaded.reviews).toHaveLength(1);
     expect(loaded.reviews[0].content.passFail).toBe('pass');
     expect(loaded.reviews[0].action.passFail).toBe('fail');
@@ -612,9 +761,9 @@ describe('mergeCases', () => {
       choice: 'ch',
     };
     const merged = mergeCases(SEED_STEERS, [imported, extra]);
-    expect(merged).toHaveLength(23);
+    expect(merged).toHaveLength(28);
     expect(merged[0].title).toBe('Updated title from Oscar');
-    expect(merged[22].id).toBe('new-case');
+    expect(merged[27].id).toBe('new-case');
   });
 });
 

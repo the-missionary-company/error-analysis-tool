@@ -52,6 +52,11 @@ describe('steerStorage', () => {
       'before-guide-sync-1018-reverse-check-vs-invented-w3',
       'before-guide-fireflies-one-resolver-vs-the-rest-of-ch-802',
       'before-guide-calendar-ch-827-pr-a-vs-shared-registry',
+      'finish-path-tracer-smoke-after-annotations-trial-later',
+      'finish-path-capture-ken-bugs-then-close-adapters-elsewhere',
+      'finish-path-sync-dark-1018-then-close-w2',
+      'finish-path-fireflies-default-off-copy-path-flag-later',
+      'finish-path-calendar-isolated-registry-af-cal-02-later',
     ]);
     expect(loadSteerReviews(store)).toEqual({});
     expect(store.getItem('ea.steers.reviews')).toBeNull();
@@ -219,8 +224,8 @@ describe('steerStorage', () => {
       store,
     );
     const cases = loadSteerCases(store);
-    expect(cases).toHaveLength(23);
-    expect(cases[22].id).toBe('second-case');
+    expect(cases).toHaveLength(28);
+    expect(cases[27].id).toBe('second-case');
     const restored = loadSteerReviews(store)[SEED_STEERS[0].id];
     expect(restored.content.passFail).toBe('fail');
     expect(restored.action.passFail).toBe('pass');

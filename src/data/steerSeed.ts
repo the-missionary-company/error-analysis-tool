@@ -518,4 +518,153 @@ C. HOLD all of CH-827 until Capture is quiet. Con: Calendar sits on 1043 again. 
     choice:
       'A. KEEP CH-827 PR A as written: exact-pair storage, Calendar still unregistered, focused registry tests only. If a production caller is ambiguous and needs a migration, HOLD and report. CUT PR B, verification plans, CH-825 alerts, merge of 1043 to main. HOLD AF-CAL-02, live Outlook, secrets, production SQL.',
   },
+  {
+    id: 'finish-path-tracer-smoke-after-annotations-trial-later',
+    number: 23,
+    title: '23 Finish path Tracer — smoke after annotations, trial later',
+    session: 'Tracer',
+    stamp: 'KEEP',
+    tooAggressive: 'Open',
+    yourCall: 'Open',
+    when: '2026-08-27',
+    timestamp: '2026-08-27T12:09:14Z',
+    notionUrl: 'https://app.notion.com/p/3c9efde7642b8130a1efc9dcac327785',
+    contextLabel: 'Background',
+    choiceLabel: 'Choice',
+    context: `Tracer exists to get one Answer Engine you can actually click: Fort Mill Project Knowledge, default-off, two reviewer surfaces, evidence you can open. That is [CH-757](https://linear.app/the-missionary-company/issue/CH-757/answer-engine-tracer-bullet-approved-better-implementation-package). Project-done is: the isolated stack is on a preview you can smoke. The four-week trial is a later ticket.
+The agent’s own remaining list for the whole project is honest: (1) Fort Mill / source acceptance, (2) durable review annotations, (3) replay / promotion / rollback, (4) StoreyPM trial. Linear matches that. Isolated UI is already stacked through [#1042](https://github.com/the-missionary-company/central-hub/pull/1042) / [#1044](https://github.com/the-missionary-company/central-hub/pull/1044). In Review left: [CH-781](https://linear.app/the-missionary-company/issue/CH-781/ae-ui-01b-final-tracer-apiui-wiring) UI wiring, [CH-780](https://linear.app/the-missionary-company/issue/CH-780/ae-api-01b-scoped-tracer-routes-and-repositories) routes, [CH-769](https://linear.app/the-missionary-company/issue/CH-769/sync-sp-01-sharepoint-tracer-source-conformance) SharePoint conformance, [CH-822](https://linear.app/the-missionary-company/issue/CH-822/alert-01-tracer-alert-contract-episodes-and-slack-delivery-assurance) alerts. Still Todo to finish: [CH-782](https://linear.app/the-missionary-company/issue/CH-782/ae-an-01b-secure-annotation-persistence-and-routes) annotations, [CH-783](https://linear.app/the-missionary-company/issue/CH-783/ae-le-01b-integrated-replay-calibration-promotion-and-rollback) replay, [CH-784](https://linear.app/the-missionary-company/issue/CH-784/src-definition-of-done-independent-project-source-conformance-receipts) source receipts, [CH-785](https://linear.app/the-missionary-company/issue/CH-785/dark-definition-of-done-dark-end-to-end-fixture-integration-gate) dark e2e, [CH-786](https://linear.app/the-missionary-company/issue/CH-786/read-definition-of-done-per-project-attended-read-only-acceptance) attended reads, [CH-787](https://linear.app/the-missionary-company/issue/CH-787/sync-02-definition-of-done-select-final-2-3-independently-accepted) second project, [CH-788](https://linear.app/the-missionary-company/issue/CH-788/ae-rl-01-definition-of-done-narrow-default-off-canary-and-smoke) canary, [CH-815](https://linear.app/the-missionary-company/issue/CH-815/activate-and-verify-fort-mill-project-knowledge-trial) / [CH-789](https://linear.app/the-missionary-company/issue/CH-789/ae-tr-01-definition-of-done-reviewer-learning-trial-and-phase-2) trial.
+From inside the session, (4) is a locked door, so it keeps polishing buttons.`,
+    problem: `We do not finish Tracer by inventing Defer dialogs. We also do not finish it by starting the trial. The finish path is: stop UI, land the last default-off review code (annotations, maybe fixture replay), then you smoke. Live SharePoint reads and trial wait on you.
+How we finish
+1. Stop isolated UI. #1044 is the last nit, not remaining work.
+2. KEEP only default-off code that a reviewer will touch: CH-782 annotations. CH-783 only if it stays fixture / dark.
+3. SharePoint conformance CH-769 can stay In Review. Live Fort Mill reads are HOLD until the SharePoint key (Sam only).
+4. You smoke the stacked preview. That is project-done for this parent.
+5. Later tickets, not this session: CH-786 attended reads, CH-787 second project, CH-788 canary, CH-815 / CH-789 trial. [#1029](https://github.com/the-missionary-company/central-hub/pull/1029) if it is more production SQL stays HOLD.`,
+    options: `A. Guide them onto that finish path. Pro: matches CH-757 and their own list. Con: annotations are real work, not a 20 minute PR. LOE: one more isolated slice, then park.
+B. Let them keep stacking UI until you get bored. Con: we never get to smoke. LOE: the rest of the week.
+C. Call the isolated UI stack done tonight and archive. Con: you cannot correct a review yet (CH-782 still Todo). LOE: a false done.`,
+    choice:
+      'A. I tell Tracer: remaining to finish this project is annotations, then your smoke. CUT more UI. HOLD SharePoint key, trial, live providers, #1029 SQL. CH-787 / CH-788 / CH-815 stay later tickets.',
+  },
+  {
+    id: 'finish-path-capture-ken-bugs-then-close-adapters-elsewhere',
+    number: 24,
+    title: '24 Finish path Capture — Ken bugs then close, adapters elsewhere',
+    session: 'Capture',
+    stamp: 'KEEP',
+    tooAggressive: 'Open',
+    yourCall: 'Open',
+    when: '2026-08-27',
+    timestamp: '2026-08-27T12:09:14Z',
+    notionUrl: 'https://app.notion.com/p/3c9efde7642b810887ccdfde3fe739fd',
+    contextLabel: 'Background',
+    choiceLabel: 'Choice',
+    context: `Capture generalization exists so Email, Meetings, and Calendar share one inbox and one Add to project / Not for a project save. That package is [CH-807](https://linear.app/the-missionary-company/issue/CH-807/generic-capture-review-core). Project-done is: you can smoke that inbox. Ken already sat with it. [CH-838](https://linear.app/the-missionary-company/issue/CH-838/qa-human-sign-off-for-generic-capture-core) is your later 10 to 15 minute walk, not a stop.
+Linear: CH-807 / [CH-808](https://linear.app/the-missionary-company/issue/CH-808/freeze-generic-capture-contracts-and-design) / [CH-809](https://linear.app/the-missionary-company/issue/CH-809/build-fenced-capture-decision-authority) / [CH-810](https://linear.app/the-missionary-company/issue/CH-810/attended-provider-free-capture-decision-smoke-and-rollback) are Done. Open on this project: CH-838 Triage, [CH-811](https://linear.app/the-missionary-company/issue/CH-811/24-hour-generic-capture-monitoring-evidence-closure-and-cleanup) ceremony, [CH-827](https://linear.app/the-missionary-company/issue/CH-827/foundation-cal-01-exact-providersource-kind-registry-handoff) (Calendar already owns PR A). CH-790 and friends are DORMANT. Old email tickets ([CH-704](https://linear.app/the-missionary-company/issue/CH-704/wave-1-implement-general-capture-correction-lifecycle-across-project), [CH-703](https://linear.app/the-missionary-company/issue/CH-703/p0-prevention-make-capture-scoring-and-decision-audiences-impossible), [CH-701](https://linear.app/the-missionary-company/issue/CH-701/open-capture-scoring-to-all-connected-storeypm-employees), [CH-690](https://linear.app/the-missionary-company/issue/CH-690/build-do-not-include-dismissed-30-day-recovery-restore-and-delete-now)) live on a different Linear project.
+The agent’s remaining list for the whole project: Ken behavioral bugs, finish Narrow answer / band, then real Fireflies and Calendar adapters.
+From inside the session, Ken left, so it invents the next product.`,
+    problem: `This project is almost done. Live adapters are Fireflies and Calendar, not Capture. If we let this tray become those connectors, generalization never closes.
+How we finish
+1. KEEP Ken-found behavior and the Narrow handoff. That is the last Capture work that belongs here.
+2. CH-838 stays your walk, later. Do not write more QA tickets. CUT CH-811.
+3. CUT “real Fireflies / Calendar adapters” from this session. Those parents already exist.
+4. Email leftovers (704 / 703 / 701 / 690) are a different project. They do not reopen CH-807.
+5. HOLD Clerk, live mailbox, Ken member-path proof (Ken’s StoreyPM account).
+6. After Ken bugs + Narrow land, remaining is already later-on-ticket. Then we archive this parent.`,
+    options: `A. Close generalization on Ken bugs + Narrow, then treat the rest as later or other parents. Pro: matches Done tickets and the Ken walk. Con: adapters still have to get built somewhere. That is already Fireflies / Calendar. LOE: one isolated slice, then close-out.
+B. Let Capture build the connectors. Con: three parents in one tray. LOE: a new program.
+C. Archive tonight with Ken bugs still open. Con: you just found nits. LOE: a false done.`,
+    choice:
+      'A. I tell Capture: remaining to finish this project is Ken bugs and Narrow. Then we close. CUT adapters, CH-811, picker polish you called later. HOLD Clerk and live mailbox. CH-838 stays your later walk.',
+  },
+  {
+    id: 'finish-path-sync-dark-1018-then-close-w2',
+    number: 25,
+    title: '25 Finish path Sync — dark #1018 then close W2',
+    session: 'Sync',
+    stamp: 'KEEP',
+    tooAggressive: 'Open',
+    yourCall: 'Open',
+    when: '2026-08-27',
+    timestamp: '2026-08-27T12:09:14Z',
+    notionUrl: 'https://app.notion.com/p/3c9efde7642b81e59200ccf3cfbddd04',
+    contextLabel: 'Background',
+    choiceLabel: 'Choice',
+    context: `Sync W2 exists to finish the isolated project-source acceptance stack (receipts, false-accept / supersede, registry helpers) so the fleet can widen later. There is no Linear ticket named W2. [CH-795](https://linear.app/the-missionary-company/issue/CH-795/sync-p1-finish-project-source-acceptance-control-plane) is In Progress but the body still says DORMANT / FORECAST ONLY. [CH-766](https://linear.app/the-missionary-company/issue/CH-766/sync-01-receipt-and-source-acceptance-ledger-semantics) already Done under Tracer. [CH-820](https://linear.app/the-missionary-company/issue/CH-820/sync-al-01-inventory-and-freeze-sync-alert-episodes) / [CH-821](https://linear.app/the-missionary-company/issue/CH-821/sync-al-02-implement-sync-alerts-delivery-health-and-bounded-canary) are the next alert wave. [CH-198](https://linear.app/the-missionary-company/issue/CH-198/build-the-retention-hard-delete-sweeper-claudemd-rule-22-describes) is a platform sweeper, not this session. Fleet rollout tickets are DORMANT.
+The isolated stack is [#1018](https://github.com/the-missionary-company/central-hub/pull/1018) at \`cac140dc\`, 16 commits ahead of main, four SQLs, [#1041](https://github.com/the-missionary-company/central-hub/pull/1041) already in it. Main is unchanged. The agent did not write a remaining-work sentence. It is reverse-checking whether those migrations or helpers have production call sites.
+From inside the session, “nobody using the app” looks like merge permission. Linear looks like CH-820 is the next project.`,
+    problem: `W2 has no clean close ticket, so the agent will invent Wave C or alerts. Finishing this project is: get the isolated acceptance stack onto main if it is dark, then stop. Fleet and alerts are later.
+How we finish
+1. Finish the #1018 reverse-check (already started).
+2. If the four migrations are additive and no production caller writes a provider or arms a live scheduler, merge #1018 to main. No users, undoable. That is KEEP under the rule you locked.
+3. If any helper is on Graph or a live job, HOLD the merge and say so.
+4. After a dark merge (or a documented HOLD), this W2 session is project-done. Remaining lives on later tickets: CH-820 / CH-821 alerts, CH-198 sweeper, DORMANT fleet.
+5. CUT review-metadata, generations, Wave C, CH-795-as-a-new-build.`,
+    options: `A. Reverse-check, merge if dark, then close W2. Pro: the work is already sitting there. Con: four SQLs can still surprise us. LOE: the audit plus one merge.
+B. Open CH-820 as “the rest of Sync.” Con: that is a new wave. LOE: another week.
+C. Leave #1018 isolated forever. Con: main never gets W2. LOE: stall.`,
+    choice:
+      'A. I tell Sync: remaining to finish this project is the #1018 reverse-check and, if dark, the main merge. Then we close. CUT alerts and Wave C. HOLD the merge if it writes a provider.',
+  },
+  {
+    id: 'finish-path-fireflies-default-off-copy-path-flag-later',
+    number: 26,
+    title: '26 Finish path Fireflies — default-off copy path, flag later',
+    session: 'Fireflies',
+    stamp: 'KEEP',
+    tooAggressive: 'Open',
+    yourCall: 'Open',
+    when: '2026-08-27',
+    timestamp: '2026-08-27T12:09:14Z',
+    notionUrl: 'https://app.notion.com/p/3c9efde7642b8188b30ce5f8428a45f8',
+    contextLabel: 'Background',
+    choiceLabel: 'Choice',
+    context: `Fireflies W1 exists so a meeting shows in Capture, a human picks a project or HOLD, and the transcript can copy into that project’s SharePoint inbox. No auto-map. No provider writes until you say so. Linear [CH-799](https://linear.app/the-missionary-company/issue/CH-799/dormant-forecast-only-meetings-fireflies-implementation-increment) / [CH-800](https://linear.app/the-missionary-company/issue/CH-800/dormant-forecast-only-meetings-fireflies-dod-capture-review-human) / [CH-801](https://linear.app/the-missionary-company/issue/CH-801/dormant-forecast-only-meetings-fireflies-dod-firefliesmeeting-provider) / [CH-802](https://linear.app/the-missionary-company/issue/CH-802/dormant-forecast-only-meetings-fireflies-dod-generic-sharepoint) are In Review and still titled DORMANT. [CH-824](https://linear.app/the-missionary-company/issue/CH-824/meetings-fireflies-project-wide-alert-contracts-and-delivery) is alerts, not W1.
+Default-off review composition is already stacked ([#1033](https://github.com/the-missionary-company/central-hub/pull/1033) / [#1040](https://github.com/the-missionary-company/central-hub/pull/1040)), not on main. The agent’s remaining list for the whole project: SharePoint target resolution, publication authority, connector staging, Search evidence, reconciliation, guarded runner. Then enable \`FIREFLIES_CAPTURE_REVIEW_ENABLED\`.
+From inside the session, “do not park because the flag is off” means assemble the whole publisher tonight.`,
+    problem: `W1 is not done until the default-off copy-to-inbox path exists. That is CH-802, and it is real remaining. Search evidence, reconciliation, alerts, and a new identity layer are not. Live fetch and the prod flag are your door.
+How we finish
+1. KEEP default-off publication composition that reuses existing functions (target resolution is the slice already started). No fetch, no write, no new factory.
+2. One more default-off publisher / outbox wire only if it is the same shape. Then stop.
+3. You smoke later with the flag. That is HOLD: \`FIREFLIES_CAPTURE_REVIEW_ENABLED\` on prod, live Fireflies fetch, SharePoint writes.
+4. CUT CH-824, Search evidence, reconciliation probing, lease-owner / strace / extra identity.
+5. Merging the isolated stack to main is only KEEP if it stays exact-true / default-off and does not arm a worker. Otherwise it stays stacked.
+6. After the default-off copy path is in the stack, this parent is ready for your smoke. That is project-done. Enabling it is later.`,
+    options: `A. Finish the default-off copy path, then park on the flag. Pro: matches the product you locked. Con: one more composition PR. LOE: tonight plus park.
+B. Let it build Search / reconciliation / runner as “remaining.” Con: W2 in a W1 session. LOE: the rest of the week.
+C. Park now and call #1040 project-done. Con: no copy-to-inbox path yet. LOE: a false done.`,
+    choice:
+      'A. I tell Fireflies: remaining to finish this project is the default-off copy-to-inbox composition, then your smoke. CUT Search / reconciliation / alerts. HOLD the prod flag, live fetch, SharePoint writes.',
+  },
+  {
+    id: 'finish-path-calendar-isolated-registry-af-cal-02-later',
+    number: 27,
+    title: '27 Finish path Calendar — isolated registry, AF-CAL-02 later',
+    session: 'Calendar',
+    stamp: 'KEEP',
+    tooAggressive: 'Open',
+    yourCall: 'Open',
+    when: '2026-08-27',
+    timestamp: '2026-08-27T12:09:14Z',
+    notionUrl: 'https://app.notion.com/p/3c9efde7642b81648114cace8047602d',
+    contextLabel: 'Background',
+    choiceLabel: 'Choice',
+    context: `Calendar exists so Outlook events can enter the same Capture inbox, occurrence-first, no implicit SharePoint publish, default-off. You approved AF-CAL-01: isolated default-off code only. Project-done is: that code is in an isolated stack you can later Approve onto main. Live Outlook is AF-CAL-02, a later door.
+Linear: [CH-826](https://linear.app/the-missionary-company/issue/CH-826/cal-w1a-freeze-provider-free-calendar-intake-contract) and [CH-828](https://linear.app/the-missionary-company/issue/CH-828/cal-w2-build-default-off-provider-free-outlook-calendar-adapter) In Review. Isolated W3 is [#1043](https://github.com/the-missionary-company/central-hub/pull/1043), not merged. Parent [CH-753](https://linear.app/the-missionary-company/issue/CH-753/calendar-implementation-parent-calendar-outlook) and DoD [CH-803](https://linear.app/the-missionary-company/issue/CH-803/calendar-outlook-dod-need-external-contracts-and-release-gates) / [CH-804](https://linear.app/the-missionary-company/issue/CH-804/calendar-outlook-dod-default-off-read-only-adapter-occurrence-first) / [CH-805](https://linear.app/the-missionary-company/issue/CH-805/calendar-outlook-dod-capture-review-correctionretraction-and-no) still carry DORMANT language. [CH-827](https://linear.app/the-missionary-company/issue/CH-827/foundation-cal-01-exact-providersource-kind-registry-handoff) (exact provider/sourceKind registry) lives on the Capture Foundation project. [CH-825](https://linear.app/the-missionary-company/issue/CH-825/cal-al-01-calendar-alert-contract-and-activation-readiness) is alerts.
+The agent’s remaining list for the whole project, after W3: CH-827 PR A, Calendar still unregistered / not_ready.
+From inside the session, AF-CAL-01 looks like permission to keep eating Foundation tickets.`,
+    problem: `We finish Calendar when the default-off adapter + registry can sit next to SharePoint without colliding, still unregistered. We do not finish it by merging to main or calling Graph. PR B (consumers) is the collision with Capture.
+How we finish
+1. KEEP CH-827 PR A only if current SharePoint / Smartsheet callers stay safe without a migration. Calendar event pair stays unregistered.
+2. Isolated W3 #1043 stays off main until you Approve AF-CAL-02.
+3. CUT PR B / consumer migration, verification-plan chapel, CH-825 alerts.
+4. HOLD AF-CAL-02, live Outlook, secrets, production SQL.
+5. After PR A (or a documented stop), this parent is ready for your AF-CAL-02 decision. That is project-done for the isolated phase. Live canary is later.`,
+    options: `A. Land PR A if independently safe, then park on AF-CAL-02. Pro: Calendar can coexist with SharePoint later. Con: shared registry file. LOE: one isolated PR.
+B. Keep going into consumers / merge #1043. Con: Capture is live in the same registry. LOE: a collision.
+C. Stop Calendar now and wait for you. Con: 1043 sits alone and CH-827 stays open. LOE: idle parent.`,
+    choice:
+      'A. I tell Calendar: remaining to finish this isolated project is CH-827 PR A, then park. You own AF-CAL-02. CUT PR B and alerts. HOLD live Outlook and main merge.',
+  },
 ];
