@@ -37,7 +37,7 @@ function expectEmptyScores(caseId: string) {
 
 describe('seed cases', () => {
   it('rewrites every steer as Background / Problem / Options / Choice with empty scores', () => {
-    expect(SEED_STEERS).toHaveLength(15);
+    expect(SEED_STEERS).toHaveLength(17);
     for (const seed of SEED_STEERS) {
       expect(seed.contextLabel).toBe('Background');
       expect(seed.choiceLabel).toBe('Choice');
@@ -266,7 +266,39 @@ C. Ask Sam whether tests are required this time. Pro: he decides the diligence. 
     expectEmptyScores(seed!.id);
   });
 
-  it('queues steers 1–15 in Notion order', () => {
+  it('includes steer 16 parked-Tracer body verbatim with empty scores', () => {
+    const seed = SEED_STEERS.find((item) => item.id === 'i-parked-tracer-after-cutting-the-chapel');
+    expect(seed?.number).toBe(16);
+    expect(seed?.title).toBe('16 I parked Tracer after cutting the chapel');
+    expect(seed?.session).toBe('Tracer');
+    expect(seed?.stamp).toBe('CUT');
+    expect(seed?.timestamp).toBe('2026-08-27T09:58:03Z');
+    expect(seed?.notionUrl).toBe('https://app.notion.com/p/3c9efde7642b81aab1c2c67442c5c2ab');
+    expect(seed?.context).toContain('CH-824 generation-to-member projection adapter');
+    expect(seed?.problem).toContain('A CUT is a chapel, not the parent');
+    expect(seed?.options).toContain('Unpark the parent');
+    expect(seed?.choice).toContain('I unparked Tracer at 16:54');
+    expectEmptyScores(seed!.id);
+  });
+
+  it('includes steer 17 Calendar verification-plan body verbatim with empty scores', () => {
+    const seed = SEED_STEERS.find(
+      (item) => item.id === 'calendar-wrote-a-verification-plan-instead-of-code',
+    );
+    expect(seed?.number).toBe(17);
+    expect(seed?.title).toBe('17 Calendar wrote a verification plan instead of code');
+    expect(seed?.session).toBe('Calendar');
+    expect(seed?.stamp).toBe('CUT');
+    expect(seed?.timestamp).toBe('2026-08-27T09:58:03Z');
+    expect(seed?.notionUrl).toBe('https://app.notion.com/p/3c9efde7642b81cdaaf8c175d4855722');
+    expect(seed?.context).toContain('Sam approved AF-CAL-01 at 18:38');
+    expect(seed?.problem).toContain('verification-plan chapel');
+    expect(seed?.options).toContain('CUT the verification-plan lane');
+    expect(seed?.choice).toContain('Night watch cut the verification-plan cathedral at 18:44');
+    expectEmptyScores(seed!.id);
+  });
+
+  it('queues steers 1–17 in Notion order', () => {
     expect(SEED_STEERS.map((item) => item.id)).toEqual([
       'sync-was-becoming-a-type-religion',
       'capture-counted-pigeons-on-vercel',
@@ -283,6 +315,8 @@ C. Ask Sam whether tests are required this time. Pro: he decides the diligence. 
       'held-the-undoable-dress-rehearsal',
       'do-the-hmac-and-the-cheap-smoke-yourself',
       'the-vitest-sweep-is-the-agent-making-itself-feel-safe',
+      'i-parked-tracer-after-cutting-the-chapel',
+      'calendar-wrote-a-verification-plan-instead-of-code',
     ]);
   });
 
@@ -461,7 +495,7 @@ describe('exportSteerBoardJSON', () => {
     const json = exportSteerBoardJSON(SEED_STEERS, [
       { ...emptyReview('will-not-green-production-migration') },
     ]);
-    expect(parseSteerCases(json)).toHaveLength(15);
+    expect(parseSteerCases(json)).toHaveLength(17);
     expect(parseSteerReviews(json)).toHaveLength(1);
   });
 
@@ -487,7 +521,7 @@ describe('exportSteerBoardJSON', () => {
       },
     ]);
     const loaded = parseSteerPayload(json);
-    expect(loaded.cases).toHaveLength(15);
+    expect(loaded.cases).toHaveLength(17);
     expect(loaded.reviews).toHaveLength(1);
     expect(loaded.reviews[0].content.passFail).toBe('pass');
     expect(loaded.reviews[0].action.passFail).toBe('fail');
@@ -514,9 +548,9 @@ describe('mergeCases', () => {
       choice: 'ch',
     };
     const merged = mergeCases(SEED_STEERS, [imported, extra]);
-    expect(merged).toHaveLength(16);
+    expect(merged).toHaveLength(18);
     expect(merged[0].title).toBe('Updated title from Oscar');
-    expect(merged[15].id).toBe('new-case');
+    expect(merged[17].id).toBe('new-case');
   });
 });
 

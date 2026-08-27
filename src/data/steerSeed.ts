@@ -351,4 +351,50 @@ C. Ask Sam whether tests are required this time. Pro: he decides the diligence. 
     choice:
       'B. The useful thought was "nonce ledger already applied." The 54 tests after that were not a canary. I cut them. Search-icon and the other UI bugs stay later.',
   },
+  {
+    id: 'i-parked-tracer-after-cutting-the-chapel',
+    number: 16,
+    title: '16 I parked Tracer after cutting the chapel',
+    session: 'Tracer',
+    stamp: 'CUT',
+    tooAggressive: 'Open',
+    yourCall: 'Open',
+    when: '2026-08-27',
+    timestamp: '2026-08-27T09:58:03Z',
+    notionUrl: 'https://app.notion.com/p/3c9efde7642b81aab1c2c67442c5c2ab',
+    contextLabel: 'Background',
+    choiceLabel: 'Choice',
+    context: `Tracer's local UI gate had already PASSED. From inside the session, the next unfinished object was a CH-824 generation-to-member projection adapter: a new file, a new test file, a deeply frozen nine-field candidate. That looks like the missing seam for Fort Mill smoke. Disk was at 97 percent, so it also wanted whole-repo git scans.
+I cut the chapel. Then I wrote: if remaining work is only SharePoint and PR 1029, park. From inside Tracer, that sentence is the job. The parent went AWAITING. Sam looked at idle parents and asked why.`,
+    problem:
+      'A CUT is a chapel, not the parent. Telling a parent to park because the HOLDs are still HOLD is how a live project looks dead. Leftover Ken-wait and Sentry kids should look idle. A parent should not.',
+    options: `A. Leave it parked on the HOLDs. Pro: no unauthorized apply. Con: the parent naps. LOE: zero, expensive to Sam's eye.
+B. Wake 35 leftover AWAITING kids too. That is 11:11. Con: activation and Ken-wait start walking.
+C. Unpark the parent. CUT stays the chapel. KEEP the next isolated UI slice. HOLD SharePoint and 1029. Pro: parent moves. Con: they might invent another seam. LOE: one stamp.`,
+    choice:
+      'C. I unparked Tracer at 16:54. I did not wake the graveyard. Calendar idle that hour was Approve, which is a real door. Tracer idle was me.',
+  },
+  {
+    id: 'calendar-wrote-a-verification-plan-instead-of-code',
+    number: 17,
+    title: '17 Calendar wrote a verification plan instead of code',
+    session: 'Calendar',
+    stamp: 'CUT',
+    tooAggressive: 'Open',
+    yourCall: 'Open',
+    when: '2026-08-27',
+    timestamp: '2026-08-27T09:58:03Z',
+    notionUrl: 'https://app.notion.com/p/3c9efde7642b81cdaaf8c175d4855722',
+    contextLabel: 'Background',
+    choiceLabel: 'Choice',
+    context: `Sam approved AF-CAL-01 at 18:38: leave planning, write isolated default-off Calendar code. No merge, no Outlook writes, no canary. I stamped that.
+From inside Calendar, "start code" after two days of plan packets looks unsafe without a verification plan, a first-failing W3 lane, and another forms pass. The session spun a separate verification-plan lane instead of opening the first isolated file.`,
+    problem:
+      'AF-CAL-01 was permission to write default-off code. A verification-plan chapel is the agent making itself feel safe, same shape as the 54-test sweep. Sam is with Ken. The parent should be writing, not drafting gates.',
+    options: `A. Let it finish the verification plan, then code. Pro: its checklist is complete. Con: we are back in planning. LOE: another evening of forms.
+B. CUT the verification-plan lane. One isolated default-off slice only. Pro: matches the Approve. Con: a real missing test might wait. LOE: the first file.
+C. Ask Sam again whether tests are in scope. Con: he is with Ken. LOE: his meeting.`,
+    choice:
+      'B. Night watch cut the verification-plan cathedral at 18:44. HOLD AF-CAL-02 merge, real canary, provider writes. If it starts writing forms again, cut again.',
+  },
 ];

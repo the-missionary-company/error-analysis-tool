@@ -45,6 +45,8 @@ describe('steerStorage', () => {
       'held-the-undoable-dress-rehearsal',
       'do-the-hmac-and-the-cheap-smoke-yourself',
       'the-vitest-sweep-is-the-agent-making-itself-feel-safe',
+      'i-parked-tracer-after-cutting-the-chapel',
+      'calendar-wrote-a-verification-plan-instead-of-code',
     ]);
     expect(loadSteerReviews(store)).toEqual({});
     expect(store.getItem('ea.steers.reviews')).toBeNull();
@@ -212,8 +214,8 @@ describe('steerStorage', () => {
       store,
     );
     const cases = loadSteerCases(store);
-    expect(cases).toHaveLength(16);
-    expect(cases[15].id).toBe('second-case');
+    expect(cases).toHaveLength(18);
+    expect(cases[17].id).toBe('second-case');
     const restored = loadSteerReviews(store)[SEED_STEERS[0].id];
     expect(restored.content.passFail).toBe('fail');
     expect(restored.action.passFail).toBe('pass');
