@@ -3,7 +3,7 @@ import type { Author, NoteKind, ScoreLane, SteerNote, SteerReview, SteerSection 
 import { addThreadReply, attachSpanNotes, emptyReview, newId, parseSteerReviews } from './steers.js';
 import { authorizeReviewsRequest, jsonResponse } from './evalGate.js';
 
-export { gateEvalDashboardRequest, isReviewsApiPath } from './evalGate.js';
+export { gateEvalDashboardRequest, isCasesApiPath, isJsonApiPath, isReviewsApiPath } from './evalGate.js';
 
 export const REVIEWS_BLOB_PATH = 'steer-reviews.json';
 
@@ -68,19 +68,25 @@ export interface AppendCommentInput {
   spanText?: string;
 }
 
-function knownCase(caseId: string, reviews: SteerReview[]): boolean {
+function knownCase(
+  caseId: string,
+  reviews: SteerReview[],
+  extraCaseIds: readonly string[] = [],
+): boolean {
   return (
     reviews.some((item) => item.caseId === caseId) ||
-    (SEED_STEER_IDS as readonly string[]).includes(caseId)
+    (SEED_STEER_IDS as readonly string[]).includes(caseId) ||
+    extraCaseIds.includes(caseId)
   );
 }
 
 export function appendCommentToReviews(
   reviews: SteerReview[],
   input: AppendCommentInput,
+  extraCaseIds: readonly string[] = [],
 ): { review: SteerReview; note: SteerNote } | null {
   const text = input.text.trim();
-  if (!text || !knownCase(input.caseId, reviews)) return null;
+  if (!text || !knownCase(input.caseId, reviews, extraCaseIds)) return null;
   const current = reviews.find((item) => item.caseId === input.caseId) ?? emptyReview(input.caseId);
   const kind: NoteKind = input.kind === 'question' ? 'question' : 'comment';
 
@@ -251,6 +257,7 @@ export async function handleReviewsCommentRequest(
   request: Request,
   env: Record<string, string | undefined>,
   persist: ReviewsPersist,
+  extraCaseIds: readonly string[] = [],
 ): Promise<Response> {
   if (!(await authorizeReviewsRequest(request, env))) {
     return jsonResponse(401, { error: 'unauthorized' });
@@ -267,22 +274,26 @@ export async function handleReviewsCommentRequest(
       return jsonResponse(400, { error: 'lane must be content or action' });
     }
     const existing = await persist.read();
-    const result = appendCommentToReviews(existing, {
-      caseId: body.caseId,
-      author: body.author === 'sam' ? 'sam' : 'oscar',
-      text: body.text,
-      lane: body.lane as ScoreLane,
-      kind: body.kind === 'question' ? 'question' : 'comment',
-      highlightId: typeof body.highlightId === 'string' ? body.highlightId : undefined,
-      section: SECTIONS.includes(body.section as SteerSection)
-        ? (body.section as SteerSection)
-        : undefined,
-      start: typeof body.start === 'number' ? body.start : undefined,
-      end: typeof body.end === 'number' ? body.end : undefined,
-      spanText: typeof body.spanText === 'string' ? body.spanText : undefined,
-    });
+    const result = appendCommentToReviews(
+      existing,
+      {
+        caseId: body.caseId,
+        author: body.author === 'sam' ? 'sam' : 'oscar',
+        text: body.text,
+        lane: body.lane as ScoreLane,
+        kind: body.kind === 'question' ? 'question' : 'comment',
+        highlightId: typeof body.highlightId === 'string' ? body.highlightId : undefined,
+        section: SECTIONS.includes(body.section as SteerSection)
+          ? (body.section as SteerSection)
+          : undefined,
+        start: typeof body.start === 'number' ? body.start : undefined,
+        end: typeof body.end === 'number' ? body.end : undefined,
+        spanText: typeof body.spanText === 'string' ? body.spanText : undefined,
+      },
+      extraCaseIds,
+    );
     if (!result) {
-      const exists = knownCase(body.caseId, existing);
+      const exists = knownCase(body.caseId, existing, extraCaseIds);
       return jsonResponse(404, { error: exists ? 'highlight not found' : 'case not found' });
     }
     const reviews = mergeReviewsByUpdatedAt(existing, [result.review]);

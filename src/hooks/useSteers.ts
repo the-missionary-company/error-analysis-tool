@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { SEED_STEERS } from '../data/steerSeed';
+import { fetchRemoteCases, remoteCaseExtras } from '../lib/casesClient';
 import { fetchRemoteReviews, putRemoteReviews } from '../lib/reviewsClient';
 import { mergeReviewsByUpdatedAt } from '../lib/reviewsApi';
 import {
@@ -50,9 +51,17 @@ export function useSteers() {
       if (!cancelled) setReviews(loadSteerReviews());
       if (uploadUnion) void putRemoteReviews(merged);
     };
+    const pullCases = async () => {
+      const remote = await fetchRemoteCases();
+      if (cancelled || !remote) return;
+      saveImportedCases(remoteCaseExtras(remote));
+      if (!cancelled) setCases(loadSteerCases());
+    };
     void pull(true);
+    void pullCases();
     const timer = window.setInterval(() => {
       void pull(false);
+      void pullCases();
     }, 15000);
     return () => {
       cancelled = true;

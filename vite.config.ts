@@ -3,11 +3,15 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { defineConfig, type PreviewServer, type ViteDevServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { loginOutcome, parsePasswordFromBody } from './src/lib/evalAuth';
+import { handleCasesRequest } from './src/lib/casesApi';
+import { createBlobCasesPersist } from './src/lib/casesBlob';
+import { readPersistedCaseIds } from './src/lib/casesApi';
 import {
   gateEvalDashboardRequest,
   handleReviewsCommentRequest,
   handleReviewsReplyRequest,
   handleReviewsRequest,
+  isCasesApiPath,
   isReviewsApiPath,
 } from './src/lib/reviewsApi';
 import { createBlobReviewsPersist } from './src/lib/reviewsBlob';
@@ -67,14 +71,23 @@ function applyEvalDashboardGate(server: ViteDevServer | PreviewServer) {
       return;
     }
 
+    if (isCasesApiPath(path)) {
+      const raw = req.method === 'GET' || req.method === 'HEAD' ? undefined : await readBody(req);
+      const request = incomingToRequest(req, url, raw);
+      const response = await handleCasesRequest(request, process.env, createBlobCasesPersist(process.env));
+      await writeWebResponse(res, response);
+      return;
+    }
+
     if (isReviewsApiPath(path)) {
       const raw = req.method === 'GET' || req.method === 'HEAD' ? undefined : await readBody(req);
       const request = incomingToRequest(req, url, raw);
       const persist = createBlobReviewsPersist(process.env);
+      const extraCaseIds = await readPersistedCaseIds(createBlobCasesPersist(process.env));
       const response = path.startsWith('/api/reviews/reply')
         ? await handleReviewsReplyRequest(request, process.env, persist)
         : path.startsWith('/api/reviews/comment')
-          ? await handleReviewsCommentRequest(request, process.env, persist)
+          ? await handleReviewsCommentRequest(request, process.env, persist, extraCaseIds)
           : await handleReviewsRequest(request, process.env, persist);
       await writeWebResponse(res, response);
       return;

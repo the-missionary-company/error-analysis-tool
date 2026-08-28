@@ -5,6 +5,15 @@ export function isReviewsApiPath(pathname: string): boolean {
   return path === '/api/reviews' || path.startsWith('/api/reviews/');
 }
 
+export function isCasesApiPath(pathname: string): boolean {
+  const path = (pathname.split('?')[0] ?? pathname).replace(/\/$/, '') || '/';
+  return path === '/api/cases' || path.startsWith('/api/cases/');
+}
+
+export function isJsonApiPath(pathname: string): boolean {
+  return isReviewsApiPath(pathname) || isCasesApiPath(pathname);
+}
+
 export function parseBearerPassword(header: string | null | undefined): string | undefined {
   if (!header) return undefined;
   const match = header.trim().match(/^Bearer\s+(\S+)/i);
@@ -41,7 +50,7 @@ export async function gateEvalDashboardRequest(
 ): Promise<Response | undefined> {
   const { pathname } = new URL(request.url);
   if (isPublicPath(pathname)) return undefined;
-  if (isReviewsApiPath(pathname)) {
+  if (isJsonApiPath(pathname)) {
     if (await authorizeReviewsRequest(request, env)) return undefined;
     return jsonResponse(401, { error: 'unauthorized' });
   }

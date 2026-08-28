@@ -49,6 +49,14 @@ export async function pipeWebResponse(
   res.end(await response.text());
 }
 
+export async function runApiFunction(
+  first: unknown,
+  second: unknown,
+  handle: (request: Request) => Promise<Response>,
+): Promise<Response | void> {
+  return runReviewsFunction(first, second, handle);
+}
+
 export async function runReviewsFunction(
   first: unknown,
   second: unknown,
