@@ -12,7 +12,7 @@ The pile is the work. Analysis of broader patterns waits until you have scored a
    - **Content / understanding** — how Oscar sent the message. Did you understand the write-up, and what the agents are doing?
    - **Action / tech lead** — how Oscar acted as the tech lead.
    Those two scores stay independent. Pass one and Fail the other if that is the truth.
-4. When a sentence is the problem, highlight it. A popover opens at the cursor. Pick **Content** or **Action** (they use different colors), type the note, press **Enter**. That is the whole save. Escape cancels.
+4. When a sentence is the problem, highlight it (drag-select on a laptop, or tap a paragraph on mobile). A composer opens — floating near the cursor on desktop, or as a bottom sheet on phones. Pick **Content** or **Action** (they use different colors), type the note, press **Enter**. That is the whole save. Escape cancels. Pass/Fail scores scroll with the page so the case body stays readable on a phone.
 5. The note appears **to the right of that span**, like a Google Doc comment. Click the highlight or the card to jump between them.
 6. Go to the next case (`j` / `k`, or `n` for next unscored). Repeat.
 

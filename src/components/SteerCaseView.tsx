@@ -51,6 +51,11 @@ export function SteerCaseView({
         )}
       </header>
 
+      <p className="rounded-lg border border-dashed border-ink-200 bg-ink-50/80 px-3 py-2 text-[12px] leading-snug text-ink-500 sm:hidden">
+        Tap a paragraph to highlight it and leave a comment. On a laptop you can still drag-select a
+        shorter span.
+      </p>
+
       {SECTIONS.map(({ key, label }) => {
         const text = steer[key];
         if (!text.trim()) return null;

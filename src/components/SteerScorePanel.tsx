@@ -16,7 +16,7 @@ export function SteerScorePanel({
   onLaneChange: (lane: ScoreLane, next: LaneScore) => void;
 }) {
   return (
-    <aside className="card sticky top-[4.5rem] z-20 space-y-3 p-3">
+    <aside className="card z-20 space-y-3 p-3">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {LANES.map((lane) => (
           <LaneCard
