@@ -68,10 +68,25 @@ export function HighlightableText({
   onRevisionClick,
 }: Props) {
   const rootRef = useRef<HTMLDivElement>(null);
+  const dragSelectRef = useRef(false);
   const scopedHighlights = highlights.filter((h) => h.section === section);
   const scopedRevisions = revisions.filter((r) => r.section === section);
   const segments = positionSegments(text, applyBodySegments(text, scopedHighlights, scopedRevisions));
   const useCards = hasOptionCards(text);
+
+  const emitSpan = (start: number, end: number, x: number, y: number) => {
+    const sourceText = text.slice(start, end);
+    if (!sourceText.trim()) return;
+    onSelect({
+      section,
+      start,
+      end,
+      text: sourceText,
+      quote: displayTextForRange(text, start, end) || sourceText,
+      x,
+      y,
+    });
+  };
 
   const renderRange = (from: number, to: number, keyPrefix: string) =>
     renderSourceRange({
@@ -97,15 +112,23 @@ export function HighlightableText({
         if (!offsets) return;
         const sourceText = text.slice(offsets.start, offsets.end);
         if (!sourceText.trim()) return;
-        onSelect({
-          section,
-          start: offsets.start,
-          end: offsets.end,
-          text: sourceText,
-          quote: displayTextForRange(text, offsets.start, offsets.end) || offsets.text,
-          x: event.clientX,
-          y: event.clientY,
-        });
+        dragSelectRef.current = true;
+        emitSpan(offsets.start, offsets.end, event.clientX, event.clientY);
+      }}
+      onClick={(event) => {
+        if (dragSelectRef.current) {
+          dragSelectRef.current = false;
+          return;
+        }
+        const target = event.target as HTMLElement | null;
+        if (!target || !rootRef.current?.contains(target)) return;
+        if (target.closest('a, mark, s, button, [data-role="replacement"]')) return;
+        const block = target.closest('[data-span-start]') as HTMLElement | null;
+        if (!block || !rootRef.current.contains(block)) return;
+        const start = Number(block.dataset.spanStart);
+        const end = Number(block.dataset.spanEnd);
+        if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return;
+        emitSpan(start, end, event.clientX, event.clientY);
       }}
     >
       {useCards
@@ -120,24 +143,34 @@ export function HighlightableText({
                     : 'mb-3 last:mb-0'
                 }
               >
-                {block.parts.map((part, partIndex) => (
-                  <div
-                    key={`opt-${blockIndex}-${part.kind}-${partIndex}`}
-                    className={cn('whitespace-pre-wrap', part.kind !== 'lead' && 'mt-2')}
-                  >
-                    {part.kind !== 'lead' && <PartBadge kind={part.kind} />}
-                    {renderRange(
-                      visiblePartStart(text, part.start, part.end, part.kind),
-                      part.end,
-                      `b${blockIndex}p${partIndex}`,
-                    )}
-                  </div>
-                ))}
+                {block.parts.map((part, partIndex) => {
+                  const spanStart = visiblePartStart(text, part.start, part.end, part.kind);
+                  return (
+                    <div
+                      key={`opt-${blockIndex}-${part.kind}-${partIndex}`}
+                      data-span-start={spanStart}
+                      data-span-end={part.end}
+                      className={cn(
+                        'cursor-pointer whitespace-pre-wrap rounded-md transition-colors',
+                        'hover:bg-accent/5 active:bg-accent/10',
+                        part.kind !== 'lead' && 'mt-2',
+                      )}
+                    >
+                      {part.kind !== 'lead' && <PartBadge kind={part.kind} />}
+                      {renderRange(spanStart, part.end, `b${blockIndex}p${partIndex}`)}
+                    </div>
+                  );
+                })}
               </div>
             );
           })
         : splitParagraphs(text).map((para, index) => (
-            <p key={`p-${index}`} className="mb-3 whitespace-pre-wrap last:mb-0">
+            <p
+              key={`p-${index}`}
+              data-span-start={para.start}
+              data-span-end={para.end}
+              className="mb-3 cursor-pointer whitespace-pre-wrap rounded-md px-1 -mx-1 transition-colors last:mb-0 hover:bg-accent/5 active:bg-accent/10"
+            >
               {renderRange(para.start, para.end, `p${index}`)}
             </p>
           ))}
