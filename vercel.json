@@ -1,0 +1,9 @@
+{
+  "rewrites": [
+    { "source": "/login", "destination": "/login.html" },
+    { "source": "/api/reviews/comment", "destination": "/api/reviews-comment" },
+    { "source": "/api/reviews/reply", "destination": "/api/reviews-reply" },
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/((?!api/|login(?:\\.html)?|robots\\.txt).*)", "destination": "/index.html" }
+  ]
+}
