@@ -34,10 +34,16 @@ Rule of thumb: if you would Slack Oscar “please change this sentence,” leave
 
 ## Oscar: post on the board (no Notion)
 
-Same Bearer password as the padlock. Do not PUT a full review unless you mean to replace it — that can overwrite Sam's scores. Use comment and reply instead.
+Full reference: **[API.md](API.md)**. Keep that file current when endpoints change.
+
+Same Bearer password as the padlock. Do not PUT a full review unless you mean to replace it — that can overwrite Sam's scores. Use comment and reply instead. To put a new steer on the live board, `POST /api/cases` (you write the body).
 
 ```bash
-# Read
+# Cases (seed + anything you posted)
+curl -sS -H "Authorization: Bearer $EVAL_DASHBOARD_PASSWORD" \
+  https://eval-dashboard-zeta.vercel.app/api/cases
+
+# Reviews
 curl -sS -H "Authorization: Bearer $EVAL_DASHBOARD_PASSWORD" \
   https://eval-dashboard-zeta.vercel.app/api/reviews
 
@@ -60,7 +66,7 @@ curl -sS -X POST -H "Authorization: Bearer $EVAL_DASHBOARD_PASSWORD" \
   https://eval-dashboard-zeta.vercel.app/api/reviews/reply
 ```
 
-`lane` is `content` or `action`. `kind` is `comment` (default) or `question`. Optional `highlightId` attaches to an existing highlight. The board pulls remote notes about every 15 seconds.
+`lane` is `content` or `action`. `kind` is `comment` (default) or `question`. Optional `highlightId` attaches to an existing highlight. The board pulls remote notes and cases about every 15 seconds.
 
 ## What this board does not do
 

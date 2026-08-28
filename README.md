@@ -16,7 +16,9 @@ Vercel project `eval-dashboard`. GitHub Pages stays blocked.
 
 ## Stack
 
-Vite + React + TypeScript + Tailwind CSS. Reviews also persist on `GET`/`PUT` `/api/reviews` (Vercel Blob) so Oscar can read and comment without Notion.
+Vite + React + TypeScript + Tailwind CSS. Cases and reviews persist on `/api/cases` and `/api/reviews` (Vercel Blob) so Oscar can post a steer and comment without Notion.
+
+Oscar’s reference: **[API.md](API.md)**. Update that file in the same commit as any API change.
 
 ## Run
 
@@ -44,7 +46,7 @@ There is **no Process button**. Scores and span comments save as you go.
 3. “Change this now” is a comment on that span. Oscar can act on it immediately.
 4. Broader patterns wait until you have a pile of scored cases. Nothing auto-clusters or trains an eval skill from this board yet.
 
-Oscar posts with Bearer auth to `POST /api/reviews/comment` and `POST /api/reviews/reply`. See [HOW-IT-WORKS.md](HOW-IT-WORKS.md#oscar-post-on-the-board-no-notion). Do not PUT a whole review to leave a comment — that can overwrite Sam's scores.
+Oscar posts with Bearer auth. See **[API.md](API.md)** (and the short copy in [HOW-IT-WORKS.md](HOW-IT-WORKS.md#oscar-post-on-the-board-no-notion)). Do not PUT a whole review to leave a comment — that can overwrite Sam's scores.
 
 ## Steers scoring
 
