@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { Download, Upload } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Check, Download, RotateCcw, Upload } from 'lucide-react';
 import { GutterNotes } from '../components/GutterNotes';
 import { HowThisWorks } from '../components/HowThisWorks';
 import { SpanNoteComposer } from '../components/SpanNoteComposer';
@@ -9,20 +9,34 @@ import { SteerScorePanel } from '../components/SteerScorePanel';
 import type { PendingSpan } from '../components/HighlightableText';
 import { useSteers } from '../hooks/useSteers';
 import { useToast } from '../hooks/useToast';
-import { loadAuthor, loadCaseSort, saveAuthor, saveCaseSort } from '../lib/steerStorage';
+import {
+  loadAuthor,
+  loadCaseSort,
+  loadInboxTab,
+  loadProjectFilter,
+  saveAuthor,
+  saveCaseSort,
+  saveInboxTab,
+  saveProjectFilter,
+} from '../lib/steerStorage';
 import { downloadText } from '../lib/storage';
 import {
   AUTHOR_DEFS,
   addThreadReply,
   attachSpanNotes,
   caseProgress,
+  caseProject,
   createRevisionFromQuestion,
+  emptyReview,
+  isFiled,
+  markFiled,
+  markUnfiled,
   parseSteerPayload,
   parseSteerReviews,
   sortCases,
   usedLabelsForLane,
 } from '../lib/steers';
-import type { CaseSort } from '../types/steers';
+import type { CaseSort, InboxTab } from '../types/steers';
 import { cn } from '../lib/utils';
 import type { Author, LaneScore, NoteKind, ScoreLane } from '../types/steers';
 
@@ -43,11 +57,25 @@ export function SteersPage() {
   const [pending, setPending] = useState<PendingSpan | null>(null);
   const [sort, setSort] = useState<CaseSort>(() => loadCaseSort());
   const [author, setAuthor] = useState<Author>(() => loadAuthor());
+  const [inboxTab, setInboxTab] = useState<InboxTab>(() => loadInboxTab());
+  const [projectFilter, setProjectFilter] = useState<string | null>(() => loadProjectFilter());
   const orderedCases = sortCases(cases, sort);
   const [focusedNoteId, setFocusedNoteId] = useState<string | null>(null);
   const casesInput = useRef<HTMLInputElement>(null);
   const labelsInput = useRef<HTMLInputElement>(null);
   const caseBodyRef = useRef<HTMLDivElement>(null);
+
+  const visibleQueueIds = useMemo(() => {
+    return orderedCases
+      .filter((item) => {
+        const filed = isFiled(reviews[item.id]);
+        if (inboxTab === 'inbox' && filed) return false;
+        if (inboxTab === 'filed' && !filed) return false;
+        if (projectFilter && caseProject(item) !== projectFilter) return false;
+        return true;
+      })
+      .map((item) => item.id);
+  }, [inboxTab, orderedCases, projectFilter, reviews]);
 
   useEffect(() => {
     document.querySelector(`[data-case-id="${activeId}"]`)?.scrollIntoView({ block: 'nearest' });
@@ -64,11 +92,11 @@ export function SteersPage() {
         setPending(null);
         return;
       }
-      const ids = orderedCases.map((item) => item.id);
+      const ids = visibleQueueIds;
       const index = ids.indexOf(activeId);
       if (e.key === 'j' || e.key === 'ArrowDown') {
         e.preventDefault();
-        const next = ids[Math.min(ids.length - 1, index + 1)];
+        const next = ids[Math.min(ids.length - 1, Math.max(0, index) + 1)];
         if (next) setActiveId(next);
       }
       if (e.key === 'k' || e.key === 'ArrowUp') {
@@ -78,15 +106,24 @@ export function SteersPage() {
       }
       if (e.key === 'n') {
         e.preventDefault();
-        const open = ids.filter((id) => caseProgress(reviews[id]) !== 'scored');
-        if (!open.length) return;
+        const open = ids.filter((id) => {
+          if (isFiled(reviews[id])) return false;
+          return caseProgress(reviews[id]) !== 'scored';
+        });
+        if (!open.length) {
+          const inbox = ids.filter((id) => !isFiled(reviews[id]));
+          if (!inbox.length) return;
+          const from = inbox.find((id) => ids.indexOf(id) > index) ?? inbox[0];
+          setActiveId(from);
+          return;
+        }
         const from = open.find((id) => ids.indexOf(id) > index) ?? open[0];
         setActiveId(from);
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [activeId, orderedCases, reviews, setActiveId]);
+  }, [activeId, reviews, setActiveId, visibleQueueIds]);
 
   if (!activeCase) {
     return (
@@ -137,6 +174,35 @@ export function SteersPage() {
     setPending(null);
     window.getSelection()?.removeAllRanges();
     push('Comment saved next to the span', 'success');
+  };
+
+  const fileActiveCase = () => {
+    if (!activeCase) return;
+    const next = markFiled(activeReview.caseId === activeCase.id ? activeReview : emptyReview(activeCase.id));
+    updateReview(next);
+    const remaining = orderedCases
+      .filter((item) => {
+        if (item.id === activeCase.id) return false;
+        if (isFiled(reviews[item.id])) return false;
+        if (projectFilter && caseProject(item) !== projectFilter) return false;
+        return true;
+      })
+      .map((item) => item.id);
+    if (remaining[0]) setActiveId(remaining[0]);
+    else {
+      setInboxTab('filed');
+      saveInboxTab('filed');
+    }
+    setPending(null);
+    push('Filed — out of inbox', 'success');
+  };
+
+  const unfileActiveCase = () => {
+    if (!activeCase) return;
+    updateReview(markUnfiled(activeReview));
+    setInboxTab('inbox');
+    saveInboxTab('inbox');
+    push('Back in inbox', 'success');
   };
 
   const readFile = async (file: File) => JSON.parse(await file.text()) as unknown;
@@ -259,9 +325,19 @@ export function SteersPage() {
           reviews={reviews}
           activeId={activeId}
           sort={sort}
+          inboxTab={inboxTab}
+          projectFilter={projectFilter}
           onSortChange={(next) => {
             setSort(next);
             saveCaseSort(next);
+          }}
+          onInboxTabChange={(tab) => {
+            setInboxTab(tab);
+            saveInboxTab(tab);
+          }}
+          onProjectFilterChange={(project) => {
+            setProjectFilter(project);
+            saveProjectFilter(project);
           }}
           onSelect={(id) => {
             setActiveId(id);
@@ -270,6 +346,24 @@ export function SteersPage() {
         />
         </div>
         <div className="min-w-0 space-y-4">
+        <div className="flex flex-wrap items-center gap-2">
+          {isFiled(activeReview) ? (
+            <button type="button" className="btn-secondary" onClick={unfileActiveCase}>
+              <RotateCcw className="h-4 w-4" />
+              Back to inbox
+            </button>
+          ) : (
+            <button type="button" className="btn-primary" onClick={fileActiveCase}>
+              <Check className="h-4 w-4" />
+              Done — file it
+            </button>
+          )}
+          <p className="text-xs text-ink-500">
+            {isFiled(activeReview)
+              ? 'Filed cases stay searchable under Filed.'
+              : 'Files this case out of your inbox. You can still open it under Filed.'}
+          </p>
+        </div>
         <SteerScorePanel
           review={activeReview}
           reuseByLane={{

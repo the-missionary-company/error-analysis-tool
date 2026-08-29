@@ -25,8 +25,9 @@ export interface SteerHighlight {
   comment: string;
 }
 
-export type CaseSortField = 'timestamp' | 'number' | 'stamp' | 'session';
+export type CaseSortField = 'timestamp' | 'number' | 'stamp' | 'session' | 'project';
 export type CaseSortDirection = 'asc' | 'desc';
+export type InboxTab = 'inbox' | 'filed';
 
 export interface CaseSort {
   field: CaseSortField;
@@ -41,6 +42,13 @@ export interface SteerCase {
   when: string;
   number?: number;
   timestamp?: string;
+  /** Project / parent agent Sam filters by (Capture, Sync, Tracer, …). Falls back to session. */
+  project?: string;
+  /** Linear parent ticket id, e.g. CH-757. */
+  parentTicket?: string;
+  parentTicketUrl?: string;
+  /** Spec id or short slug, e.g. AF-CAL-01. */
+  spec?: string;
   yourCall?: string;
   tooAggressive?: string;
   yourCallBody?: string;
@@ -97,6 +105,8 @@ export interface SteerReview {
   chips: SteerChipId[];
   notes: SteerNote[];
   revisions: SteerRevision[];
+  /** When set, Sam filed this case out of the inbox. */
+  filedAt?: string;
   updatedAt: string;
 }
 

@@ -123,6 +123,31 @@ describe('handleCasesRequest', () => {
     expect(cookie.status).toBe(200);
   });
 
+  it('filters GET cases by project and parentTicket', async () => {
+    const persist = memoryCases();
+    const headers = { Authorization: 'Bearer board-secret' };
+    const byProject = await handleCasesRequest(
+      new Request('https://x/api/cases?project=Tracer', { headers }),
+      env,
+      persist,
+    );
+    expect(byProject.status).toBe(200);
+    const projectBody = (await byProject.json()) as { cases: SteerCase[] };
+    expect(projectBody.cases.length).toBeGreaterThan(0);
+    expect(projectBody.cases.every((item) => item.project === 'Tracer' || item.session === 'Tracer')).toBe(
+      true,
+    );
+
+    const byTicket = await handleCasesRequest(
+      new Request('https://x/api/cases?parentTicket=CH-757', { headers }),
+      env,
+      persist,
+    );
+    const ticketBody = (await byTicket.json()) as { cases: SteerCase[] };
+    expect(ticketBody.cases.length).toBeGreaterThan(0);
+    expect(ticketBody.cases.every((item) => item.parentTicket === 'CH-757')).toBe(true);
+  });
+
   it('400s a POST that is missing required fields', async () => {
     const res = await handleCasesRequest(
       new Request('https://x/api/cases', {

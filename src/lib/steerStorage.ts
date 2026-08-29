@@ -1,5 +1,5 @@
 import { SEED_STEERS } from '../data/steerSeed';
-import type { Author, CaseSort, SteerCase, SteerReview } from '../types/steers';
+import type { Author, CaseSort, InboxTab, SteerCase, SteerReview } from '../types/steers';
 import { DEFAULT_CASE_SORT, mergeCases, parseSteerReviews } from './steers';
 
 export interface KeyValueStore {
@@ -13,6 +13,8 @@ const KEYS = {
   author: 'ea.steers.author',
   active: 'ea.steers.active',
   sort: 'ea.steers.sort',
+  inboxTab: 'ea.steers.inboxTab',
+  projectFilter: 'ea.steers.projectFilter',
 } as const;
 
 function defaultStore(): KeyValueStore {
@@ -94,7 +96,7 @@ export function saveActiveId(id: string, store: KeyValueStore = defaultStore()) 
   store.setItem(KEYS.active, id);
 }
 
-const SORT_FIELDS = new Set(['timestamp', 'number', 'stamp', 'session']);
+const SORT_FIELDS = new Set(['timestamp', 'number', 'stamp', 'session', 'project']);
 
 export function loadCaseSort(store: KeyValueStore = defaultStore()): CaseSort {
   const raw = readJSON<Partial<CaseSort> | null>(store, KEYS.sort, null);
@@ -107,6 +109,27 @@ export function loadCaseSort(store: KeyValueStore = defaultStore()): CaseSort {
 
 export function saveCaseSort(sort: CaseSort, store: KeyValueStore = defaultStore()) {
   writeJSON(store, KEYS.sort, sort);
+}
+
+export function loadInboxTab(store: KeyValueStore = defaultStore()): InboxTab {
+  return store.getItem(KEYS.inboxTab) === 'filed' ? 'filed' : 'inbox';
+}
+
+export function saveInboxTab(tab: InboxTab, store: KeyValueStore = defaultStore()) {
+  store.setItem(KEYS.inboxTab, tab);
+}
+
+export function loadProjectFilter(store: KeyValueStore = defaultStore()): string | null {
+  const raw = store.getItem(KEYS.projectFilter);
+  return raw && raw.trim() ? raw.trim() : null;
+}
+
+export function saveProjectFilter(project: string | null, store: KeyValueStore = defaultStore()) {
+  if (!project) {
+    store.setItem(KEYS.projectFilter, '');
+    return;
+  }
+  store.setItem(KEYS.projectFilter, project);
 }
 
 export function importSteerReviews(

@@ -19,19 +19,19 @@ Do **not** invent steer bodies. Do **not** invent or overwrite Sam’s Pass/Fail
 
 | What you do on the board | API | Notes |
 | --- | --- | --- |
-| Read the case list / one case | `GET /api/cases` | Seed plus posted extras. `?id=` or `?number=` |
-| Post a new steer (no Notion) | `POST /api/cases` | Required fields below. Missing `id` is slugged from title |
+| Read the case list / one case | `GET /api/cases` | Seed plus posted extras. `?id=` or `?number=` or `?project=` / `?parentTicket=` / `?spec=` |
+| Post a new steer (no Notion) | `POST /api/cases` | Required fields below. Always send `project` + `parentTicket` when you know them |
 | Update a posted steer | `POST /api/cases` with the same `id` | Merges by id. Posted row overrides seed only if you post that id |
-| Read Sam’s scores, notes, threads | `GET /api/reviews` | `?caseId=` optional |
-| Case-level comment or question | `POST /api/reviews/comment` | Defaults `author` to `oscar`. Does not change Pass/Fail |
+| Read Sam’s scores, notes, threads | `GET /api/reviews` | `?caseId=` optional. `filedAt` means Sam filed it out of inbox |
+| Case-level comment or question | `POST /api/reviews/comment` | Defaults `author` to `oscar`. Does not change Pass/Fail or filing |
 | Span / gutter comment | `POST /api/reviews/comment` with `section` + `spanText` | Optional `start`, `end`, `highlightId` |
 | Reply in a thread | `POST /api/reviews/reply` | Needs `noteId` from GET |
 | Export the board | `GET /api/cases` + `GET /api/reviews` | Same shape as Export JSON, minus `kind` / `exportedAt` |
 | Import cases | `POST /api/cases` with `{ "cases": [...] }` | Same required fields as Load cases |
-| Mark Pass/Fail, labels, chips | `PUT /api/reviews` | **Sam’s work.** A full PUT replaces the stored review and can wipe scores |
+| Mark Pass/Fail, labels, chips, file/unfile | `PUT /api/reviews` | **Sam’s work.** A full PUT replaces the stored review and can wipe scores / `filedAt` |
 | Apply a visible revision on a question | *UI only today* | Strike + replacement overlay; does not rewrite the stored case body |
 | Remove a highlight | *UI only today* | Local + synced review via PUT if you must |
-| Sort / search / `j` `k` `n` | *UI only* | Navigation |
+| Sort / search / project filter / inbox · `j` `k` `n` | *UI only* | Navigation. `n` = next unscored inbox case |
 | Posting-as Sam/Oscar toggle | `author` on comment/reply | API field, not a session |
 | Hub + A1 annotate / cluster | *No Oscar API* | Separate Hamel-style board in the browser |
 
@@ -61,7 +61,18 @@ Returns `{ "cases": SteerCase[] }` = seed steers plus persisted extras, merge by
 oscar "$HOST/api/cases"
 oscar "$HOST/api/cases?id=after-guide-tracer-fort-mill-zero-write-tonight"
 oscar "$HOST/api/cases?number=33"
+oscar "$HOST/api/cases?project=Tracer"
+oscar "$HOST/api/cases?parentTicket=CH-757"
+oscar "$HOST/api/cases?spec=AF-CAL-01"
 ```
+
+Filter query params (AND together when combined):
+
+| Param | Matches |
+| --- | --- |
+| `project` | Case `project` (falls back to `session` if Oscar omitted `project`) |
+| `parentTicket` | Linear parent id, e.g. `CH-757` |
+| `spec` | Spec id / slug Oscar sent, e.g. `AF-CAL-01` |
 
 ### `POST /api/cases`
 
@@ -69,14 +80,27 @@ Accepts one case, `{ "case": … }`, or `{ "cases": […] }`.
 
 Required: `title`, `session`, `stamp`, `context`, `problem`, `options`, `choice`.
 
-If `id` is missing, it is slugged from `title`. If `number` is missing, it is `max(seed + stored) + 1`. If `when` / `timestamp` are missing, they are now. Optional: `tooAggressive`, `yourCall`, `yourCallBody`, `contextLabel` (default `Background`), `choiceLabel` (default `Choice`), `notionUrl`.
+If `id` is missing, it is slugged from `title`. If `number` is missing, it is `max(seed + stored) + 1`. If `when` / `timestamp` are missing, they are now. Optional: `tooAggressive`, `yourCall`, `yourCallBody`, `contextLabel` (default `Background`), `choiceLabel` (default `Choice`), `notionUrl`, **`project`**, **`parentTicket`**, **`parentTicketUrl`**, **`spec`**.
 
-Returns `{ "case": … }` for a single body, `{ "cases": […] }` for a list. **400** if a required field is missing.
+**Oscar / Nick — always send scope fields** so Sam can work one project at a time:
+
+| Field | Example | Meaning |
+| --- | --- | --- |
+| `project` | `"Tracer"` | The parent project / agent lane Sam filters on. Prefer this over relying on `session`. Use the five live names: `Capture`, `Sync`, `Tracer`, `Calendar`, `Fireflies` (or another clear project name). |
+| `parentTicket` | `"CH-757"` | Linear parent ticket for that project |
+| `parentTicketUrl` | `"https://linear.app/.../CH-757/..."` | Optional link shown on the board |
+| `spec` | `"AF-CAL-01"` | Optional spec id or short slug when the steer is about a named spec |
+
+`session` stays the agent/session label (often the same as `project`). Sam’s board falls back to `session` when `project` is missing, and fills known parent tickets for Capture/Sync/Tracer/Fireflies/Calendar when `parentTicket` is omitted — but **do not rely on that**. Send the fields.
 
 ```bash
 oscar -X POST "$HOST/api/cases" -d '{
   "title": "…",
   "session": "Tracer",
+  "project": "Tracer",
+  "parentTicket": "CH-757",
+  "parentTicketUrl": "https://linear.app/the-missionary-company/issue/CH-757/answer-engine-tracer-bullet-approved-better-implementation-package",
+  "spec": "CH-757",
   "stamp": "KEEP",
   "context": "…",
   "problem": "…",
@@ -101,6 +125,8 @@ Returns `{ "reviews": SteerReview[] }`. Optional `?caseId=`.
 oscar "$HOST/api/reviews"
 oscar "$HOST/api/reviews?caseId=sync-was-becoming-a-type-religion"
 ```
+
+`filedAt` on a review means Sam pressed **Done — file it** and moved the case out of the inbox. Oscar should not clear or invent `filedAt`. Leave it alone on comment/reply. A full `PUT /api/reviews` that omits `filedAt` can wipe Sam’s filing if that PUT wins on `updatedAt` — prefer comment/reply.
 
 ### `POST /api/reviews/comment`
 
@@ -156,15 +182,24 @@ Accepts `{ "review": … }`, `{ "reviews": […] }`, or a reviews array. Merges 
 
 ## Shapes
 
-`SteerCase` required strings: `id`, `title`, `session`, `stamp`, `when`, `context`, `problem`, `options`, `choice`. Optional: `number`, `timestamp`, `yourCall`, `tooAggressive`, `yourCallBody`, `contextLabel`, `choiceLabel`, `notionUrl`.
+`SteerCase` required strings: `id`, `title`, `session`, `stamp`, `when`, `context`, `problem`, `options`, `choice`. Optional: `number`, `timestamp`, `yourCall`, `tooAggressive`, `yourCallBody`, `contextLabel`, `choiceLabel`, `notionUrl`, `project`, `parentTicket`, `parentTicketUrl`, `spec`.
 
-`SteerReview`: `caseId`, `content` / `action` (`passFail` `pass` | `fail` | `null`, `comment`, `labels[]`), `highlights[]`, `notes[]`, `revisions[]`, `chips[]`, `updatedAt`.
+`SteerReview`: `caseId`, `content` / `action` (`passFail` `pass` | `fail` | `null`, `comment`, `labels[]`), `highlights[]`, `notes[]`, `revisions[]`, `chips[]`, `filedAt?` (ISO when Sam filed it out of the inbox), `updatedAt`.
 
 `lane`: `content` | `action`.  
 `kind`: `comment` | `question`.  
 `author`: `sam` | `oscar`.
 
 ---
+
+## Board inbox (Sam)
+
+- Default list is **Inbox** (cases without `filedAt`).
+- **Done — file it** sets `filedAt` on that review and jumps to the next inbox case (honoring the project filter).
+- **Filed** is a separate tab so Sam can still find finished cases.
+- Filter chips by **Project** (and search by parent ticket / spec).
+
+Oscar posts cases with `project` + `parentTicket` so those chips work. Filing is Sam’s workflow, not an Oscar API action.
 
 ## Errors
 

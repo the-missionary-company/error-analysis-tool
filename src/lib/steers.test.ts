@@ -12,7 +12,11 @@ import {
   createRevisionFromQuestion,
   emptyReview,
   exportSteerBoardJSON,
+  filterCasesByScope,
   findSpanOffsets,
+  isFiled,
+  markFiled,
+  markUnfiled,
   mergeCases,
   usedLabelsForLane,
   parseSteerCases,
@@ -1170,6 +1174,61 @@ describe('span notes and case progress', () => {
         action: { passFail: 'fail', comment: '', labels: [] },
       }),
     ).toBe('scored');
+  });
+});
+
+describe('project scope and inbox filing', () => {
+  it('fills project from session and known parent tickets', () => {
+    const cases = parseSteerCases([
+      {
+        id: 't1',
+        title: 'T',
+        session: 'Tracer',
+        stamp: 'KEEP',
+        when: '2026-08-28',
+        context: 'c',
+        problem: 'p',
+        options: 'o',
+        choice: 'x',
+      },
+    ]);
+    expect(cases[0].project).toBe('Tracer');
+    expect(cases[0].parentTicket).toBe('CH-757');
+    expect(cases[0].parentTicketUrl).toContain('CH-757');
+  });
+
+  it('keeps Oscar-supplied project, parentTicket, and spec', () => {
+    const cases = parseSteerCases([
+      {
+        id: 'c1',
+        title: 'C',
+        session: 'Capture',
+        project: 'Capture',
+        parentTicket: 'CH-807',
+        parentTicketUrl: 'https://linear.app/x/CH-807',
+        spec: 'capture-core',
+        stamp: 'KEEP',
+        when: '2026-08-28',
+        context: 'c',
+        problem: 'p',
+        options: 'o',
+        choice: 'x',
+      },
+    ]);
+    expect(cases[0].spec).toBe('capture-core');
+    expect(filterCasesByScope(cases, { project: 'Capture' })).toHaveLength(1);
+    expect(filterCasesByScope(cases, { parentTicket: 'CH-807' })).toHaveLength(1);
+    expect(filterCasesByScope(cases, { spec: 'capture-core' })).toHaveLength(1);
+    expect(filterCasesByScope(cases, { project: 'Sync' })).toHaveLength(0);
+  });
+
+  it('files and unfiles a review for the inbox', () => {
+    const filed = markFiled(emptyReview('c1'), new Date('2026-08-29T01:00:00.000Z'));
+    expect(isFiled(filed)).toBe(true);
+    expect(filed.filedAt).toBe('2026-08-29T01:00:00.000Z');
+    expect(isFiled(markUnfiled(filed))).toBe(false);
+    const parsed = parseSteerReviews([{ ...filed }])[0];
+    expect(parsed.filedAt).toBe('2026-08-29T01:00:00.000Z');
   });
 });
 
