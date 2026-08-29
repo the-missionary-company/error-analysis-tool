@@ -19,6 +19,59 @@ export interface ReviewsPersist {
   write(reviews: SteerReview[]): Promise<void>;
 }
 
+export type ReviewsRequestDeps = {
+  fetchImpl?: typeof fetch;
+};
+
+export const OSCAR_WEBHOOK_TIMEOUT_MS = 3000;
+
+function filedAtValue(review: SteerReview | undefined): string {
+  return review?.filedAt?.trim() ?? '';
+}
+
+/** Incoming reviews whose filedAt is new or changed versus the stored copy. */
+export function filedCaseIdsToNotify(
+  existing: SteerReview[],
+  incoming: SteerReview[],
+): string[] {
+  const previous = new Map(existing.map((item) => [item.caseId, filedAtValue(item)]));
+  const seen = new Set<string>();
+  const ids: string[] = [];
+  for (const review of incoming) {
+    const next = filedAtValue(review);
+    if (!next) continue;
+    const prev = previous.get(review.caseId) ?? '';
+    if (prev === next || seen.has(review.caseId)) continue;
+    seen.add(review.caseId);
+    ids.push(review.caseId);
+  }
+  return ids;
+}
+
+/** POST one { caseId } per newly filed case. Skip if env is blank. Never throw. */
+export async function notifyOscarFiled(
+  env: Record<string, string | undefined>,
+  caseIds: string[],
+  fetchImpl: typeof fetch = fetch,
+): Promise<void> {
+  const url = env.OSCAR_EVAL_WEBHOOK_URL?.trim();
+  const key = env.OSCAR_EVAL_WEBHOOK_KEY?.trim();
+  if (!url || !key || caseIds.length === 0) return;
+  await Promise.allSettled(
+    caseIds.map((caseId) =>
+      fetchImpl(url, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${key}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ caseId, event: 'filed' }),
+        signal: AbortSignal.timeout(OSCAR_WEBHOOK_TIMEOUT_MS),
+      }),
+    ),
+  );
+}
+
 export function mergeReviewsByUpdatedAt(
   existing: SteerReview[],
   incoming: SteerReview[],
@@ -181,6 +234,7 @@ export async function handleReviewsRequest(
   request: Request,
   env: Record<string, string | undefined>,
   persist: ReviewsPersist,
+  deps: ReviewsRequestDeps = {},
 ): Promise<Response> {
   if (!(await authorizeReviewsRequest(request, env))) {
     return jsonResponse(401, { error: 'unauthorized' });
@@ -202,6 +256,15 @@ export async function handleReviewsRequest(
       const existing = await persist.read();
       const reviews = mergeReviewsByUpdatedAt(existing, incoming);
       await persist.write(reviews);
+      try {
+        await notifyOscarFiled(
+          env,
+          filedCaseIdsToNotify(existing, reviews),
+          deps.fetchImpl ?? fetch,
+        );
+      } catch {
+        // Webhook must never fail the PUT.
+      }
       return jsonResponse(200, { reviews });
     } catch (error) {
       if (error instanceof PersistNotConfigured) {
