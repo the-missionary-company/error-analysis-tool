@@ -70,6 +70,9 @@ export interface SteerNote {
   author: Author;
   text: string;
   createdAt: string;
+  editedAt?: string;
+  resolvedAt?: string;
+  resolvedBy?: Author;
   replies: ThreadReply[];
   highlightId?: string;
   section?: SteerSection;

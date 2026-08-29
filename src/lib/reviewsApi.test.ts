@@ -8,6 +8,7 @@ import {
   gateEvalDashboardRequest,
   appendCommentToReviews,
   handleReviewsCommentRequest,
+  handleReviewsNoteRequest,
   handleReviewsReplyRequest,
   handleReviewsRequest,
   mergeReviewsByUpdatedAt,
@@ -404,6 +405,65 @@ describe('handleReviewsCommentRequest', () => {
   });
 });
 
+describe('handleReviewsNoteRequest', () => {
+  const env = { EVAL_DASHBOARD_PASSWORD: 'board-secret', BLOB_READ_WRITE_TOKEN: 'token' };
+
+  it('edits and resolves a note without changing Pass/Fail', async () => {
+    const persist = memoryPersist([
+      review({
+        caseId: 'one',
+        updatedAt: '2026-08-10T00:00:00.000Z',
+        content: { passFail: 'fail', comment: 'Sam score', labels: [] },
+        notes: [
+          {
+            id: 'n1',
+            kind: 'comment',
+            lane: 'action',
+            author: 'sam',
+            text: 'Filed note',
+            createdAt: '2026-08-10T00:00:00.000Z',
+            replies: [],
+          },
+        ],
+      }),
+    ]);
+    const edited = await handleReviewsNoteRequest(
+      new Request('https://x/api/reviews/note', {
+        method: 'POST',
+        headers: {
+          Authorization: 'Bearer board-secret',
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({ caseId: 'one', noteId: 'n1', text: 'Edited note' }),
+      }),
+      env,
+      persist,
+    );
+    expect(edited.status).toBe(200);
+    const editedBody = (await edited.json()) as { note: { text: string; editedAt?: string } };
+    expect(editedBody.note.text).toBe('Edited note');
+    expect(editedBody.note.editedAt).toMatch(/^\d{4}-/);
+
+    const resolved = await handleReviewsNoteRequest(
+      new Request('https://x/api/reviews/note', {
+        method: 'POST',
+        headers: {
+          Authorization: 'Bearer board-secret',
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({ caseId: 'one', noteId: 'n1', resolved: true, author: 'oscar' }),
+      }),
+      env,
+      persist,
+    );
+    expect(resolved.status).toBe(200);
+    const saved = await persist.read();
+    expect(saved[0].content.passFail).toBe('fail');
+    expect(saved[0].notes[0].resolvedAt).toMatch(/^\d{4}-/);
+    expect(saved[0].notes[0].resolvedBy).toBe('oscar');
+  });
+});
+
 describe('handleReviewsReplyRequest', () => {
   const env = { EVAL_DASHBOARD_PASSWORD: 'board-secret', BLOB_READ_WRITE_TOKEN: 'token' };
 
@@ -466,6 +526,10 @@ describe('vercel.json', () => {
     expect(vercel.rewrites).toContainEqual({
       source: '/api/reviews/comment',
       destination: '/api/reviews-comment',
+    });
+    expect(vercel.rewrites).toContainEqual({
+      source: '/api/reviews/note',
+      destination: '/api/reviews-note',
     });
     expect(vercel.rewrites).toContainEqual({
       source: '/api/reviews/reply',

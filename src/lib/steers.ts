@@ -385,6 +385,9 @@ function parseNote(value: unknown, index: number): SteerNote {
     createdAt: typeof obj.createdAt === 'string' ? obj.createdAt : '',
     replies: Array.isArray(obj.replies) ? obj.replies.map(parseReply) : [],
   };
+  if (typeof obj.editedAt === 'string' && obj.editedAt) note.editedAt = obj.editedAt;
+  if (typeof obj.resolvedAt === 'string' && obj.resolvedAt) note.resolvedAt = obj.resolvedAt;
+  if (obj.resolvedBy === 'sam' || obj.resolvedBy === 'oscar') note.resolvedBy = obj.resolvedBy;
   if (typeof obj.highlightId === 'string' && obj.highlightId) note.highlightId = obj.highlightId;
   if (SECTIONS.includes(obj.section as SteerSection)) note.section = obj.section as SteerSection;
   if (start !== undefined) note.start = start;
@@ -529,6 +532,25 @@ export function newId(prefix: string): string {
 
 export function newHighlightId(): string {
   return newId('h');
+}
+
+export function noteIsResolved(note: SteerNote): boolean {
+  return Boolean(note.resolvedAt);
+}
+
+export function editSteerNote(note: SteerNote, text: string, now = new Date()): SteerNote {
+  const next = text.trim();
+  if (!next) throw new Error('note text is required');
+  return { ...note, text: next, editedAt: now.toISOString() };
+}
+
+export function resolveSteerNote(note: SteerNote, author: Author, now = new Date()): SteerNote {
+  return { ...note, resolvedAt: now.toISOString(), resolvedBy: author };
+}
+
+export function unresolveSteerNote(note: SteerNote): SteerNote {
+  const { resolvedAt: _resolvedAt, resolvedBy: _resolvedBy, ...rest } = note;
+  return rest;
 }
 
 export function addThreadReply(note: SteerNote, author: Author, text: string): SteerNote {

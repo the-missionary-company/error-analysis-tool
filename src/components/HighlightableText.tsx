@@ -26,6 +26,7 @@ interface Props {
   onSelect: (span: PendingSpan) => void;
   onHighlightClick: (highlight: SteerHighlight) => void;
   onRevisionClick: (revision: SteerRevision) => void;
+  resolvedHighlightIds?: readonly string[];
 }
 
 interface PositionedSegment extends BodySegment {
@@ -66,6 +67,7 @@ export function HighlightableText({
   onSelect,
   onHighlightClick,
   onRevisionClick,
+  resolvedHighlightIds = [],
 }: Props) {
   const rootRef = useRef<HTMLDivElement>(null);
   const dragSelectRef = useRef(false);
@@ -97,6 +99,7 @@ export function HighlightableText({
       keyPrefix,
       onHighlightClick,
       onRevisionClick,
+      resolvedHighlightIds,
     });
 
   return (
@@ -230,6 +233,7 @@ function renderSourceRange({
   keyPrefix,
   onHighlightClick,
   onRevisionClick,
+  resolvedHighlightIds,
 }: {
   text: string;
   from: number;
@@ -238,6 +242,7 @@ function renderSourceRange({
   keyPrefix: string;
   onHighlightClick: (highlight: SteerHighlight) => void;
   onRevisionClick: (revision: SteerRevision) => void;
+  resolvedHighlightIds: readonly string[];
 }): ReactNode {
   const nodes: ReactNode[] = [];
   const tokens = parseInlineMarkup(text);
@@ -256,6 +261,7 @@ function renderSourceRange({
           keyPrefix: `${keyPrefix}-${start}`,
           onHighlightClick,
           onRevisionClick,
+          resolvedHighlightIds,
         }),
       );
       continue;
@@ -270,6 +276,7 @@ function renderSourceRange({
         segment: overlap,
         onHighlightClick,
         onRevisionClick,
+        resolvedHighlightIds,
         children:
           token.kind === 'link' ? (
             <TicketLink href={token.href} label={token.display} srcStart={token.labelStart} />
@@ -301,6 +308,7 @@ function renderPlainRuns({
   keyPrefix,
   onHighlightClick,
   onRevisionClick,
+  resolvedHighlightIds,
 }: {
   text: string;
   start: number;
@@ -309,6 +317,7 @@ function renderPlainRuns({
   keyPrefix: string;
   onHighlightClick: (highlight: SteerHighlight) => void;
   onRevisionClick: (revision: SteerRevision) => void;
+  resolvedHighlightIds: readonly string[];
 }): ReactNode[] {
   const hits = segments
     .filter((segment) => segment.role !== 'replacement' && segment.start < end && segment.end > start)
@@ -331,6 +340,7 @@ function renderPlainRuns({
           segment,
           onHighlightClick,
           onRevisionClick,
+          resolvedHighlightIds,
           children: text.slice(from, to),
         }),
       );
@@ -370,6 +380,7 @@ function wrapRun({
   children,
   onHighlightClick,
   onRevisionClick,
+  resolvedHighlightIds,
 }: {
   key: string;
   srcStart: number;
@@ -377,6 +388,7 @@ function wrapRun({
   children: ReactNode;
   onHighlightClick: (highlight: SteerHighlight) => void;
   onRevisionClick: (revision: SteerRevision) => void;
+  resolvedHighlightIds: readonly string[];
 }): ReactNode {
   if (segment?.role === 'struck') {
     return (
@@ -404,9 +416,14 @@ function wrapRun({
         className={cn(
           'cursor-pointer rounded-sm px-0.5 underline decoration-dotted underline-offset-2',
           LANE_TONE[segment.highlight.lane].mark,
+          resolvedHighlightIds.includes(segment.highlight.id) && 'opacity-40',
         )}
         title={
-          segment.highlight.lane === 'content' ? 'Content / understanding' : 'Action / tech lead'
+          resolvedHighlightIds.includes(segment.highlight.id)
+            ? 'Resolved comment'
+            : segment.highlight.lane === 'content'
+              ? 'Content / understanding'
+              : 'Action / tech lead'
         }
         onClick={(event) => {
           event.stopPropagation();

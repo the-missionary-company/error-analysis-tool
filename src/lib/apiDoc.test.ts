@@ -11,6 +11,7 @@ describe('API.md', () => {
     expect(doc).toContain('PUT /api/reviews');
     expect(doc).toContain('POST /api/reviews/comment');
     expect(doc).toContain('POST /api/reviews/reply');
+    expect(doc).toContain('POST /api/reviews/note');
     expect(doc).toContain('Authorization: Bearer');
     expect(doc).toContain('Do not PUT a full review');
   });

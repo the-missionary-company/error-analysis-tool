@@ -1,6 +1,15 @@
 import { SEED_STEER_IDS } from '../data/seedCaseIds.js';
 import type { Author, NoteKind, ScoreLane, SteerNote, SteerReview, SteerSection } from '../types/steers.js';
-import { addThreadReply, attachSpanNotes, emptyReview, newId, parseSteerReviews } from './steers.js';
+import {
+  addThreadReply,
+  attachSpanNotes,
+  editSteerNote,
+  emptyReview,
+  newId,
+  parseSteerReviews,
+  resolveSteerNote,
+  unresolveSteerNote,
+} from './steers.js';
 import { authorizeReviewsRequest, jsonResponse } from './evalGate.js';
 
 export { gateEvalDashboardRequest, isCasesApiPath, isJsonApiPath, isReviewsApiPath } from './evalGate.js';
@@ -301,5 +310,61 @@ export async function handleReviewsCommentRequest(
     return jsonResponse(200, { review: result.review, note: result.note });
   } catch (error) {
     return persistError(error) ?? jsonResponse(400, { error: 'invalid comment payload' });
+  }
+}
+
+export async function handleReviewsNoteRequest(
+  request: Request,
+  env: Record<string, string | undefined>,
+  persist: ReviewsPersist,
+): Promise<Response> {
+  if (!(await authorizeReviewsRequest(request, env))) {
+    return jsonResponse(401, { error: 'unauthorized' });
+  }
+  if (request.method !== 'POST') {
+    return jsonResponse(405, { error: 'method not allowed' });
+  }
+  try {
+    const body = (await request.json()) as {
+      caseId?: unknown;
+      noteId?: unknown;
+      text?: unknown;
+      resolved?: unknown;
+      author?: unknown;
+    };
+    if (typeof body.caseId !== 'string' || typeof body.noteId !== 'string') {
+      return jsonResponse(400, { error: 'caseId and noteId are required' });
+    }
+    const hasText = typeof body.text === 'string';
+    const hasResolved = typeof body.resolved === 'boolean';
+    if (!hasText && !hasResolved) {
+      return jsonResponse(400, { error: 'text or resolved is required' });
+    }
+    if (hasText && !body.text.trim()) {
+      return jsonResponse(400, { error: 'text is required' });
+    }
+    const existing = await persist.read();
+    const review = existing.find((item) => item.caseId === body.caseId);
+    if (!review) return jsonResponse(404, { error: 'note not found' });
+    const current = review.notes.find((note) => note.id === body.noteId);
+    if (!current) return jsonResponse(404, { error: 'note not found' });
+
+    let next = current;
+    if (hasText) next = editSteerNote(next, body.text);
+    if (hasResolved) {
+      next = body.resolved
+        ? resolveSteerNote(next, body.author === 'oscar' ? 'oscar' : 'sam')
+        : unresolveSteerNote(next);
+    }
+    const updated: SteerReview = {
+      ...review,
+      notes: review.notes.map((note) => (note.id === next.id ? next : note)),
+      updatedAt: new Date().toISOString(),
+    };
+    const reviews = mergeReviewsByUpdatedAt(existing, [updated]);
+    await persist.write(reviews);
+    return jsonResponse(200, { review: updated, note: next });
+  } catch (error) {
+    return persistError(error) ?? jsonResponse(400, { error: 'invalid note payload' });
   }
 }

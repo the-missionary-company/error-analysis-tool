@@ -26,6 +26,7 @@ Do **not** invent steer bodies. Do **not** invent or overwrite Sam’s Pass/Fail
 | Case-level comment or question | `POST /api/reviews/comment` | Defaults `author` to `oscar`. Does not change Pass/Fail |
 | Span / gutter comment | `POST /api/reviews/comment` with `section` + `spanText` | Optional `start`, `end`, `highlightId` |
 | Reply in a thread | `POST /api/reviews/reply` | Needs `noteId` from GET |
+| Edit or resolve a filed note | `POST /api/reviews/note` | `text` and/or `resolved`. Does not change Pass/Fail |
 | Export the board | `GET /api/cases` + `GET /api/reviews` | Same shape as Export JSON, minus `kind` / `exportedAt` |
 | Import cases | `POST /api/cases` with `{ "cases": [...] }` | Same required fields as Load cases |
 | Mark Pass/Fail, labels, chips | `PUT /api/reviews` | **Sam’s work.** A full PUT replaces the stored review and can wipe scores |
@@ -132,6 +133,27 @@ oscar -X POST "$HOST/api/reviews/comment" -d '{
 `section` is `context` | `problem` | `options` | `choice`. Optional `highlightId` attaches to an existing highlight.
 
 **404** `case not found` or `highlight not found`.
+
+### `POST /api/reviews/note`
+
+Does **not** change Pass/Fail. Edit `text` and/or set `resolved` on an existing note.
+
+```bash
+oscar -X POST "$HOST/api/reviews/note" -d '{
+  "caseId": "sync-was-becoming-a-type-religion",
+  "noteId": "n-…",
+  "text": "Clearer note"
+}'
+
+oscar -X POST "$HOST/api/reviews/note" -d '{
+  "caseId": "sync-was-becoming-a-type-religion",
+  "noteId": "n-…",
+  "resolved": true,
+  "author": "oscar"
+}'
+```
+
+`resolved: false` reopens the note. **404** if the note is missing.
 
 ### `POST /api/reviews/reply`
 

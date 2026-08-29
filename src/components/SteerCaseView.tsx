@@ -1,5 +1,6 @@
 import { ExternalLink } from 'lucide-react';
-import type { SteerCase, SteerHighlight, SteerRevision, SteerSection } from '../types/steers';
+import type { SteerCase, SteerHighlight, SteerNote, SteerRevision, SteerSection } from '../types/steers';
+import { resolvedHighlightIds } from '../lib/gutterLayout';
 import { formatDate } from '../lib/utils';
 import { HighlightableText, type PendingSpan } from './HighlightableText';
 
@@ -13,6 +14,7 @@ const SECTIONS: { key: SteerSection; label: string }[] = [
 export function SteerCaseView({
   steer,
   highlights,
+  notes = [],
   revisions,
   onSelect,
   onHighlightClick,
@@ -20,6 +22,7 @@ export function SteerCaseView({
 }: {
   steer: SteerCase;
   highlights: SteerHighlight[];
+  notes?: SteerNote[];
   revisions: SteerRevision[];
   onSelect: (span: PendingSpan) => void;
   onHighlightClick: (highlight: SteerHighlight) => void;
@@ -71,6 +74,7 @@ export function SteerCaseView({
               section={key}
               highlights={highlights}
               revisions={revisions}
+              resolvedHighlightIds={resolvedHighlightIds(highlights, notes)}
               onSelect={onSelect}
               onHighlightClick={onHighlightClick}
               onRevisionClick={onRevisionClick}

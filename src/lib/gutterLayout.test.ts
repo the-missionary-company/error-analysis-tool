@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { notesForHighlight, stackGutterItems } from './gutterLayout';
+import { notesForHighlight, resolvedHighlightIds, stackGutterItems } from './gutterLayout';
 import { emptyReview } from './steers';
 import type { SteerNote } from '../types/steers';
 
@@ -64,5 +64,16 @@ describe('notesForHighlight', () => {
     ];
     expect(notesForHighlight(notes, 'h1').map((item) => item.id)).toEqual(['n1', 'n3']);
     expect(notesForHighlight(review.notes, 'missing')).toEqual([]);
+  });
+});
+
+describe('resolvedHighlightIds', () => {
+  it('marks a highlight resolved only when every attached note is resolved', () => {
+    const highlights = [{ id: 'h1' }, { id: 'h2' }];
+    const notes = [
+      note({ id: 'n1', highlightId: 'h1', resolvedAt: '2026-08-29T00:00:00.000Z' }),
+      note({ id: 'n2', highlightId: 'h2' }),
+    ];
+    expect(resolvedHighlightIds(highlights, notes)).toEqual(['h1']);
   });
 });

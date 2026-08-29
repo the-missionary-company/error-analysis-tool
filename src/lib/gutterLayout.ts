@@ -1,7 +1,20 @@
+import { noteIsResolved } from './steers';
 import type { SteerNote } from '../types/steers';
 
 export function notesForHighlight(notes: SteerNote[], highlightId: string): SteerNote[] {
   return notes.filter((note) => note.highlightId === highlightId);
+}
+
+export function resolvedHighlightIds(
+  highlights: { id: string }[],
+  notes: SteerNote[],
+): string[] {
+  return highlights
+    .filter((highlight) => {
+      const attached = notesForHighlight(notes, highlight.id);
+      return attached.length > 0 && attached.every(noteIsResolved);
+    })
+    .map((highlight) => highlight.id);
 }
 
 export function stackGutterItems(

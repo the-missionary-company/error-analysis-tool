@@ -8,6 +8,10 @@ import {
   applyHighlightSegments,
   addLaneLabel,
   addThreadReply,
+  editSteerNote,
+  noteIsResolved,
+  resolveSteerNote,
+  unresolveSteerNote,
   applyBodySegments,
   createRevisionFromQuestion,
   emptyReview,
@@ -1041,6 +1045,41 @@ describe('comments vs question threads', () => {
     expect(withReply.replies).toHaveLength(2);
     expect(withReply.replies[1].author).toBe('sam');
     expect(question.replies).toHaveLength(1);
+  });
+
+  it('edits and resolves a filed note without dropping the thread', () => {
+    const base = {
+      id: 'n1',
+      kind: 'comment' as const,
+      lane: 'content' as const,
+      author: 'sam' as const,
+      text: 'Original note',
+      createdAt: '2026-08-29T00:00:00.000Z',
+      replies: [{ id: 'r1', author: 'oscar' as const, text: 'Seen.', createdAt: '2026-08-29T00:01:00.000Z' }],
+    };
+    const edited = editSteerNote(base, '  Clearer note  ', new Date('2026-08-29T01:00:00.000Z'));
+    expect(edited.text).toBe('Clearer note');
+    expect(edited.editedAt).toBe('2026-08-29T01:00:00.000Z');
+    expect(edited.replies).toHaveLength(1);
+    expect(noteIsResolved(edited)).toBe(false);
+
+    const resolved = resolveSteerNote(edited, 'sam', new Date('2026-08-29T02:00:00.000Z'));
+    expect(noteIsResolved(resolved)).toBe(true);
+    expect(resolved.resolvedBy).toBe('sam');
+    expect(resolved.resolvedAt).toBe('2026-08-29T02:00:00.000Z');
+    expect(unresolveSteerNote(resolved).resolvedAt).toBeUndefined();
+
+    const parsed = parseSteerReviews({
+      reviews: [
+        {
+          caseId: 'one',
+          notes: [{ ...resolved, resolvedAt: '2026-08-29T02:00:00.000Z', resolvedBy: 'sam', editedAt: '2026-08-29T01:00:00.000Z' }],
+        },
+      ],
+    });
+    expect(parsed[0].notes[0].text).toBe('Clearer note');
+    expect(parsed[0].notes[0].resolvedAt).toBe('2026-08-29T02:00:00.000Z');
+    expect(parsed[0].notes[0].editedAt).toBe('2026-08-29T01:00:00.000Z');
   });
 });
 

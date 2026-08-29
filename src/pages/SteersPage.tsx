@@ -282,11 +282,12 @@ export function SteersPage() {
           }}
           onLaneChange={onLaneChange}
         />
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
           <div ref={caseBodyRef} className="min-w-0">
             <SteerCaseView
               steer={activeCase}
               highlights={activeReview.highlights}
+              notes={activeReview.notes}
               revisions={activeReview.revisions}
               onSelect={(span) => {
                 setPending(span);
@@ -307,7 +308,6 @@ export function SteersPage() {
             review={activeReview}
             author={author}
             focusedNoteId={focusedNoteId}
-            bodyRef={caseBodyRef}
             onFocus={focusNote}
             onChangeNotes={(notes) => updateReview({ ...activeReview, notes })}
             onRemoveHighlight={onRemoveHighlight}

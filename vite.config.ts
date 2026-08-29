@@ -9,6 +9,7 @@ import { readPersistedCaseIds } from './src/lib/casesApi';
 import {
   gateEvalDashboardRequest,
   handleReviewsCommentRequest,
+  handleReviewsNoteRequest,
   handleReviewsReplyRequest,
   handleReviewsRequest,
   isCasesApiPath,
@@ -86,9 +87,11 @@ function applyEvalDashboardGate(server: ViteDevServer | PreviewServer) {
       const extraCaseIds = await readPersistedCaseIds(createBlobCasesPersist(process.env));
       const response = path.startsWith('/api/reviews/reply')
         ? await handleReviewsReplyRequest(request, process.env, persist)
-        : path.startsWith('/api/reviews/comment')
-          ? await handleReviewsCommentRequest(request, process.env, persist, extraCaseIds)
-          : await handleReviewsRequest(request, process.env, persist);
+        : path.startsWith('/api/reviews/note')
+          ? await handleReviewsNoteRequest(request, process.env, persist)
+          : path.startsWith('/api/reviews/comment')
+            ? await handleReviewsCommentRequest(request, process.env, persist, extraCaseIds)
+            : await handleReviewsRequest(request, process.env, persist);
       await writeWebResponse(res, response);
       return;
     }
