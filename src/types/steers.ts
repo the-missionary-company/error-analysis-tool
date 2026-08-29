@@ -25,9 +25,11 @@ export interface SteerHighlight {
   comment: string;
 }
 
-export type CaseSortField = 'timestamp' | 'number' | 'stamp' | 'session' | 'project';
+export type CaseSortField = 'timestamp' | 'number' | 'stamp' | 'session' | 'project' | 'parent';
 export type CaseSortDirection = 'asc' | 'desc';
 export type InboxTab = 'inbox' | 'filed';
+/** Tracker that owns the durable parent id. Default is linear. */
+export type ParentSystem = 'linear' | (string & {});
 
 export interface CaseSort {
   field: CaseSortField;
@@ -37,15 +39,33 @@ export interface CaseSort {
 export interface SteerCase {
   id: string;
   title: string;
+  /**
+   * Optional agent/runner label (legacy). Prefer sessionId for Vorflux.
+   * Always present after parse (defaults to project, parentId, or "—").
+   */
   session: string;
   stamp: string;
   when: string;
   number?: number;
   timestamp?: string;
-  /** Project / parent agent Sam filters by (Capture, Sync, Tracer, …). Falls back to session. */
+  /** Optional Vorflux (or other runner) session id. Not required. */
+  sessionId?: string;
+  /** Human project label (Capture, Sync, Tracer, …). Display helper; not the durable key. */
   project?: string;
-  /** Linear parent ticket id, e.g. CH-757. */
+  /**
+   * Which system owns parentId. Default `linear`. Future-proof for other trackers.
+   */
+  parentSystem?: ParentSystem;
+  /** Durable parent id in parentSystem. For Linear: CH-757. Primary filter key. */
+  parentId?: string;
+  parentUrl?: string;
+  /**
+   * @deprecated Alias of parentId (Linear). Still accepted on POST/GET for older clients.
+   */
   parentTicket?: string;
+  /**
+   * @deprecated Alias of parentUrl.
+   */
   parentTicketUrl?: string;
   /** Spec id or short slug, e.g. AF-CAL-01. */
   spec?: string;

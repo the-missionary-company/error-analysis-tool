@@ -1178,48 +1178,74 @@ describe('span notes and case progress', () => {
 });
 
 describe('project scope and inbox filing', () => {
-  it('fills project from session and known parent tickets', () => {
+  it('fills Linear parentId from known project and accepts sessionless posts', () => {
     const cases = parseSteerCases([
       {
         id: 't1',
         title: 'T',
-        session: 'Tracer',
         stamp: 'KEEP',
         when: '2026-08-28',
+        project: 'Tracer',
         context: 'c',
         problem: 'p',
         options: 'o',
         choice: 'x',
       },
     ]);
+    expect(cases[0].session).toBe('Tracer');
     expect(cases[0].project).toBe('Tracer');
+    expect(cases[0].parentSystem).toBe('linear');
+    expect(cases[0].parentId).toBe('CH-757');
     expect(cases[0].parentTicket).toBe('CH-757');
-    expect(cases[0].parentTicketUrl).toContain('CH-757');
+    expect(cases[0].parentUrl).toContain('CH-757');
   });
 
-  it('keeps Oscar-supplied project, parentTicket, and spec', () => {
+  it('keeps Oscar-supplied parentSystem, parentId, sessionId, and spec', () => {
     const cases = parseSteerCases([
       {
         id: 'c1',
         title: 'C',
-        session: 'Capture',
-        project: 'Capture',
-        parentTicket: 'CH-807',
-        parentTicketUrl: 'https://linear.app/x/CH-807',
-        spec: 'capture-core',
         stamp: 'KEEP',
         when: '2026-08-28',
+        parentSystem: 'linear',
+        parentId: 'CH-807',
+        parentUrl: 'https://linear.app/x/CH-807',
+        project: 'Capture',
+        sessionId: 'abc123',
+        spec: 'capture-core',
         context: 'c',
         problem: 'p',
         options: 'o',
         choice: 'x',
       },
     ]);
+    expect(cases[0].sessionId).toBe('abc123');
     expect(cases[0].spec).toBe('capture-core');
-    expect(filterCasesByScope(cases, { project: 'Capture' })).toHaveLength(1);
-    expect(filterCasesByScope(cases, { parentTicket: 'CH-807' })).toHaveLength(1);
-    expect(filterCasesByScope(cases, { spec: 'capture-core' })).toHaveLength(1);
+    expect(cases[0].parentId).toBe('CH-807');
+    expect(filterCasesByScope(cases, { parentId: 'CH-807' })).toHaveLength(1);
+    expect(filterCasesByScope(cases, { parentKey: 'linear:CH-807' })).toHaveLength(1);
+    expect(filterCasesByScope(cases, { parentSystem: 'linear', parentId: 'CH-807' })).toHaveLength(1);
     expect(filterCasesByScope(cases, { project: 'Sync' })).toHaveLength(0);
+  });
+
+  it('accepts legacy parentTicket alias', () => {
+    const cases = parseSteerCases([
+      {
+        id: 'legacy',
+        title: 'L',
+        session: 'Sync',
+        stamp: 'KEEP',
+        when: '2026-08-28',
+        parentTicket: 'CH-795',
+        parentTicketUrl: 'https://linear.app/x/CH-795',
+        context: 'c',
+        problem: 'p',
+        options: 'o',
+        choice: 'x',
+      },
+    ]);
+    expect(cases[0].parentId).toBe('CH-795');
+    expect(cases[0].parentUrl).toContain('CH-795');
   });
 
   it('files and unfiles a review for the inbox', () => {

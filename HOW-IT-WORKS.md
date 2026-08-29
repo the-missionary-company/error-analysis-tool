@@ -6,7 +6,7 @@ The pile is the work. Analysis of broader patterns waits until you have scored a
 
 ## The loop
 
-1. Open a case (or press `n` for the next inbox case that is not fully scored). Filter by **Project** when you want one parent at a time (Capture / Sync / Tracer / Calendar / Fireflies).
+1. Open a case (or press `n` for the next inbox case that is not fully scored). Filter by **Parent (Linear)** when you want one ticket/project at a time (e.g. CH-757 · Tracer).
 2. Read **Background → Problem → Options → Choice**.
 3. Mark **Pass** or **Fail** on both scores:
    - **Content / understanding** — how Oscar sent the message. Did you understand the write-up, and what the agents are doing?

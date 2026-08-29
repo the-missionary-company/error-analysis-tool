@@ -1,6 +1,6 @@
 import { ExternalLink } from 'lucide-react';
 import type { SteerCase, SteerHighlight, SteerRevision, SteerSection } from '../types/steers';
-import { caseProject } from '../lib/steers';
+import { caseParentId, caseParentSystem, caseParentUrl, caseProject } from '../lib/steers';
 import { HighlightableText, type PendingSpan } from './HighlightableText';
 
 const SECTIONS: { key: SteerSection; label: string }[] = [
@@ -26,6 +26,9 @@ export function SteerCaseView({
   onRevisionClick: (revision: SteerRevision) => void;
 }) {
   const project = caseProject(steer);
+  const parentId = caseParentId(steer);
+  const parentUrl = caseParentUrl(steer);
+  const parentSystem = caseParentSystem(steer);
   return (
     <article className="space-y-4">
       <header className="card p-5">
@@ -33,23 +36,28 @@ export function SteerCaseView({
         <h2 className="mt-1 text-xl font-semibold leading-snug text-ink-950">{steer.title}</h2>
         <div className="mt-3 flex flex-wrap gap-2 text-xs">
           {steer.number != null && <MetaChip label="Number" value={String(steer.number)} />}
-          <MetaChip label="Project" value={project} />
-          {steer.parentTicket && (
-            steer.parentTicketUrl ? (
+          {parentId &&
+            (parentUrl ? (
               <a
-                href={steer.parentTicketUrl}
+                href={parentUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="rounded-full bg-violet-50 px-2.5 py-1 font-medium text-violet-900 ring-1 ring-violet-200 hover:bg-violet-100"
               >
-                Parent: {steer.parentTicket}
+                {parentSystem === 'linear' ? 'Linear' : parentSystem}: {parentId}
               </a>
             ) : (
-              <MetaChip label="Parent" value={steer.parentTicket} />
-            )
-          )}
+              <MetaChip
+                label={parentSystem === 'linear' ? 'Linear' : parentSystem}
+                value={parentId}
+              />
+            ))}
+          {project && <MetaChip label="Project" value={project} />}
           {steer.spec && <MetaChip label="Spec" value={steer.spec} />}
-          <MetaChip label="Session" value={steer.session} />
+          {steer.sessionId && <MetaChip label="Vorflux session" value={steer.sessionId} />}
+          {steer.session && steer.session !== '—' && steer.session !== project && (
+            <MetaChip label="Session" value={steer.session} />
+          )}
           <MetaChip label="Stamp" value={steer.stamp} tone={steer.stamp === 'HOLD' ? 'hold' : undefined} />
           {steer.tooAggressive && <MetaChip label="Too aggressive?" value={steer.tooAggressive} />}
           {steer.yourCall && <MetaChip label="Your call" value={steer.yourCall} />}
