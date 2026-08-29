@@ -19,6 +19,7 @@ describe('API.md', () => {
     expect(doc).toContain('parentTitle');
     expect(doc).toContain('sessionId');
     expect(doc).toContain('filedAt');
+    expect(doc).toContain('archived: true');
     expect(doc).toContain('On file');
     expect(doc).toContain('OSCAR_EVAL_WEBHOOK_URL');
     expect(doc).toContain('OSCAR_EVAL_WEBHOOK_KEY');

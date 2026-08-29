@@ -1,11 +1,13 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { SEED_STEERS } from '../data/steerSeed';
-import { emptyReview } from './steers';
+import { emptyReview, markArchived } from './steers';
 import {
   importSteerReviews,
+  loadInboxTab,
   loadSteerCases,
   loadSteerReviews,
   saveImportedCases,
+  saveInboxTab,
   saveSteerReview,
 } from './steerStorage';
 
@@ -239,5 +241,14 @@ describe('steerStorage', () => {
     const restored = loadSteerReviews(store)[SEED_STEERS[0].id];
     expect(restored.content.passFail).toBe('fail');
     expect(restored.action.passFail).toBe('pass');
+  });
+
+  it('persists archived on a case and restores the Archived shelf tab', () => {
+    const store = memoryStore();
+    saveImportedCases([markArchived(SEED_STEERS[0])], store);
+    expect(loadSteerCases(store)[0].archived).toBe(true);
+    saveInboxTab('archived', store);
+    expect(loadInboxTab(store)).toBe('archived');
+    expect(loadInboxTab(memoryStore())).toBe('inbox');
   });
 });

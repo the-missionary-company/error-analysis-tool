@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react';
 import {
+  caseListSection,
   caseParentId,
   caseParentKey,
   caseParentTitle,
   caseProgress,
   caseProject,
+  isArchived,
   isFiled,
   listParentScopes,
   type CaseProgress,
@@ -54,18 +56,22 @@ export function SteerCaseQueue({
 }) {
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<ProgressFilter>('all');
-  const parents = useMemo(() => listParentScopes(cases), [cases]);
+  const liveCases = useMemo(() => cases.filter((item) => !isArchived(item)), [cases]);
+  const shelfCases = useMemo(() => cases.filter((item) => isArchived(item)), [cases]);
+  const parents = useMemo(
+    () => listParentScopes(inboxTab === 'archived' ? shelfCases : liveCases),
+    [inboxTab, liveCases, shelfCases],
+  );
 
-  const inboxCount = cases.filter((item) => !isFiled(reviews[item.id])).length;
-  const filedCount = cases.length - inboxCount;
+  const inboxCount = liveCases.filter((item) => !isFiled(reviews[item.id])).length;
+  const filedCount = liveCases.length - inboxCount;
+  const archivedCount = shelfCases.length;
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
     return cases.filter((item) => {
       const review = reviews[item.id];
-      const filed = isFiled(review);
-      if (inboxTab === 'inbox' && filed) return false;
-      if (inboxTab === 'filed' && !filed) return false;
+      if (caseListSection(item, review) !== inboxTab) return false;
       if (parentFilter && caseParentKey(item) !== parentFilter) return false;
       const progress = caseProgress(review);
       if (filter === 'scored' && progress !== 'scored') return false;
@@ -91,6 +97,7 @@ export function SteerCaseQueue({
           <h2 className="text-sm font-semibold text-ink-950">Cases</h2>
           <p className="text-[11px] text-ink-500">
             {inboxCount} inbox · {filedCount} filed
+            {archivedCount ? ` · ${archivedCount} archived` : ''}
           </p>
         </div>
 
@@ -112,6 +119,18 @@ export function SteerCaseQueue({
             </button>
           ))}
         </div>
+        <button
+          type="button"
+          className={cn(
+            'mt-1 w-full rounded-md px-2 py-1 text-[11px]',
+            inboxTab === 'archived'
+              ? 'bg-ink-900 text-white'
+              : 'text-ink-400 hover:bg-ink-50 hover:text-ink-600',
+          )}
+          onClick={() => onInboxTabChange('archived')}
+        >
+          Archived{archivedCount ? ` (${archivedCount})` : ''}
+        </button>
 
         <input
           value={query}
@@ -247,7 +266,11 @@ export function SteerCaseQueue({
         })}
         {visible.length === 0 && (
           <li className="px-2 py-6 text-center text-xs text-ink-400">
-            {inboxTab === 'inbox' ? 'Inbox is clear for this filter.' : 'No filed cases in this filter.'}
+            {inboxTab === 'inbox'
+              ? 'Inbox is clear for this filter.'
+              : inboxTab === 'filed'
+                ? 'No filed cases in this filter.'
+                : 'No archived cases in this filter.'}
           </li>
         )}
       </ul>

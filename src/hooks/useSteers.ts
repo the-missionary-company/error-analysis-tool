@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { SEED_STEERS } from '../data/steerSeed';
-import { fetchRemoteCases, remoteCaseExtras } from '../lib/casesClient';
+import { fetchRemoteCases, postRemoteCases, remoteCaseExtras } from '../lib/casesClient';
 import { fetchRemoteReviews, putRemoteReviews } from '../lib/reviewsClient';
 import { mergeReviewsByUpdatedAt } from '../lib/reviewsApi';
 import {
@@ -77,6 +77,12 @@ export function useSteers() {
     if (review) void putRemoteReviews(review);
   }, []);
 
+  const persistCase = useCallback((next: SteerCase) => {
+    saveImportedCases([next]);
+    setCases(loadSteerCases());
+    void postRemoteCases(next);
+  }, []);
+
   const importCases = useCallback((incoming: SteerCase[]) => {
     saveImportedCases(incoming);
     const next = loadSteerCases();
@@ -104,6 +110,7 @@ export function useSteers() {
     activeId: activeCase?.id ?? activeId,
     setActiveId,
     persistReview,
+    persistCase,
     importCases,
     importReviews,
     exportBoard,

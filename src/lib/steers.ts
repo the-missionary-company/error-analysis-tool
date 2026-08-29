@@ -224,6 +224,27 @@ export function markUnfiled(review: SteerReview, at = new Date()): SteerReview {
   return next;
 }
 
+export function isArchived(item?: SteerCase | null): boolean {
+  return item?.archived === true;
+}
+
+export function markArchived(item: SteerCase): SteerCase {
+  return { ...item, archived: true };
+}
+
+export function markUnarchived(item: SteerCase): SteerCase {
+  return { ...item, archived: false };
+}
+
+/** Inbox / Filed hide archived cases. Archived is its own shelf. */
+export function caseListSection(
+  item: SteerCase,
+  review?: SteerReview | null,
+): 'inbox' | 'filed' | 'archived' {
+  if (isArchived(item)) return 'archived';
+  return isFiled(review) ? 'filed' : 'inbox';
+}
+
 export function listProjects(cases: SteerCase[]): string[] {
   const seen = new Set<string>();
   const out: string[] = [];
@@ -515,6 +536,8 @@ function parseCase(value: unknown, index: number): SteerCase {
   if (parentTitle) parsed.parentTitle = parentTitle;
   if (spec) parsed.spec = spec;
   if (typeof rawNumber === 'number' && Number.isFinite(rawNumber)) parsed.number = rawNumber;
+  if (obj.archived === true) parsed.archived = true;
+  if (obj.archived === false) parsed.archived = false;
   return withCaseScopeDefaults(parsed);
 }
 
@@ -717,10 +740,15 @@ export function mergeCases(base: SteerCase[], incoming: SteerCase[]): SteerCase[
   const extras: SteerCase[] = [];
   for (const item of incoming) {
     const scoped = withCaseScopeDefaults(item);
-    if (byId.has(scoped.id)) {
-      byId.set(scoped.id, scoped);
+    const prev = byId.get(scoped.id);
+    const next =
+      prev && scoped.archived === undefined && prev.archived !== undefined
+        ? { ...scoped, archived: prev.archived }
+        : scoped;
+    if (prev) {
+      byId.set(scoped.id, next);
     } else {
-      extras.push(scoped);
+      extras.push(next);
     }
   }
   return [...byId.values(), ...extras];

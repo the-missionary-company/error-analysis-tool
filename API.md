@@ -22,6 +22,8 @@ Do **not** invent steer bodies. Do **not** invent or overwrite Sam’s Pass/Fail
 | Read the case list / one case | `GET /api/cases` | Seed plus posted extras. Filter with `?parentId=` / `?parentSystem=` / `?parentKey=` / `?project=` / `?spec=` |
 | Post a new steer (no Notion) | `POST /api/cases` | Required body fields below. **Always send `parentId` + `parentSystem`** (Linear). `sessionId` optional |
 | Update a posted steer | `POST /api/cases` with the same `id` | Merges by id. Posted row overrides seed only if you post that id |
+| Archive a superseded case | `POST /api/cases` with the same `id` and `archived: true` | Shelf, not File. Hides from Inbox / Filed. Does **not** set `filedAt` or ping the File webhook |
+| Unarchive | `POST /api/cases` with the same `id` and `archived: false` | Returns to Inbox (or Filed if the review still has `filedAt`) |
 | Read Sam’s scores, notes, threads | `GET /api/reviews` | `?caseId=` optional. `filedAt` means Sam filed it out of inbox |
 | Case-level comment or question | `POST /api/reviews/comment` | Defaults `author` to `oscar`. Does not change Pass/Fail or filing |
 | Span / gutter comment | `POST /api/reviews/comment` with `section` + `spanText` | Optional `start`, `end`, `highlightId` |
@@ -87,7 +89,11 @@ Required: `title`, `stamp`, `context`, `problem`, `options`, `choice`.
 
 **`session` is optional.** Vorflux session id is optional. Linear parent id is what Sam filters on.
 
-If `id` is missing, it is slugged from `title`. If `number` is missing, it is `max(seed + stored) + 1`. If `when` / `timestamp` are missing, they are now. Optional: `tooAggressive`, `yourCall`, `yourCallBody`, `contextLabel` (default `Background`), `choiceLabel` (default `Choice`), `notionUrl`, scope fields below.
+If `id` is missing, it is slugged from `title`. If `number` is missing, it is `max(seed + stored) + 1`. If `when` / `timestamp` are missing, they are now. Optional: `tooAggressive`, `yourCall`, `yourCallBody`, `contextLabel` (default `Background`), `choiceLabel` (default `Choice`), `notionUrl`, `archived` (`true` \| `false`), scope fields below.
+
+**`archived` is a real field on `SteerCase`.** GET returns it. Case-level is the source of truth for the Inbox / Filed / Archived section.
+
+When a Tracer hourly page is superseded, POST `{ "id": "<old-case-id>", "archived": true }` (or the full case plus `archived: true`). That shelves the old id. It does **not** set `filedAt` and does **not** notify Oscar's File webhook. `{ "id", "archived": true|false }` on a known case id is enough — you do not have to resend the steer body. `archived: false` puts it back on the live list.
 
 ### Scope fields (Oscar / Nick)
 
@@ -208,7 +214,7 @@ When Sam presses **Done — file it**, the board PUTs that review with a new `fi
 
 One POST per newly filed `caseId` that the write actually kept. Newly filed means the persisted review has a `filedAt` and the previous stored copy had none, or a different `filedAt` (re-file). A PUT that loses the `updatedAt` merge does not notify.
 
-Not on `POST /api/reviews/comment`. Not on `POST /api/reviews/reply`. Not on keystroke PUTs that leave `filedAt` unchanged. Not on unfile.
+Not on `POST /api/reviews/comment`. Not on `POST /api/reviews/reply`. Not on keystroke PUTs that leave `filedAt` unchanged. Not on unfile. **Not on archive / unarchive** (`archived` lives on the case via `POST /api/cases`; that path never calls this webhook).
 
 If either env var is missing or blank, the PUT still returns 200 and no webhook fires. A webhook timeout (~3s) or fetch error is swallowed; the PUT still 200s.
 
@@ -228,7 +234,7 @@ Scope / identity (send these):
 - `sessionId` — optional Vorflux (or other runner) session id
 - Aliases: `parentTicket` / `parentTicketUrl`
 
-Also optional: `number`, `timestamp`, `yourCall`, `tooAggressive`, `yourCallBody`, `contextLabel`, `choiceLabel`, `notionUrl`.
+Also optional: `number`, `timestamp`, `yourCall`, `tooAggressive`, `yourCallBody`, `contextLabel`, `choiceLabel`, `notionUrl`, `archived` (`true` when the case is on the Archived shelf).
 
 `SteerReview`: `caseId`, `content` / `action` (`passFail` `pass` | `fail` | `null`, `comment`, `labels[]`), `highlights[]`, `notes[]`, `revisions[]`, `chips[]`, `filedAt?` (ISO when Sam filed it out of the inbox), `updatedAt`.
 
@@ -240,13 +246,15 @@ Also optional: `number`, `timestamp`, `yourCall`, `tooAggressive`, `yourCallBody
 
 ## Board inbox (Sam)
 
-- Default list is **Inbox** (cases without `filedAt`).
+- Default list is **Inbox** (live cases without `filedAt`). Archived cases are hidden here.
 - **Done — file it** sets `filedAt` on that review and jumps to the next inbox case (honoring the parent filter).
-- **Filed** is a separate tab so Sam can still find finished cases.
-- Filter chips are **Linear parent titles** (`parentSystem:parentId`), e.g. `CH-757 · Answer Engine Tracer`.
+- **Filed** is a separate tab so Sam can still find finished live cases. Archived cases are hidden here too.
+- **Archived** is a third shelf, closed by default. Open it to see the trail. Unarchive (`archived: false`) returns the case to Inbox or Filed. Not a delete.
+- Archive is not File. Do not set `filedAt` when archiving. The File webhook does not fire.
+- Filter chips are **Linear parent titles** (`parentSystem:parentId`), e.g. `CH-757 · Answer Engine Tracer`. Inbox / Filed / parent chips hide archived cases.
 - **One parent per case.** Mixed-project steers break the filter; Oscar/Nick should split them.
 
-Oscar posts `parentSystem` + `parentId` (Linear), one project at a time. Filing is Sam’s workflow, not an Oscar API action.
+Oscar posts `parentSystem` + `parentId` (Linear), one project at a time. Filing is Sam’s workflow, not an Oscar API action. Archiving a superseded hourly page is Oscar’s `POST /api/cases` with `archived: true` on the old id.
 
 ## Errors
 

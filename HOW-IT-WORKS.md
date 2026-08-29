@@ -14,7 +14,7 @@ The pile is the work. Analysis of broader patterns waits until you have scored a
    Those two scores stay independent. Pass one and Fail the other if that is the truth. Expand **Labels and case comment** when you need notes — use **Dictate** (Grok voice; screen stays awake up to 3 minutes).
 4. When a sentence is the problem, highlight it (drag-select on a laptop, or tap a paragraph on mobile). A composer opens — floating near the cursor on desktop, or as a bottom sheet on phones. Pick **Content** or **Action** (they use different colors), type or dictate the note, press **Enter**. That is the whole save. Escape cancels. Pass/Fail scores scroll with the page so the case body stays readable on a phone.
 5. The note appears **to the right of that span**, like a Google Doc comment. Click the highlight or the card to jump between them.
-6. When you are done with that case, press **Done — file it** (sticky bar at the bottom on phones). It leaves the Inbox and moves to **Filed** (still searchable). Then go to the next inbox case (`j` / `k`, or `n`).
+6. When you are done with that case, press **Done — file it** (sticky bar at the bottom on phones). It leaves the Inbox and moves to **Filed** (still searchable). Then go to the next inbox case (`j` / `k`, or `n`). **Archive** is a separate shelf, not File — it hides the case from Inbox and Filed. Unarchive puts it back. Oscar can also `POST /api/cases` with `archived: true` on an old case id (superseded Tracer hourly page) without touching Pass/Fail or `filedAt`.
 
 A **comment** is a note. A **question** is a thread Oscar can answer. If Oscar later rewrites that span, the old text is struck through and the replacement is highlighted. The original case is not silently edited.
 
