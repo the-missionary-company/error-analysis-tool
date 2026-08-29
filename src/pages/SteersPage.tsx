@@ -10,6 +10,7 @@ import type { PendingSpan } from '../components/HighlightableText';
 import { useSteers } from '../hooks/useSteers';
 import { useToast } from '../hooks/useToast';
 import { loadAuthor, loadCaseSort, saveAuthor, saveCaseSort } from '../lib/steerStorage';
+import { shouldAutoScrollToComment } from '../lib/gutterScroll';
 import { downloadText } from '../lib/storage';
 import {
   AUTHOR_DEFS,
@@ -112,8 +113,9 @@ export function SteersPage() {
     });
   };
 
-  const focusNote = (noteId: string) => {
+  const focusNote = (noteId: string, opts?: { scroll?: boolean }) => {
     setFocusedNoteId(noteId);
+    if (opts?.scroll === false || !shouldAutoScrollToComment()) return;
     window.setTimeout(() => {
       document.getElementById(`note-${noteId}`)?.scrollIntoView({ block: 'nearest' });
     }, 0);
@@ -131,11 +133,13 @@ export function SteersPage() {
       content: input.content,
       action: input.action,
     });
+    const scrollY = window.scrollY;
     updateReview(next);
     const added = next.notes[next.notes.length - 1];
-    if (added) focusNote(added.id);
+    if (added) focusNote(added.id, { scroll: false });
     setPending(null);
     window.getSelection()?.removeAllRanges();
+    requestAnimationFrame(() => window.scrollTo({ top: scrollY, left: 0, behavior: 'instant' }));
     push('Comment saved next to the span', 'success');
   };
 

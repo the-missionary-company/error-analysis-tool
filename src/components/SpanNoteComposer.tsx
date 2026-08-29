@@ -26,7 +26,10 @@ export function SpanNoteComposer({
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    if (lane) inputRef.current?.focus();
+    if (!lane) return;
+    const scrollY = window.scrollY;
+    inputRef.current?.focus({ preventScroll: true });
+    window.scrollTo({ top: scrollY, left: 0, behavior: 'instant' });
   }, [lane]);
 
   useEffect(() => {
