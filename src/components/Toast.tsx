@@ -11,7 +11,7 @@ export function ToastViewport() {
         <div
           key={t.id}
           className={cn(
-            'pointer-events-auto flex items-start gap-3 rounded-xl border bg-white px-3.5 py-3 shadow-soft',
+            'pointer-events-auto flex items-start gap-3 rounded-xl border bg-surface px-3.5 py-3 shadow-soft',
             t.kind === 'success' && 'border-emerald-200',
             t.kind === 'error' && 'border-red-200',
             t.kind === 'info' && 'border-ink-200',

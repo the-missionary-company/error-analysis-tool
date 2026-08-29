@@ -1,5 +1,10 @@
+function rgb(name) {
+  return `rgb(var(${name}) / <alpha-value>)`;
+}
+
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     screens: {
@@ -25,35 +30,36 @@ export default {
       },
       colors: {
         ink: {
-          50: '#f7f7f8',
-          100: '#eeeef0',
-          200: '#d9d9de',
-          300: '#b8b8c1',
-          400: '#91919f',
-          500: '#737384',
-          600: '#5d5d6c',
-          700: '#4c4c58',
-          800: '#41414b',
-          900: '#393941',
-          950: '#18181b',
+          50: rgb('--c-ink-50'),
+          100: rgb('--c-ink-100'),
+          200: rgb('--c-ink-200'),
+          300: rgb('--c-ink-300'),
+          400: rgb('--c-ink-400'),
+          500: rgb('--c-ink-500'),
+          600: rgb('--c-ink-600'),
+          700: rgb('--c-ink-700'),
+          800: rgb('--c-ink-800'),
+          900: rgb('--c-ink-900'),
+          950: rgb('--c-ink-950'),
         },
+        surface: rgb('--c-surface'),
         accent: {
-          DEFAULT: '#2563eb',
-          soft: '#eff6ff',
-          hover: '#1d4ed8',
+          DEFAULT: rgb('--c-accent'),
+          soft: rgb('--c-accent-soft'),
+          hover: rgb('--c-accent-hover'),
         },
         pass: {
-          DEFAULT: '#059669',
-          soft: '#ecfdf5',
+          DEFAULT: rgb('--c-pass'),
+          soft: rgb('--c-pass-soft'),
         },
         fail: {
-          DEFAULT: '#dc2626',
-          soft: '#fef2f2',
+          DEFAULT: rgb('--c-fail'),
+          soft: rgb('--c-fail-soft'),
         },
       },
       boxShadow: {
-        soft: '0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 16px rgba(15, 23, 42, 0.06)',
-        card: '0 0 0 1px rgba(15, 23, 42, 0.06), 0 2px 8px rgba(15, 23, 42, 0.04)',
+        soft: 'var(--shadow-soft)',
+        card: 'var(--shadow-card)',
       },
     },
   },

@@ -83,7 +83,7 @@ export function VoiceDictationButton({
             ? 'bg-rose-600 text-white ring-rose-700'
             : phase === 'uploading'
               ? 'bg-ink-100 text-ink-500 ring-ink-200'
-              : 'bg-white text-ink-700 ring-ink-200 hover:bg-ink-50',
+              : 'bg-surface text-ink-700 ring-ink-200 hover:bg-ink-50',
           compact && 'h-8 px-2',
         )}
         disabled={phase === 'uploading'}

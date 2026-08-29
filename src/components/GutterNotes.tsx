@@ -191,7 +191,7 @@ function GutterCard({
                 value={reply}
                 onChange={(e) => setReply(e.target.value)}
                 placeholder="Reply…"
-                className="min-h-[48px] min-w-0 flex-1 resize-y rounded-md border border-ink-200 bg-white px-2 py-1.5 text-xs"
+                className="min-h-[48px] min-w-0 flex-1 resize-y rounded-md border border-ink-200 bg-surface px-2 py-1.5 text-xs"
               />
               <VoiceDictationButton value={reply} onChange={setReply} compact className="shrink-0" />
             </div>
@@ -214,7 +214,7 @@ function GutterCard({
                   value={replacement}
                   onChange={(e) => setReplacement(e.target.value)}
                   placeholder={`Replace “${note.spanText}”…`}
-                  className="min-h-[48px] min-w-0 flex-1 resize-y rounded-md border border-ink-200 bg-white px-2 py-1.5 text-xs"
+                  className="min-h-[48px] min-w-0 flex-1 resize-y rounded-md border border-ink-200 bg-surface px-2 py-1.5 text-xs"
                 />
                 <VoiceDictationButton
                   value={replacement}

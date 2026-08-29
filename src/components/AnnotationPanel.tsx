@@ -66,7 +66,7 @@ export function AnnotationPanel({
           value={note}
           onChange={(e) => onNote(e.target.value)}
           placeholder="Smoking-gun observation… e.g. “Answer says approved but citation says revise & resubmit.”"
-          className="min-h-[140px] flex-1 resize-y rounded-lg border border-ink-200 bg-ink-50/50 px-3 py-2.5 text-sm leading-relaxed text-ink-900 placeholder:text-ink-400 focus:border-accent focus:bg-white focus:outline-none focus:ring-2 focus:ring-accent/20"
+          className="min-h-[140px] flex-1 resize-y rounded-lg border border-ink-200 bg-ink-50/50 px-3 py-2.5 text-sm leading-relaxed text-ink-900 placeholder:text-ink-400 focus:border-accent focus:bg-surface focus:outline-none focus:ring-2 focus:ring-accent/20"
         />
       </div>
 

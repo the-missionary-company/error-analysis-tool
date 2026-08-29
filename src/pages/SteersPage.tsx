@@ -173,7 +173,7 @@ export function SteersPage() {
     });
     updateReview(next);
     const added = next.notes[next.notes.length - 1];
-    if (added) focusNote(added.id);
+    if (added) setFocusedNoteId(added.id);
     setPending(null);
     window.getSelection()?.removeAllRanges();
     push('Comment saved next to the span', 'success');
@@ -322,14 +322,14 @@ export function SteersPage() {
         </a>
         <span className="ml-auto flex items-center gap-2 text-xs text-ink-500">
           Posting as
-          <span className="inline-flex rounded-lg border border-ink-200 bg-white p-0.5">
+          <span className="inline-flex rounded-lg border border-ink-200 bg-surface p-0.5">
             {(['sam', 'oscar'] as const).map((who) => (
               <button
                 key={who}
                 type="button"
                 className={cn(
                   'rounded-md px-2.5 py-1 text-xs',
-                  author === who ? 'bg-ink-900 text-white' : 'text-ink-600 hover:bg-ink-50',
+                  author === who ? 'bg-ink-950 text-ink-50' : 'text-ink-600 hover:bg-ink-50',
                 )}
                 onClick={() => {
                   setAuthor(who);
@@ -460,7 +460,7 @@ export function SteersPage() {
       </div>
       <div
         className={cn(
-          'fixed inset-x-0 bottom-0 z-30 border-t border-ink-200 bg-white/95 px-3 py-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] backdrop-blur md:hidden',
+          'fixed inset-x-0 bottom-0 z-30 border-t border-ink-200 bg-surface/95 px-3 py-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] backdrop-blur md:hidden',
           pending && 'hidden',
         )}
       >

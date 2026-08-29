@@ -1,5 +1,6 @@
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { Keyboard, Layers3 } from 'lucide-react';
+import { ThemeToggle } from './ThemeToggle';
 import { ToastViewport } from './Toast';
 import { cn } from '../lib/utils';
 
@@ -9,7 +10,7 @@ export function Layout() {
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-40 border-b border-ink-200/80 bg-white/80 backdrop-blur-md">
+      <header className="sticky top-0 z-40 border-b border-ink-200/80 bg-surface/80 backdrop-blur-md">
         <div className="mx-auto flex h-14 max-w-[1400px] items-center justify-between gap-4 px-4 sm:px-6">
           <Link to="/" className="flex items-center gap-2.5">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-sm font-bold text-white">
@@ -60,6 +61,7 @@ export function Layout() {
               <Layers3 className="h-3.5 w-3.5" />
               Method
             </a>
+            <ThemeToggle />
           </nav>
         </div>
       </header>
