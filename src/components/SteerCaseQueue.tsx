@@ -12,7 +12,7 @@ import {
   listParentScopes,
   type CaseProgress,
 } from '../lib/steers';
-import { cn } from '../lib/utils';
+import { cn, formatLocalTime } from '../lib/utils';
 import type {
   CaseSort,
   CaseSortField,
@@ -305,6 +305,14 @@ export function SteerCaseQueue({
                 >
                   <span className="block truncate font-medium">{item.title}</span>
                   <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] text-ink-400">
+                    {(item.timestamp || item.when) && (
+                      <>
+                        <span className="font-medium tabular-nums text-ink-600">
+                          {formatLocalTime(item.timestamp || item.when)}
+                        </span>
+                        <span>·</span>
+                      </>
+                    )}
                     {parentId ? (
                       <span className="font-mono text-violet-800">{parentId}</span>
                     ) : (
