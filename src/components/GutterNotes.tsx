@@ -119,7 +119,7 @@ export function GutterNotes({
                 >
                   {highlight.lane === 'content' ? 'Content' : 'Action'}
                 </span>
-                <p className="mt-1 text-xs italic text-ink-600">“{highlight.text}”</p>
+                <p className="mt-1 line-clamp-3 text-xs italic text-ink-600">“{highlight.text}”</p>
               </button>
               {visible.map((note) => (
                 <GutterCard
