@@ -101,8 +101,7 @@ export function SteerCaseQueue({
               </span>
             </p>
             <p className="mt-1 text-sm font-semibold leading-snug text-ink-950">
-              {active?.number != null ? `${active.number} · ` : ''}
-              {active?.title ?? 'Pick an update'}
+              {active ? caseListLabel(active) : 'Pick an update'}
             </p>
             <p className="mt-0.5 text-xs text-ink-500">Browse the list and open one to read it</p>
           </div>
@@ -223,6 +222,16 @@ function QueueChrome({
   );
 }
 
+function caseListLabel(item: SteerCase): string {
+  if (item.number == null) return item.title;
+  const prefix = `${item.number}`;
+  const trimmed = item.title.trim();
+  if (trimmed === prefix || trimmed.startsWith(`${prefix} `) || trimmed.startsWith(`${prefix}·`) || trimmed.startsWith(`${prefix} ·`)) {
+    return trimmed;
+  }
+  return `${item.number} · ${item.title}`;
+}
+
 function QueueList({
   cases,
   reviews,
@@ -252,10 +261,7 @@ function QueueList({
                   : 'text-ink-700 hover:bg-ink-50',
               )}
             >
-              <span className="block font-medium leading-snug">
-                {item.number != null ? `${item.number} · ` : ''}
-                {item.title}
-              </span>
+              <span className="block font-medium leading-snug">{caseListLabel(item)}</span>
               <span className="mt-0.5 flex items-center gap-1.5 text-[11px] text-ink-400">
                 <span>{item.session}</span>
                 <span>·</span>
