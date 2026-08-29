@@ -13,5 +13,8 @@ describe('API.md', () => {
     expect(doc).toContain('POST /api/reviews/reply');
     expect(doc).toContain('Authorization: Bearer');
     expect(doc).toContain('Do not PUT a full review');
+    expect(doc).toContain('project');
+    expect(doc).toContain('parentTicket');
+    expect(doc).toContain('filedAt');
   });
 });

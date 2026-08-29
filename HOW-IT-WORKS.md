@@ -6,7 +6,7 @@ The pile is the work. Analysis of broader patterns waits until you have scored a
 
 ## The loop
 
-1. Open a case (or press `n` for the next one that is not fully scored).
+1. Open a case (or press `n` for the next inbox case that is not fully scored). Filter by **Project** when you want one parent at a time (Capture / Sync / Tracer / Calendar / Fireflies).
 2. Read **Background → Problem → Options → Choice**.
 3. Mark **Pass** or **Fail** on both scores:
    - **Content / understanding** — how Oscar sent the message. Did you understand the write-up, and what the agents are doing?
@@ -14,7 +14,7 @@ The pile is the work. Analysis of broader patterns waits until you have scored a
    Those two scores stay independent. Pass one and Fail the other if that is the truth.
 4. When a sentence is the problem, highlight it (drag-select on a laptop, or tap a paragraph on mobile). A composer opens — floating near the cursor on desktop, or as a bottom sheet on phones. Pick **Content** or **Action** (they use different colors), type the note, press **Enter**. That is the whole save. Escape cancels. Pass/Fail scores scroll with the page so the case body stays readable on a phone.
 5. The note appears **to the right of that span**, like a Google Doc comment. Click the highlight or the card to jump between them.
-6. Go to the next case (`j` / `k`, or `n` for next unscored). Repeat.
+6. When you are done with that case, press **Done — file it**. It leaves the Inbox and moves to **Filed** (still searchable). Then go to the next inbox case (`j` / `k`, or `n`).
 
 A **comment** is a note. A **question** is a thread Oscar can answer. If Oscar later rewrites that span, the old text is struck through and the replacement is highlighted. The original case is not silently edited.
 

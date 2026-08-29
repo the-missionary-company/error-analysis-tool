@@ -2,7 +2,7 @@ import { SEED_STEERS } from '../data/steerSeed.js';
 import type { SteerCase } from '../types/steers.js';
 import { authorizeReviewsRequest, jsonResponse } from './evalGate.js';
 import { PersistNotConfigured } from './reviewsApi.js';
-import { mergeCases, parseSteerCases } from './steers.js';
+import { filterCasesByScope, mergeCases, parseSteerCases } from './steers.js';
 
 export const CASES_BLOB_PATH = 'steer-cases.json';
 
@@ -161,6 +161,11 @@ export async function handleCasesRequest(
       if (number != null && number !== '') {
         cases = cases.filter((item) => String(item.number) === number);
       }
+      cases = filterCasesByScope(cases, {
+        project: params.get('project'),
+        parentTicket: params.get('parentTicket'),
+        spec: params.get('spec'),
+      });
       return jsonResponse(200, { cases });
     } catch (error) {
       return persistError(error) ?? jsonResponse(500, { error: 'failed to read cases' });

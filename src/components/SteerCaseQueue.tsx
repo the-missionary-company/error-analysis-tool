@@ -1,15 +1,28 @@
 import { useMemo, useState } from 'react';
-import { caseProgress, type CaseProgress } from '../lib/steers';
+import {
+  caseProgress,
+  caseProject,
+  isFiled,
+  listProjects,
+  type CaseProgress,
+} from '../lib/steers';
 import { cn } from '../lib/utils';
-import type { CaseSort, CaseSortField, SteerCase, SteerReview } from '../types/steers';
+import type {
+  CaseSort,
+  CaseSortField,
+  InboxTab,
+  SteerCase,
+  SteerReview,
+} from '../types/steers';
 
-type Filter = 'all' | 'open' | 'scored';
+type ProgressFilter = 'all' | 'open' | 'scored';
 
 const SORT_FIELDS: { id: CaseSortField; label: string }[] = [
   { id: 'timestamp', label: 'Timestamp' },
   { id: 'number', label: 'Number' },
   { id: 'stamp', label: 'Stamp' },
   { id: 'session', label: 'Session' },
+  { id: 'project', label: 'Project' },
 ];
 
 export function SteerCaseQueue({
@@ -17,33 +30,54 @@ export function SteerCaseQueue({
   reviews,
   activeId,
   sort,
+  inboxTab,
+  projectFilter,
   onSortChange,
+  onInboxTabChange,
+  onProjectFilterChange,
   onSelect,
 }: {
   cases: SteerCase[];
   reviews: Record<string, SteerReview>;
   activeId: string;
   sort: CaseSort;
+  inboxTab: InboxTab;
+  projectFilter: string | null;
   onSortChange: (sort: CaseSort) => void;
+  onInboxTabChange: (tab: InboxTab) => void;
+  onProjectFilterChange: (project: string | null) => void;
   onSelect: (id: string) => void;
 }) {
   const [query, setQuery] = useState('');
-  const [filter, setFilter] = useState<Filter>('all');
+  const [filter, setFilter] = useState<ProgressFilter>('all');
+  const projects = useMemo(() => listProjects(cases), [cases]);
 
-  const scoredCount = cases.filter((item) => caseProgress(reviews[item.id]) === 'scored').length;
+  const inboxCount = cases.filter((item) => !isFiled(reviews[item.id])).length;
+  const filedCount = cases.length - inboxCount;
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
     return cases.filter((item) => {
-      const progress = caseProgress(reviews[item.id]);
+      const review = reviews[item.id];
+      const filed = isFiled(review);
+      if (inboxTab === 'inbox' && filed) return false;
+      if (inboxTab === 'filed' && !filed) return false;
+      if (projectFilter && caseProject(item) !== projectFilter) return false;
+      const progress = caseProgress(review);
       if (filter === 'scored' && progress !== 'scored') return false;
       if (filter === 'open' && progress === 'scored') return false;
       if (!q) return true;
-      return [item.title, item.session, item.stamp, item.when].some((part) =>
-        part.toLowerCase().includes(q),
-      );
+      return [
+        item.title,
+        item.session,
+        caseProject(item),
+        item.parentTicket,
+        item.spec,
+        item.stamp,
+        item.when,
+      ].some((part) => (part ?? '').toLowerCase().includes(q));
     });
-  }, [cases, filter, query, reviews]);
+  }, [cases, filter, inboxTab, projectFilter, query, reviews]);
 
   return (
     <aside className="flex max-h-[min(50vh,22rem)] flex-col rounded-xl border border-ink-200 bg-white md:max-h-[calc(100vh-7rem)] md:sticky md:top-[4.5rem]">
@@ -51,15 +85,67 @@ export function SteerCaseQueue({
         <div className="flex items-baseline justify-between gap-2">
           <h2 className="text-sm font-semibold text-ink-950">Cases</h2>
           <p className="text-[11px] text-ink-500">
-            {scoredCount}/{cases.length} scored
+            {inboxCount} inbox · {filedCount} filed
           </p>
         </div>
+
+        <div className="mt-2 grid grid-cols-2 gap-1">
+          {([
+            ['inbox', `Inbox (${inboxCount})`],
+            ['filed', `Filed (${filedCount})`],
+          ] as const).map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              className={cn(
+                'rounded-md px-2 py-1.5 text-[11px] font-medium',
+                inboxTab === value ? 'bg-ink-900 text-white' : 'bg-ink-50 text-ink-600 hover:bg-ink-100',
+              )}
+              onClick={() => onInboxTabChange(value)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search title, session, stamp"
+          placeholder="Search title, project, ticket…"
           className="mt-2 w-full rounded-lg border border-ink-200 px-2.5 py-1.5 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
         />
+
+        <div className="mt-2">
+          <p className="text-[11px] font-medium text-ink-400">Project</p>
+          <div className="mt-1 flex flex-wrap gap-1">
+            <button
+              type="button"
+              className={cn(
+                'rounded-md px-2 py-1 text-[11px]',
+                !projectFilter ? 'bg-ink-900 text-white' : 'bg-ink-50 text-ink-600 hover:bg-ink-100',
+              )}
+              onClick={() => onProjectFilterChange(null)}
+            >
+              All
+            </button>
+            {projects.map((project) => (
+              <button
+                key={project}
+                type="button"
+                className={cn(
+                  'rounded-md px-2 py-1 text-[11px]',
+                  projectFilter === project
+                    ? 'bg-ink-900 text-white'
+                    : 'bg-ink-50 text-ink-600 hover:bg-ink-100',
+                )}
+                onClick={() => onProjectFilterChange(project)}
+              >
+                {project}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="mt-2 flex flex-wrap gap-1">
           {(['all', 'open', 'scored'] as const).map((value) => (
             <button
@@ -99,12 +185,13 @@ export function SteerCaseQueue({
             ))}
           </div>
         </div>
-        <p className="mt-2 text-[11px] text-ink-400">j / k move · n next open</p>
+        <p className="mt-2 text-[11px] text-ink-400">j / k move · n next inbox · Done files it</p>
       </div>
       <ul className="min-h-0 flex-1 overflow-y-auto p-1.5">
         {visible.map((item) => {
           const review = reviews[item.id];
           const progress = caseProgress(review);
+          const project = caseProject(item);
           return (
             <li key={item.id}>
               <button
@@ -119,18 +206,31 @@ export function SteerCaseQueue({
                 )}
               >
                 <span className="block truncate font-medium">{item.title}</span>
-                <span className="mt-0.5 flex items-center gap-1.5 text-[11px] text-ink-400">
-                  <span>{item.session}</span>
+                <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] text-ink-400">
+                  <span>{project}</span>
+                  {item.parentTicket && (
+                    <>
+                      <span>·</span>
+                      <span className="font-mono">{item.parentTicket}</span>
+                    </>
+                  )}
                   <span>·</span>
                   <span>{item.stamp}</span>
-                  <StatusDots progress={progress} content={review?.content.passFail} action={review?.action.passFail} notes={review?.notes.length ?? 0} />
+                  <StatusDots
+                    progress={progress}
+                    content={review?.content.passFail}
+                    action={review?.action.passFail}
+                    notes={review?.notes.length ?? 0}
+                  />
                 </span>
               </button>
             </li>
           );
         })}
         {visible.length === 0 && (
-          <li className="px-2 py-6 text-center text-xs text-ink-400">No cases in this filter.</li>
+          <li className="px-2 py-6 text-center text-xs text-ink-400">
+            {inboxTab === 'inbox' ? 'Inbox is clear for this filter.' : 'No filed cases in this filter.'}
+          </li>
         )}
       </ul>
     </aside>
@@ -152,7 +252,11 @@ function StatusDots({
     <span className="ml-auto inline-flex items-center gap-1">
       <Mark label="C" value={content} />
       <Mark label="A" value={action} />
-      {notes > 0 && <span className="text-ink-500">{notes} note{notes === 1 ? '' : 's'}</span>}
+      {notes > 0 && (
+        <span className="text-ink-500">
+          {notes} note{notes === 1 ? '' : 's'}
+        </span>
+      )}
       {progress === 'unscored' && notes === 0 && <span>unscored</span>}
     </span>
   );
