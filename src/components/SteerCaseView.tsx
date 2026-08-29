@@ -123,9 +123,15 @@ export function SteerCaseView({
           <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-ink-400">
             Your call
           </div>
-          <p className="whitespace-pre-wrap text-sm leading-relaxed text-ink-800">
-            {steer.yourCallBody}
-          </p>
+          <HighlightableText
+            text={steer.yourCallBody}
+            section="choice"
+            highlights={[]}
+            revisions={[]}
+            onSelect={() => {}}
+            onHighlightClick={() => {}}
+            onRevisionClick={() => {}}
+          />
         </section>
       )}
     </article>
