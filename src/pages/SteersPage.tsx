@@ -209,16 +209,12 @@ export function SteersPage() {
 
   return (
     <div className="space-y-5">
-      <section className="max-w-3xl">
+      <section className="flex flex-wrap items-end justify-between gap-2">
         <h1 className="text-2xl font-semibold tracking-tight text-ink-950 sm:text-3xl">
           Eval dashboard
         </h1>
-        <p className="mt-2 text-[15px] leading-relaxed text-ink-600">
-          Score each case, then keep going. There is no Process button. A span comment is enough
-          when something should change now. Broader patterns wait for a pile of scored cases.
-        </p>
+        <HowThisWorks />
       </section>
-      <HowThisWorks />
 
       <div className="flex flex-wrap items-center gap-2">
         <button type="button" className="btn-secondary" onClick={() => casesInput.current?.click()}>
