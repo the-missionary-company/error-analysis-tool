@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Check, Download, RotateCcw, Upload } from 'lucide-react';
+import { Archive, ArchiveRestore, Check, Download, RotateCcw, Upload } from 'lucide-react';
 import { GutterNotes } from '../components/GutterNotes';
 import { HowThisWorks } from '../components/HowThisWorks';
 import { SpanNoteComposer } from '../components/SpanNoteComposer';
@@ -27,9 +27,13 @@ import {
   caseParentKey,
   caseProgress,
   createRevisionFromQuestion,
+  caseListSection,
   emptyReview,
+  isArchived,
   isFiled,
+  markArchived,
   markFiled,
+  markUnarchived,
   markUnfiled,
   parseSteerPayload,
   parseSteerReviews,
@@ -49,6 +53,7 @@ export function SteersPage() {
     activeId,
     setActiveId,
     persistReview,
+    persistCase,
     importCases,
     importReviews,
     exportBoard,
@@ -68,9 +73,7 @@ export function SteersPage() {
   const visibleQueueIds = useMemo(() => {
     return orderedCases
       .filter((item) => {
-        const filed = isFiled(reviews[item.id]);
-        if (inboxTab === 'inbox' && filed) return false;
-        if (inboxTab === 'filed' && !filed) return false;
+        if (caseListSection(item, reviews[item.id]) !== inboxTab) return false;
         if (parentFilter && caseParentKey(item) !== parentFilter) return false;
         return true;
       })
@@ -183,6 +186,7 @@ export function SteersPage() {
     const remaining = orderedCases
       .filter((item) => {
         if (item.id === activeCase.id) return false;
+        if (isArchived(item)) return false;
         if (isFiled(reviews[item.id])) return false;
         if (parentFilter && caseParentKey(item) !== parentFilter) return false;
         return true;
@@ -203,6 +207,31 @@ export function SteersPage() {
     setInboxTab('inbox');
     saveInboxTab('inbox');
     push('Back in inbox', 'success');
+  };
+
+  const archiveActiveCase = () => {
+    if (!activeCase) return;
+    persistCase(markArchived(activeCase));
+    const remaining = orderedCases
+      .filter((item) => {
+        if (item.id === activeCase.id) return false;
+        if (caseListSection(item, reviews[item.id]) !== inboxTab) return false;
+        if (parentFilter && caseParentKey(item) !== parentFilter) return false;
+        return true;
+      })
+      .map((item) => item.id);
+    if (remaining[0]) setActiveId(remaining[0]);
+    setPending(null);
+    push('Archived — off the live list', 'success');
+  };
+
+  const unarchiveActiveCase = () => {
+    if (!activeCase) return;
+    persistCase(markUnarchived(activeCase));
+    const nextTab = isFiled(activeReview) ? 'filed' : 'inbox';
+    setInboxTab(nextTab);
+    saveInboxTab(nextTab);
+    push(nextTab === 'filed' ? 'Back in Filed' : 'Back in Inbox', 'success');
   };
 
   const readFile = async (file: File) => JSON.parse(await file.text()) as unknown;
@@ -343,7 +372,12 @@ export function SteersPage() {
         </div>
         <div className="min-w-0 space-y-4 pb-20 md:pb-0">
         <div className="hidden flex-wrap items-center gap-2 md:flex">
-          {isFiled(activeReview) ? (
+          {isArchived(activeCase) ? (
+            <button type="button" className="btn-secondary" onClick={unarchiveActiveCase}>
+              <ArchiveRestore className="h-4 w-4" />
+              Unarchive
+            </button>
+          ) : isFiled(activeReview) ? (
             <button type="button" className="btn-secondary" onClick={unfileActiveCase}>
               <RotateCcw className="h-4 w-4" />
               Back to inbox
@@ -354,10 +388,18 @@ export function SteersPage() {
               Done — file it
             </button>
           )}
+          {!isArchived(activeCase) && (
+            <button type="button" className="btn-secondary" onClick={archiveActiveCase}>
+              <Archive className="h-4 w-4" />
+              Archive
+            </button>
+          )}
           <p className="text-xs text-ink-500">
-            {isFiled(activeReview)
-              ? 'Filed cases stay searchable under Filed.'
-              : 'Files this case out of your inbox. You can still open it under Filed.'}
+            {isArchived(activeCase)
+              ? 'On the Archived shelf. Unarchive returns it to Inbox or Filed.'
+              : isFiled(activeReview)
+                ? 'Filed cases stay searchable under Filed. Archive shelves it off the live list.'
+                : 'Files this case out of your inbox. Archive is a shelf, not File.'}
           </p>
         </div>
         <SteerScorePanel
@@ -422,16 +464,29 @@ export function SteersPage() {
           pending && 'hidden',
         )}
       >
-        {isFiled(activeReview) ? (
-          <button type="button" className="btn-secondary h-11 w-full text-sm" onClick={unfileActiveCase}>
-            <RotateCcw className="h-4 w-4" />
-            Back to inbox
+        {isArchived(activeCase) ? (
+          <button type="button" className="btn-secondary h-11 w-full text-sm" onClick={unarchiveActiveCase}>
+            <ArchiveRestore className="h-4 w-4" />
+            Unarchive
           </button>
         ) : (
-          <button type="button" className="btn-primary h-11 w-full text-sm" onClick={fileActiveCase}>
-            <Check className="h-4 w-4" />
-            Done — file it
-          </button>
+          <div className="flex gap-2">
+            {isFiled(activeReview) ? (
+              <button type="button" className="btn-secondary h-11 flex-1 text-sm" onClick={unfileActiveCase}>
+                <RotateCcw className="h-4 w-4" />
+                Back to inbox
+              </button>
+            ) : (
+              <button type="button" className="btn-primary h-11 flex-1 text-sm" onClick={fileActiveCase}>
+                <Check className="h-4 w-4" />
+                Done — file it
+              </button>
+            )}
+            <button type="button" className="btn-secondary h-11 text-sm" onClick={archiveActiveCase}>
+              <Archive className="h-4 w-4" />
+              Archive
+            </button>
+          </div>
         )}
       </div>
       {pending && (

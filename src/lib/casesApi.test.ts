@@ -264,6 +264,76 @@ describe('handleCasesRequest', () => {
     expect(((await byNumber.json()) as { cases: SteerCase[] }).cases[0].id).toBe('posted-row');
   });
 
+  it('accepts archived true/false on create or update and GET returns the field', async () => {
+    const persist = memoryCases();
+    const headers = {
+      Authorization: 'Bearer board-secret',
+      'content-type': 'application/json',
+    };
+    const created = await handleCasesRequest(
+      new Request('https://x/api/cases', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ ...REQUIRED, id: 'hourly-old', archived: true }),
+      }),
+      env,
+      persist,
+    );
+    expect(created.status).toBe(200);
+    const createdBody = (await created.json()) as { case: SteerCase };
+    expect(createdBody.case.archived).toBe(true);
+    expect(createdBody.case).not.toHaveProperty('filedAt');
+
+    const listed = await handleCasesRequest(
+      new Request('https://x/api/cases?id=hourly-old', {
+        headers: { Authorization: 'Bearer board-secret' },
+      }),
+      env,
+      persist,
+    );
+    expect(((await listed.json()) as { cases: SteerCase[] }).cases[0].archived).toBe(true);
+
+    const unarchived = await handleCasesRequest(
+      new Request('https://x/api/cases', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ id: 'hourly-old', archived: false }),
+      }),
+      env,
+      persist,
+    );
+    expect(unarchived.status).toBe(200);
+    const unarchivedBody = (await unarchived.json()) as { case: SteerCase };
+    expect(unarchivedBody.case.archived).toBe(false);
+    expect(unarchivedBody.case.problem).toBe('problem field');
+
+    const seedId = SEED_STEERS[0].id;
+    const flag = await handleCasesRequest(
+      new Request('https://x/api/cases', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ id: seedId, archived: true }),
+      }),
+      env,
+      persist,
+    );
+    expect(flag.status).toBe(200);
+    const flagged = ((await flag.json()) as { case: SteerCase }).case;
+    expect(flagged.id).toBe(seedId);
+    expect(flagged.archived).toBe(true);
+    expect(flagged.context).toBe(SEED_STEERS[0].context);
+    expect(flagged).not.toHaveProperty('filedAt');
+
+    const got = await handleCasesRequest(
+      new Request(`https://x/api/cases?id=${seedId}`, {
+        headers: { Authorization: 'Bearer board-secret' },
+      }),
+      env,
+      persist,
+    );
+    expect(((await got.json()) as { cases: SteerCase[] }).cases[0].archived).toBe(true);
+  });
+
   it('returns { cases } when the POST body is a list', async () => {
     const persist = memoryCases();
     const res = await handleCasesRequest(

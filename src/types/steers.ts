@@ -27,7 +27,7 @@ export interface SteerHighlight {
 
 export type CaseSortField = 'timestamp' | 'number' | 'stamp' | 'session' | 'project' | 'parent';
 export type CaseSortDirection = 'asc' | 'desc';
-export type InboxTab = 'inbox' | 'filed';
+export type InboxTab = 'inbox' | 'filed' | 'archived';
 /** Tracker that owns the durable parent id. Default is linear. */
 export type ParentSystem = 'linear' | (string & {});
 
@@ -81,6 +81,12 @@ export interface SteerCase {
   options: string;
   choice: string;
   notionUrl?: string;
+  /**
+   * Case-level shelf flag. Source of truth for Inbox / Filed / Archived.
+   * Oscar POSTs `archived: true` on the old case id when a Tracer hourly page
+   * is superseded. Not File — does not set filedAt and does not notify Oscar.
+   */
+  archived?: boolean;
 }
 
 export type Author = 'sam' | 'oscar';

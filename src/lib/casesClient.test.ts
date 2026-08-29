@@ -11,4 +11,11 @@ describe('remoteCaseExtras', () => {
     };
     expect(remoteCaseExtras([...SEED_STEERS, extra]).map((item) => item.id)).toEqual(['posted-extra']);
   });
+
+  it('keeps an archived seed overlay so Oscar GET/POST can see the flag', () => {
+    const archived = { ...SEED_STEERS[0], archived: true };
+    expect(remoteCaseExtras([...SEED_STEERS.slice(1), archived]).map((item) => item.id)).toEqual([
+      SEED_STEERS[0].id,
+    ]);
+  });
 });

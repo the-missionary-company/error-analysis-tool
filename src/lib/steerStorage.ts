@@ -113,7 +113,9 @@ export function saveCaseSort(sort: CaseSort, store: KeyValueStore = defaultStore
 }
 
 export function loadInboxTab(store: KeyValueStore = defaultStore()): InboxTab {
-  return store.getItem(KEYS.inboxTab) === 'filed' ? 'filed' : 'inbox';
+  const raw = store.getItem(KEYS.inboxTab);
+  if (raw === 'filed' || raw === 'archived') return raw;
+  return 'inbox';
 }
 
 export function saveInboxTab(tab: InboxTab, store: KeyValueStore = defaultStore()) {

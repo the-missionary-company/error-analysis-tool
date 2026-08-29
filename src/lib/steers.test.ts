@@ -14,8 +14,12 @@ import {
   exportSteerBoardJSON,
   filterCasesByScope,
   findSpanOffsets,
+  caseListSection,
+  isArchived,
   isFiled,
+  markArchived,
   markFiled,
+  markUnarchived,
   markUnfiled,
   mergeCases,
   usedLabelsForLane,
@@ -895,6 +899,17 @@ describe('mergeCases', () => {
     expect(merged[0].title).toBe('Updated title from Oscar');
     expect(merged[37].id).toBe('new-case');
   });
+
+  it('keeps archived when a later POST of the same id omits the field', () => {
+    const archived = { ...SEED_STEERS[0], archived: true };
+    const bodyOnly = { ...SEED_STEERS[0], title: 'Updated title from Oscar' };
+    const kept = mergeCases(SEED_STEERS, [archived]);
+    expect(kept[0].archived).toBe(true);
+    const merged = mergeCases(kept, [bodyOnly]);
+    expect(merged[0].title).toBe('Updated title from Oscar');
+    expect(merged[0].archived).toBe(true);
+    expect(mergeCases(kept, [{ ...SEED_STEERS[0], archived: false }])[0].archived).toBe(false);
+  });
 });
 
 describe('highlight spans', () => {
@@ -1255,6 +1270,49 @@ describe('project scope and inbox filing', () => {
     expect(isFiled(markUnfiled(filed))).toBe(false);
     const parsed = parseSteerReviews([{ ...filed }])[0];
     expect(parsed.filedAt).toBe('2026-08-29T01:00:00.000Z');
+  });
+
+  it('archives and unarchives a case without touching filedAt', () => {
+    const live = parseSteerCases([
+      {
+        id: 'hourly',
+        title: 'Hourly',
+        stamp: 'KEEP',
+        when: '2026-08-29',
+        project: 'Tracer',
+        context: 'c',
+        problem: 'p',
+        options: 'o',
+        choice: 'x',
+      },
+    ])[0];
+    const review = markFiled(emptyReview(live.id), new Date('2026-08-29T01:00:00.000Z'));
+    const archived = markArchived(live);
+    expect(isArchived(archived)).toBe(true);
+    expect(archived.archived).toBe(true);
+    expect('filedAt' in archived).toBe(false);
+    expect(isFiled(review)).toBe(true);
+    expect(caseListSection(archived, review)).toBe('archived');
+    expect(caseListSection(live, review)).toBe('filed');
+    expect(caseListSection(live, emptyReview(live.id))).toBe('inbox');
+
+    const restored = markUnarchived(archived);
+    expect(isArchived(restored)).toBe(false);
+    expect(restored.archived).toBe(false);
+    expect(caseListSection(restored, review)).toBe('filed');
+    expect(caseListSection(restored, emptyReview(live.id))).toBe('inbox');
+
+    const [parsedTrue] = parseSteerCases([{ ...archived }]);
+    const [parsedFalse] = parseSteerCases([{ ...restored }]);
+    expect(parsedTrue.archived).toBe(true);
+    expect(parsedFalse.archived).toBe(false);
+    expect(parseSteerCases([{ ...live }])[0].archived).toBeUndefined();
+
+    const exported = JSON.parse(exportSteerBoardJSON([archived, restored], [review]));
+    expect(exported.cases[0].archived).toBe(true);
+    expect(exported.cases[1].archived).toBe(false);
+    expect(exported.reviews[0].filedAt).toBe('2026-08-29T01:00:00.000Z');
+    expect(exported.reviews[0].archived).toBeUndefined();
   });
 });
 

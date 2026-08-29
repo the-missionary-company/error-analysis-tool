@@ -2,7 +2,13 @@ import { SEED_STEERS } from '../data/steerSeed.js';
 import type { SteerCase } from '../types/steers.js';
 import { authorizeReviewsRequest, jsonResponse } from './evalGate.js';
 import { PersistNotConfigured } from './reviewsApi.js';
-import { filterCasesByScope, mergeCases, parseSteerCases } from './steers.js';
+import {
+  filterCasesByScope,
+  markArchived,
+  markUnarchived,
+  mergeCases,
+  parseSteerCases,
+} from './steers.js';
 
 export const CASES_BLOB_PATH = 'steer-cases.json';
 
@@ -142,6 +148,23 @@ function extractPostedCases(input: unknown): { raw: unknown[]; singular: boolean
   throw new Error('Case 1 is missing required steer fields');
 }
 
+/** `{ id, archived }` on a known case id — no body rewrite, no invented steer. */
+function archiveFlagUpdate(
+  item: unknown,
+  seed: SteerCase[],
+  stored: SteerCase[],
+): SteerCase | null {
+  const obj = asRecord(item);
+  if (!obj) return null;
+  const id = typeof obj.id === 'string' ? obj.id.trim() : '';
+  if (!id || typeof obj.archived !== 'boolean') return null;
+  const extra = Object.keys(obj).filter((key) => key !== 'id' && key !== 'archived' && obj[key] !== undefined);
+  if (extra.length) return null;
+  const existing = [...seed, ...stored].find((row) => row.id === id);
+  if (!existing) return null;
+  return obj.archived ? markArchived(existing) : markUnarchived(existing);
+}
+
 export function parseCasesWritePayload(
   input: unknown,
   stored: SteerCase[] = [],
@@ -153,6 +176,11 @@ export function parseCasesWritePayload(
   }
   const seen = [...stored];
   return raw.map((item, index) => {
+    const flag = archiveFlagUpdate(item, SEED_STEERS, seen);
+    if (flag) {
+      seen.push(flag);
+      return flag;
+    }
     const missing = requiredMissing(item);
     if (missing.length) {
       throw new Error(`Case ${index + 1} is missing required steer fields: ${missing.join(', ')}`);

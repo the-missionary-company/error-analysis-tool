@@ -19,3 +19,17 @@ export function remoteCaseExtras(remote: SteerCase[]): SteerCase[] {
     return JSON.stringify(seed) !== JSON.stringify(item);
   });
 }
+
+export async function postRemoteCases(input: SteerCase | SteerCase[]): Promise<void> {
+  try {
+    const body = Array.isArray(input) ? { cases: input } : input;
+    await fetch('/api/cases', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    // Board stays on localStorage if the API is down.
+  }
+}
