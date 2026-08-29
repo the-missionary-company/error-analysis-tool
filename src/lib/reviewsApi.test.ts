@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { emptyReview } from './steers';
 import { AUTH_COOKIE_NAME } from './evalAuth';
 import {
+  OSCAR_WEBHOOK_TIMEOUT_MS,
   PersistNotConfigured,
   appendReplyToReviews,
   gateEvalDashboardRequest,
@@ -411,6 +412,11 @@ describe('notifyOscarFiled', () => {
       fetchImpl as unknown as typeof fetch,
     );
     await notifyOscarFiled(
+      { OSCAR_EVAL_WEBHOOK_URL: '   ', OSCAR_EVAL_WEBHOOK_KEY: 'key' },
+      ['one'],
+      fetchImpl as unknown as typeof fetch,
+    );
+    await notifyOscarFiled(
       { OSCAR_EVAL_WEBHOOK_URL: '', OSCAR_EVAL_WEBHOOK_KEY: 'key' },
       ['one'],
       fetchImpl as unknown as typeof fetch,
@@ -430,6 +436,7 @@ describe('notifyOscarFiled', () => {
       'Content-Type': 'application/json',
     });
     expect((init as RequestInit).signal).toBeInstanceOf(AbortSignal);
+    expect(OSCAR_WEBHOOK_TIMEOUT_MS).toBe(3000);
     expect(JSON.parse(String((init as RequestInit).body))).toEqual(
       expect.objectContaining({ caseId: 'one' }),
     );
@@ -485,6 +492,30 @@ describe('PUT /api/reviews Oscar file webhook', () => {
     );
     expect(res.status).toBe(200);
     expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it('does not notify when incoming files but loses the updatedAt merge', async () => {
+    const persist = memoryPersist([
+      review({
+        caseId: 'one',
+        updatedAt: '2026-08-29T14:00:00.000Z',
+        content: { passFail: 'pass', comment: 'oscar later', labels: [] },
+      }),
+    ]);
+    const { res, fetchImpl } = await putReview(
+      review({
+        caseId: 'one',
+        filedAt: '2026-08-29T12:00:00.000Z',
+        updatedAt: '2026-08-29T12:00:00.000Z',
+      }),
+      WEBHOOK_ENV,
+      persist,
+    );
+    expect(res.status).toBe(200);
+    expect(fetchImpl).not.toHaveBeenCalled();
+    const saved = await persist.read();
+    expect(saved[0].filedAt).toBeUndefined();
+    expect(saved[0].content.comment).toBe('oscar later');
   });
 
   it('does not notify when a PUT unfiles', async () => {

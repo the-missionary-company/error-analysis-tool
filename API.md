@@ -206,7 +206,7 @@ Accepts `{ "review": … }`, `{ "reviews": […] }`, or a reviews array. Merges 
 
 When Sam presses **Done — file it**, the board PUTs that review with a new `filedAt`. After the write succeeds, the server POSTs `{ "caseId": "<id>" }` to Oscar's Grok Bot webhook (`OSCAR_EVAL_WEBHOOK_URL`) with `Authorization: Bearer $OSCAR_EVAL_WEBHOOK_KEY`.
 
-One POST per newly filed `caseId` in that PUT. Newly filed means incoming `filedAt` is set and the stored review had none, or a different `filedAt` (re-file).
+One POST per newly filed `caseId` that the write actually kept. Newly filed means the persisted review has a `filedAt` and the previous stored copy had none, or a different `filedAt` (re-file). A PUT that loses the `updatedAt` merge does not notify.
 
 Not on `POST /api/reviews/comment`. Not on `POST /api/reviews/reply`. Not on keystroke PUTs that leave `filedAt` unchanged. Not on unfile.
 

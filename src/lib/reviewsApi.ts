@@ -23,7 +23,7 @@ export type ReviewsRequestDeps = {
   fetchImpl?: typeof fetch;
 };
 
-const OSCAR_WEBHOOK_TIMEOUT_MS = 3000;
+export const OSCAR_WEBHOOK_TIMEOUT_MS = 3000;
 
 function filedAtValue(review: SteerReview | undefined): string {
   return review?.filedAt?.trim() ?? '';
@@ -57,9 +57,9 @@ export async function notifyOscarFiled(
   const url = env.OSCAR_EVAL_WEBHOOK_URL?.trim();
   const key = env.OSCAR_EVAL_WEBHOOK_KEY?.trim();
   if (!url || !key || caseIds.length === 0) return;
-  for (const caseId of caseIds) {
-    try {
-      await fetchImpl(url, {
+  await Promise.allSettled(
+    caseIds.map((caseId) =>
+      fetchImpl(url, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${key}`,
@@ -67,11 +67,9 @@ export async function notifyOscarFiled(
         },
         body: JSON.stringify({ caseId, event: 'filed' }),
         signal: AbortSignal.timeout(OSCAR_WEBHOOK_TIMEOUT_MS),
-      });
-    } catch {
-      // PUT still 200. Do not leak the url or key.
-    }
-  }
+      }),
+    ),
+  );
 }
 
 export function mergeReviewsByUpdatedAt(
@@ -261,7 +259,7 @@ export async function handleReviewsRequest(
       try {
         await notifyOscarFiled(
           env,
-          filedCaseIdsToNotify(existing, incoming),
+          filedCaseIdsToNotify(existing, reviews),
           deps.fetchImpl ?? fetch,
         );
       } catch {
