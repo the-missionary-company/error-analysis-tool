@@ -8,7 +8,7 @@ export function HowThisWorks() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-sm font-semibold text-ink-950">How this board works</h2>
-          <p className="mt-1 max-w-3xl text-sm leading-relaxed text-ink-600">
+          <p className="mt-1 hidden max-w-3xl text-sm leading-relaxed text-ink-600 sm:block">
             There is no Process button. Scores and comments save as you go. Pass/Fail the two
             scores. Highlight a span when you want Oscar to change something now, or when you are
             collecting a pattern for later. Broader analysis waits until you have a pile — it does

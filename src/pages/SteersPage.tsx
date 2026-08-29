@@ -145,13 +145,24 @@ export function SteersPage() {
 
   const readFile = async (file: File) => JSON.parse(await file.text()) as unknown;
 
+  const scorePanel = (
+    <SteerScorePanel
+      review={activeReview}
+      reuseByLane={{
+        content: usedLabelsForLane(Object.values(reviews), 'content'),
+        action: usedLabelsForLane(Object.values(reviews), 'action'),
+      }}
+      onLaneChange={onLaneChange}
+    />
+  );
+
   return (
     <div className="space-y-5">
       <section className="max-w-3xl">
         <h1 className="text-2xl font-semibold tracking-tight text-ink-950 sm:text-3xl">
           Eval dashboard
         </h1>
-        <p className="mt-2 text-[15px] leading-relaxed text-ink-600">
+        <p className="mt-2 hidden text-[15px] leading-relaxed text-ink-600 sm:block">
           Score each case, then keep going. There is no Process button. A span comment is enough
           when something should change now. Broader patterns wait for a pile of scored cases.
         </p>
@@ -274,14 +285,7 @@ export function SteersPage() {
         />
         </div>
         <div className="min-w-0 space-y-4">
-        <SteerScorePanel
-          review={activeReview}
-          reuseByLane={{
-            content: usedLabelsForLane(Object.values(reviews), 'content'),
-            action: usedLabelsForLane(Object.values(reviews), 'action'),
-          }}
-          onLaneChange={onLaneChange}
-        />
+        <div className="hidden md:block">{scorePanel}</div>
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
           <div ref={caseBodyRef} className="min-w-0">
             <SteerCaseView
@@ -328,6 +332,7 @@ export function SteersPage() {
             }}
           />
         </div>
+        <div className="md:hidden">{scorePanel}</div>
         </div>
       </div>
       {pending && (
