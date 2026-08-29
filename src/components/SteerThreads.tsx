@@ -106,7 +106,7 @@ function ThreadCard({
             value={reply}
             onChange={(e) => setReply(e.target.value)}
             placeholder={`${AUTHOR_DEFS[author].label} replies in this thread…`}
-            className="min-h-[64px] w-full resize-y rounded-lg border border-ink-200 bg-white px-2.5 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+            className="min-h-[64px] w-full resize-y rounded-lg border border-ink-200 bg-surface px-2.5 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
           />
           <button type="submit" className="btn-secondary h-8 px-3 text-xs">
             Reply
@@ -130,7 +130,7 @@ function ThreadCard({
             value={replacement}
             onChange={(e) => setReplacement(e.target.value)}
             placeholder={`Replace “${note.spanText}”…`}
-            className="min-h-[64px] w-full resize-y rounded-lg border border-ink-200 bg-white px-2.5 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+            className="min-h-[64px] w-full resize-y rounded-lg border border-ink-200 bg-surface px-2.5 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
           />
           <button type="submit" className="btn-primary h-8 px-3 text-xs">
             Apply visible revision

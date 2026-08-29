@@ -1,7 +1,14 @@
 import type { ReactNode } from 'react';
 import { useRef } from 'react';
 import { applyBodySegments, type BodySegment } from '../lib/steers';
-import { displayTextForRange, linkHrefLooksSafe, parseInlineMarkup, splitParagraphs } from '../lib/inlineMarkup';
+import {
+  displayTextForRange,
+  groupMarkdownBlocks,
+  linkHrefLooksSafe,
+  parseInlineMarkup,
+  splitMarkdownBlocks,
+  type MarkdownGroup,
+} from '../lib/inlineMarkup';
 import { hasOptionCards, parseOptionBlocks, type OptionPartKind } from '../lib/optionBlocks';
 import { LANE_TONE } from '../lib/laneStyles';
 import { rangeOffsetsInRoot } from '../lib/selection';
@@ -164,17 +171,92 @@ export function HighlightableText({
               </div>
             );
           })
-        : splitParagraphs(text).map((para, index) => (
-            <p
-              key={`p-${index}`}
-              data-span-start={para.start}
-              data-span-end={para.end}
-              className="mb-3 cursor-pointer whitespace-pre-wrap rounded-md px-1 -mx-1 transition-colors last:mb-0 hover:bg-accent/5 active:bg-accent/10"
-            >
-              {renderRange(para.start, para.end, `p${index}`)}
-            </p>
-          ))}
+        : groupMarkdownBlocks(splitMarkdownBlocks(text)).map((group, index) =>
+            renderMarkdownGroup({
+              group,
+              index,
+              renderRange,
+            }),
+          )}
     </div>
+  );
+}
+
+const BLOCK_HOVER = 'cursor-pointer rounded-md px-1 -mx-1 transition-colors hover:bg-accent/5 active:bg-accent/10';
+
+function renderMarkdownGroup({
+  group,
+  index,
+  renderRange,
+}: {
+  group: MarkdownGroup;
+  index: number;
+  renderRange: (from: number, to: number, keyPrefix: string) => ReactNode;
+}): ReactNode {
+  if (group.kind === 'list') {
+    const Tag = group.list === 'ol' ? 'ol' : 'ul';
+    return (
+      <Tag
+        key={`md-${index}`}
+        className={cn(
+          'my-3 space-y-1.5 pl-5 marker:font-semibold marker:text-ink-400',
+          group.list === 'ol' ? 'list-decimal' : 'list-disc',
+        )}
+      >
+        {group.items.map((item, itemIndex) => (
+          <li
+            key={`md-${index}-${itemIndex}`}
+            data-span-start={item.contentStart}
+            data-span-end={item.contentEnd}
+            className={cn('pl-1', BLOCK_HOVER)}
+          >
+            {renderRange(item.contentStart, item.contentEnd, `l${index}i${itemIndex}`)}
+          </li>
+        ))}
+      </Tag>
+    );
+  }
+  if (group.kind === 'rule') {
+    return <hr key={`md-${index}`} className="my-4 border-ink-200" />;
+  }
+  if (group.kind === 'heading') {
+    const Tag = group.level <= 2 ? 'h3' : 'h4';
+    return (
+      <Tag
+        key={`md-${index}`}
+        data-span-start={group.contentStart}
+        data-span-end={group.contentEnd}
+        className={cn(
+          'mb-2 mt-5 font-semibold tracking-tight text-ink-950 first:mt-0',
+          group.level <= 2 ? 'text-[17px] leading-snug' : 'text-[15px] leading-snug',
+          BLOCK_HOVER,
+        )}
+      >
+        {renderRange(group.contentStart, group.contentEnd, `h${index}`)}
+      </Tag>
+    );
+  }
+  if (group.kind === 'quote') {
+    return (
+      <blockquote
+        key={`md-${index}`}
+        data-span-start={group.contentStart}
+        data-span-end={group.contentEnd}
+        className={cn('my-3 border-l-2 border-ink-300 pl-3 text-ink-600', BLOCK_HOVER)}
+      >
+        {renderRange(group.contentStart, group.contentEnd, `q${index}`)}
+      </blockquote>
+    );
+  }
+  return (
+    <p
+      key={`md-${index}`}
+      data-span-start={group.contentStart}
+      data-span-end={group.contentEnd}
+      className={cn('mb-3 whitespace-pre-wrap last:mb-0', BLOCK_HOVER)}
+    >
+      {renderRange(group.contentStart, group.contentEnd, `p${index}`)}
+    </p>
   );
 }
 
@@ -275,6 +357,8 @@ function renderSourceRange({
             <TicketLink href={token.href} label={token.display} srcStart={token.labelStart} />
           ) : token.kind === 'code' ? (
             <code className="rounded bg-ink-100 px-1 py-0.5 font-mono text-[13px] text-ink-900">{token.display}</code>
+          ) : token.kind === 'italic' ? (
+            <em className="italic text-ink-800">{token.display}</em>
           ) : (
             <strong className="font-semibold text-ink-950">{token.display}</strong>
           ),
@@ -289,8 +373,8 @@ function renderSourceRange({
   return nodes;
 }
 
-function wrapperPrefix(kind: 'code' | 'bold'): number {
-  return kind === 'code' ? 1 : 2;
+function wrapperPrefix(kind: 'code' | 'bold' | 'italic'): number {
+  return kind === 'bold' ? 2 : 1;
 }
 
 function renderPlainRuns({

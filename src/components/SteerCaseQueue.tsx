@@ -126,7 +126,7 @@ export function SteerCaseQueue({
             type="button"
             className={cn(
               'shrink-0 rounded-md px-2 py-1 text-[11px]',
-              !parentFilter ? 'bg-ink-900 text-white' : 'bg-ink-50 text-ink-600 hover:bg-ink-100',
+              !parentFilter ? 'bg-ink-950 text-ink-50' : 'bg-ink-50 text-ink-600 hover:bg-ink-100',
             )}
             onClick={() => onParentFilterChange(null)}
           >
@@ -140,7 +140,7 @@ export function SteerCaseQueue({
               className={cn(
                 'max-w-[14rem] shrink-0 truncate rounded-md px-2 py-1 text-[11px]',
                 parentFilter === parent.key
-                  ? 'bg-ink-900 text-white'
+                  ? 'bg-ink-950 text-ink-50'
                   : 'bg-ink-50 text-ink-600 hover:bg-ink-100',
               )}
               onClick={() => onParentFilterChange(parent.key)}
@@ -158,7 +158,7 @@ export function SteerCaseQueue({
             type="button"
             className={cn(
               'rounded-md px-2 py-1 text-[11px] capitalize md:flex-1',
-              filter === value ? 'bg-ink-900 text-white' : 'bg-ink-50 text-ink-600 hover:bg-ink-100',
+              filter === value ? 'bg-ink-950 text-ink-50' : 'bg-ink-50 text-ink-600 hover:bg-ink-100',
             )}
             onClick={() => setFilter(value)}
           >
@@ -176,7 +176,7 @@ export function SteerCaseQueue({
               type="button"
               className={cn(
                 'rounded-md px-2 py-1.5 text-[11px] md:py-1',
-                sort.field === field.id ? 'bg-ink-900 text-white' : 'bg-ink-50 text-ink-600 hover:bg-ink-100',
+                sort.field === field.id ? 'bg-ink-950 text-ink-50' : 'bg-ink-50 text-ink-600 hover:bg-ink-100',
               )}
               onClick={() =>
                 onSortChange({
@@ -203,7 +203,7 @@ export function SteerCaseQueue({
 
   return (
     <>
-      <aside className="flex max-h-[min(55vh,28rem)] flex-col rounded-xl border border-ink-200 bg-white md:max-h-[calc(100vh-7rem)] md:sticky md:top-[4.5rem]">
+      <aside className="flex max-h-[min(55vh,28rem)] flex-col rounded-xl border border-ink-200 bg-surface md:max-h-[calc(100vh-7rem)] md:sticky md:top-[4.5rem]">
         <div className="shrink-0 border-b border-ink-100 px-3 py-2.5">
           <div className="flex items-baseline justify-between gap-2">
             <h2 className="text-sm font-semibold text-ink-950">Cases</h2>
@@ -223,7 +223,7 @@ export function SteerCaseQueue({
                 type="button"
                 className={cn(
                   'rounded-md px-2 py-1.5 text-[11px] font-medium',
-                  inboxTab === value ? 'bg-ink-900 text-white' : 'bg-ink-50 text-ink-600 hover:bg-ink-100',
+                  inboxTab === value ? 'bg-ink-950 text-ink-50' : 'bg-ink-50 text-ink-600 hover:bg-ink-100',
                 )}
                 onClick={() => onInboxTabChange(value)}
               >
@@ -236,7 +236,7 @@ export function SteerCaseQueue({
             className={cn(
               'mt-1 w-full rounded-md px-2 py-1 text-[11px]',
               inboxTab === 'archived'
-                ? 'bg-ink-900 text-white'
+                ? 'bg-ink-950 text-ink-50'
                 : 'text-ink-400 hover:bg-ink-50 hover:text-ink-600',
             )}
             onClick={() => onInboxTabChange('archived')}
@@ -256,8 +256,8 @@ export function SteerCaseQueue({
               className={cn(
                 'inline-flex shrink-0 items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium md:hidden',
                 filtersOpen || sheetFilterCount > 0
-                  ? 'border-ink-900 bg-ink-900 text-white'
-                  : 'border-ink-200 bg-white text-ink-700',
+                  ? 'border-ink-900 bg-ink-950 text-ink-50'
+                  : 'border-ink-200 bg-surface text-ink-700',
               )}
               aria-expanded={filtersOpen}
               aria-controls="case-filters-sheet"
@@ -314,7 +314,7 @@ export function SteerCaseQueue({
                       </>
                     )}
                     {parentId ? (
-                      <span className="font-mono text-violet-800">{parentId}</span>
+                      <span className="font-mono text-violet-800 dark:text-violet-300">{parentId}</span>
                     ) : (
                       <span>{project || '—'}</span>
                     )}
@@ -362,7 +362,7 @@ export function SteerCaseQueue({
             role="dialog"
             aria-modal="true"
             aria-labelledby="case-filters-title"
-            className="absolute inset-x-0 bottom-0 max-h-[min(85vh,36rem)] overflow-y-auto rounded-t-2xl border border-ink-200 bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-soft"
+            className="absolute inset-x-0 bottom-0 max-h-[min(85vh,36rem)] overflow-y-auto rounded-t-2xl border border-ink-200 bg-surface p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-soft"
           >
             <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-ink-200" aria-hidden />
             <div className="mb-3 flex items-center justify-between gap-2">
@@ -423,8 +423,8 @@ function Mark({ label, value }: { label: string; value?: 'pass' | 'fail' | null 
     <span
       className={cn(
         'rounded px-1 py-px font-medium',
-        value === 'pass' && 'bg-emerald-50 text-emerald-800',
-        value === 'fail' && 'bg-rose-50 text-rose-800',
+        value === 'pass' && 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300',
+        value === 'fail' && 'bg-rose-50 text-rose-800 dark:bg-rose-950 dark:text-rose-300',
         !value && 'bg-ink-100 text-ink-400',
       )}
       title={`${label}: ${value ?? 'open'}`}

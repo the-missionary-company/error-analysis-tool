@@ -74,7 +74,7 @@ export function SpanNoteComposer({
           } as CSSProperties
         }
         className={cn(
-          'fixed z-50 border border-ink-200 bg-white shadow-soft',
+          'fixed z-50 border border-ink-200 bg-surface shadow-soft',
           'inset-x-0 bottom-0 max-h-[min(85vh,32rem)] w-full overflow-y-auto rounded-t-2xl p-4 pb-[max(1rem,env(safe-area-inset-bottom))]',
           'sm:inset-x-auto sm:bottom-auto sm:left-[var(--composer-left)] sm:top-[var(--composer-top)] sm:max-h-none sm:w-[320px] sm:rounded-xl sm:p-3 sm:pb-3',
         )}
@@ -108,7 +108,7 @@ export function SpanNoteComposer({
                   type="button"
                   className={cn(
                     'rounded-md px-3 py-2 text-xs ring-1 ring-ink-200 sm:px-2 sm:py-1 sm:text-[11px]',
-                    kind === value ? 'bg-ink-900 text-white ring-ink-900' : 'bg-white text-ink-600',
+                    kind === value ? 'bg-ink-950 text-ink-50 ring-ink-950' : 'bg-surface text-ink-600',
                   )}
                   onClick={() => setKind(value)}
                 >
@@ -132,7 +132,7 @@ export function SpanNoteComposer({
                     ? `Question on ${LANE_DEFS[lane].title}… Enter to save`
                     : `Note on ${LANE_DEFS[lane].title}… Enter to save`
                 }
-                className="min-h-[96px] min-w-0 flex-1 resize-y rounded-lg border border-ink-200 bg-ink-50/50 px-3 py-2.5 text-base focus:border-accent focus:bg-white focus:outline-none focus:ring-2 focus:ring-accent/20 sm:min-h-[72px] sm:px-2.5 sm:py-2 sm:text-sm"
+                className="min-h-[96px] min-w-0 flex-1 resize-y rounded-lg border border-ink-200 bg-ink-50/50 px-3 py-2.5 text-base focus:border-accent focus:bg-surface focus:outline-none focus:ring-2 focus:ring-accent/20 sm:min-h-[72px] sm:px-2.5 sm:py-2 sm:text-sm"
               />
               <VoiceDictationButton value={text} onChange={setText} className="shrink-0" />
             </div>

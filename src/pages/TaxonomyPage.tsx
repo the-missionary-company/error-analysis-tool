@@ -169,7 +169,7 @@ export function TaxonomyPage() {
               API key (localStorage only)
               <input
                 type="password"
-                className="mt-1 w-full rounded-lg border border-ink-200 bg-white px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-lg border border-ink-200 bg-surface px-3 py-2 text-sm"
                 value={settings.apiKey}
                 onChange={(e) => persistSettings({ ...settings, apiKey: e.target.value })}
                 placeholder="sk-..."
@@ -178,7 +178,7 @@ export function TaxonomyPage() {
             <label className="block text-xs text-ink-500">
               Base URL
               <input
-                className="mt-1 w-full rounded-lg border border-ink-200 bg-white px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-lg border border-ink-200 bg-surface px-3 py-2 text-sm"
                 value={settings.apiBaseUrl}
                 onChange={(e) => persistSettings({ ...settings, apiBaseUrl: e.target.value })}
               />
@@ -186,7 +186,7 @@ export function TaxonomyPage() {
             <label className="block text-xs text-ink-500">
               Model
               <input
-                className="mt-1 w-full rounded-lg border border-ink-200 bg-white px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-lg border border-ink-200 bg-surface px-3 py-2 text-sm"
                 value={settings.model}
                 onChange={(e) => persistSettings({ ...settings, model: e.target.value })}
               />
@@ -197,7 +197,7 @@ export function TaxonomyPage() {
         {pasteOpen && (
           <div className="space-y-2">
             <textarea
-              className="h-40 w-full rounded-lg border border-ink-200 bg-white px-3 py-2 font-mono text-xs"
+              className="h-40 w-full rounded-lg border border-ink-200 bg-surface px-3 py-2 font-mono text-xs"
               placeholder='Paste {"categories":[...],"assignments":[...]} from ChatGPT'
               value={pasteText}
               onChange={(e) => setPasteText(e.target.value)}
@@ -260,7 +260,7 @@ export function TaxonomyPage() {
                     )}
                   </div>
                   <select
-                    className="rounded-md border border-ink-200 bg-white px-2 py-1 text-xs"
+                    className="rounded-md border border-ink-200 bg-surface px-2 py-1 text-xs"
                     value={c.findingKind}
                     onChange={(e) => setFindingKind(c.id, e.target.value as FindingKind)}
                   >

@@ -4,6 +4,54 @@
 
 :root {
   color-scheme: light;
+  --c-page: 247 247 248;
+  --c-surface: 255 255 255;
+  --c-ink-50: 247 247 248;
+  --c-ink-100: 238 238 240;
+  --c-ink-200: 217 217 222;
+  --c-ink-300: 184 184 193;
+  --c-ink-400: 145 145 159;
+  --c-ink-500: 115 115 132;
+  --c-ink-600: 93 93 108;
+  --c-ink-700: 76 76 88;
+  --c-ink-800: 65 65 75;
+  --c-ink-900: 57 57 65;
+  --c-ink-950: 24 24 27;
+  --c-accent: 37 99 235;
+  --c-accent-soft: 239 246 255;
+  --c-accent-hover: 29 78 216;
+  --c-pass: 5 150 105;
+  --c-pass-soft: 236 253 245;
+  --c-fail: 220 38 38;
+  --c-fail-soft: 254 242 242;
+  --shadow-soft: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 16px rgba(15, 23, 42, 0.06);
+  --shadow-card: 0 0 0 1px rgba(15, 23, 42, 0.06), 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+.dark {
+  color-scheme: dark;
+  --c-page: 17 17 19;
+  --c-surface: 32 32 36;
+  --c-ink-50: 24 24 27;
+  --c-ink-100: 39 39 44;
+  --c-ink-200: 63 63 70;
+  --c-ink-300: 82 82 91;
+  --c-ink-400: 161 161 170;
+  --c-ink-500: 180 180 188;
+  --c-ink-600: 196 196 204;
+  --c-ink-700: 212 212 216;
+  --c-ink-800: 228 228 231;
+  --c-ink-900: 244 244 245;
+  --c-ink-950: 250 250 250;
+  --c-accent: 96 165 250;
+  --c-accent-soft: 30 41 84;
+  --c-accent-hover: 147 197 253;
+  --c-pass: 52 211 153;
+  --c-pass-soft: 6 78 59;
+  --c-fail: 248 113 113;
+  --c-fail-soft: 127 29 29;
+  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.35), 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-card: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 2px 8px rgba(0, 0, 0, 0.28);
 }
 
 html,
@@ -17,7 +65,14 @@ body {
   background:
     radial-gradient(1200px 600px at 10% -10%, rgba(37, 99, 235, 0.06), transparent 55%),
     radial-gradient(900px 500px at 100% 0%, rgba(5, 150, 105, 0.05), transparent 50%),
-    #f7f7f8;
+    rgb(var(--c-page));
+}
+
+.dark body {
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(37, 99, 235, 0.14), transparent 55%),
+    radial-gradient(900px 500px at 100% 0%, rgba(16, 185, 129, 0.08), transparent 50%),
+    rgb(var(--c-page));
 }
 
 @layer components {
@@ -29,19 +84,19 @@ body {
     @apply btn bg-accent text-white hover:bg-accent-hover shadow-sm;
   }
   .btn-secondary {
-    @apply btn bg-white text-ink-800 border border-ink-200 hover:bg-ink-50 shadow-sm;
+    @apply btn bg-surface text-ink-800 border border-ink-200 hover:bg-ink-50 shadow-sm;
   }
   .btn-ghost {
     @apply btn text-ink-600 hover:bg-ink-100;
   }
   .btn-pass {
-    @apply btn border border-pass/30 bg-pass-soft text-pass hover:bg-emerald-100;
+    @apply btn border border-pass/30 bg-pass-soft text-pass hover:bg-emerald-100 dark:hover:bg-emerald-900;
   }
   .btn-fail {
-    @apply btn border border-fail/30 bg-fail-soft text-fail hover:bg-red-100;
+    @apply btn border border-fail/30 bg-fail-soft text-fail hover:bg-red-100 dark:hover:bg-red-950;
   }
   .card {
-    @apply rounded-xl bg-white shadow-card;
+    @apply rounded-xl bg-surface shadow-card;
   }
   .kbd {
     @apply inline-flex items-center rounded border border-ink-200 bg-ink-50 px-1.5 py-0.5 font-mono text-[11px] text-ink-600;
@@ -51,5 +106,5 @@ body {
 /* Subtle scrollbar */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #d9d9de transparent;
+  scrollbar-color: rgb(var(--c-ink-200)) transparent;
 }
