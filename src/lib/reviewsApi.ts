@@ -335,12 +335,12 @@ export async function handleReviewsNoteRequest(
     if (typeof body.caseId !== 'string' || typeof body.noteId !== 'string') {
       return jsonResponse(400, { error: 'caseId and noteId are required' });
     }
-    const hasText = typeof body.text === 'string';
+    const text = typeof body.text === 'string' ? body.text : undefined;
     const hasResolved = typeof body.resolved === 'boolean';
-    if (!hasText && !hasResolved) {
+    if (text === undefined && !hasResolved) {
       return jsonResponse(400, { error: 'text or resolved is required' });
     }
-    if (hasText && !body.text.trim()) {
+    if (text !== undefined && !text.trim()) {
       return jsonResponse(400, { error: 'text is required' });
     }
     const existing = await persist.read();
@@ -350,7 +350,7 @@ export async function handleReviewsNoteRequest(
     if (!current) return jsonResponse(404, { error: 'note not found' });
 
     let next = current;
-    if (hasText) next = editSteerNote(next, body.text);
+    if (text !== undefined) next = editSteerNote(next, text);
     if (hasResolved) {
       next = body.resolved
         ? resolveSteerNote(next, body.author === 'oscar' ? 'oscar' : 'sam')

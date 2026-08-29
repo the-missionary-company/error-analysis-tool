@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { notesForHighlight } from '../lib/gutterLayout';
 import { LANE_TONE } from '../lib/laneStyles';
 import {
@@ -156,7 +156,7 @@ function FilterChip({
 }: {
   active: boolean;
   onClick: () => void;
-  children: string;
+  children: ReactNode;
 }) {
   return (
     <button
