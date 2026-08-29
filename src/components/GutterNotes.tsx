@@ -4,6 +4,7 @@ import { LANE_TONE } from '../lib/laneStyles';
 import { AUTHOR_DEFS, LANE_DEFS, addThreadReply } from '../lib/steers';
 import { cn, formatDate } from '../lib/utils';
 import type { Author, SteerNote, SteerReview } from '../types/steers';
+import { VoiceDictationButton } from './VoiceDictationButton';
 
 const CARD_GAP = 76;
 
@@ -185,12 +186,15 @@ function GutterCard({
               setReply('');
             }}
           >
-            <textarea
-              value={reply}
-              onChange={(e) => setReply(e.target.value)}
-              placeholder="Reply…"
-              className="min-h-[48px] w-full resize-y rounded-md border border-ink-200 bg-white px-2 py-1.5 text-xs"
-            />
+            <div className="flex items-start gap-1.5">
+              <textarea
+                value={reply}
+                onChange={(e) => setReply(e.target.value)}
+                placeholder="Reply…"
+                className="min-h-[48px] min-w-0 flex-1 resize-y rounded-md border border-ink-200 bg-white px-2 py-1.5 text-xs"
+              />
+              <VoiceDictationButton value={reply} onChange={setReply} compact className="shrink-0" />
+            </div>
             <button type="submit" className="btn-secondary h-7 px-2 text-[11px]">
               Reply
             </button>
@@ -205,12 +209,20 @@ function GutterCard({
                 setReplacement('');
               }}
             >
-              <textarea
-                value={replacement}
-                onChange={(e) => setReplacement(e.target.value)}
-                placeholder={`Replace “${note.spanText}”…`}
-                className="min-h-[48px] w-full resize-y rounded-md border border-ink-200 bg-white px-2 py-1.5 text-xs"
-              />
+              <div className="flex items-start gap-1.5">
+                <textarea
+                  value={replacement}
+                  onChange={(e) => setReplacement(e.target.value)}
+                  placeholder={`Replace “${note.spanText}”…`}
+                  className="min-h-[48px] min-w-0 flex-1 resize-y rounded-md border border-ink-200 bg-white px-2 py-1.5 text-xs"
+                />
+                <VoiceDictationButton
+                  value={replacement}
+                  onChange={setReplacement}
+                  compact
+                  className="shrink-0"
+                />
+              </div>
               <button type="submit" className="btn-primary h-7 px-2 text-[11px]">
                 Apply revision
               </button>

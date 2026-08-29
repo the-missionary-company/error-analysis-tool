@@ -15,7 +15,10 @@ describe('API.md', () => {
     expect(doc).toContain('Do not PUT a full review');
     expect(doc).toContain('parentId');
     expect(doc).toContain('parentSystem');
+    expect(doc).toContain('parentTitle');
     expect(doc).toContain('sessionId');
     expect(doc).toContain('filedAt');
+    expect(doc).toContain('POST /api/transcribe');
+    expect(doc).toContain('XAI_API_KEY');
   });
 });

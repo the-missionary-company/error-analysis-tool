@@ -345,8 +345,8 @@ export function SteersPage() {
           }}
         />
         </div>
-        <div className="min-w-0 space-y-4">
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="min-w-0 space-y-4 pb-20 md:pb-0">
+        <div className="hidden flex-wrap items-center gap-2 md:flex">
           {isFiled(activeReview) ? (
             <button type="button" className="btn-secondary" onClick={unfileActiveCase}>
               <RotateCcw className="h-4 w-4" />
@@ -419,6 +419,24 @@ export function SteersPage() {
           />
         </div>
         </div>
+      </div>
+      <div
+        className={cn(
+          'fixed inset-x-0 bottom-0 z-30 border-t border-ink-200 bg-white/95 px-3 py-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] backdrop-blur md:hidden',
+          pending && 'hidden',
+        )}
+      >
+        {isFiled(activeReview) ? (
+          <button type="button" className="btn-secondary h-11 w-full text-sm" onClick={unfileActiveCase}>
+            <RotateCcw className="h-4 w-4" />
+            Back to inbox
+          </button>
+        ) : (
+          <button type="button" className="btn-primary h-11 w-full text-sm" onClick={fileActiveCase}>
+            <Check className="h-4 w-4" />
+            Done — file it
+          </button>
+        )}
       </div>
       {pending && (
         <SpanNoteComposer

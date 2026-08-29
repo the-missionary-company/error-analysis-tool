@@ -59,6 +59,8 @@ export interface SteerCase {
   /** Durable parent id in parentSystem. For Linear: CH-757. Primary filter key. */
   parentId?: string;
   parentUrl?: string;
+  /** Short human title for the parent ticket (filter chips / headers). Prefer over session ids. */
+  parentTitle?: string;
   /**
    * @deprecated Alias of parentId (Linear). Still accepted on POST/GET for older clients.
    */
