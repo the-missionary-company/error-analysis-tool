@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { emptyReview } from './steers';
 import { AUTH_COOKIE_NAME } from './evalAuth';
 import {
@@ -7,10 +7,12 @@ import {
   appendReplyToReviews,
   gateEvalDashboardRequest,
   appendCommentToReviews,
+  filedCaseIdsToNotify,
   handleReviewsCommentRequest,
   handleReviewsReplyRequest,
   handleReviewsRequest,
   mergeReviewsByUpdatedAt,
+  notifyOscarFiled,
   parseReviewsWritePayload,
   type ReviewsPersist,
 } from './reviewsApi';
@@ -266,6 +268,361 @@ describe('handleReviewsRequest', () => {
     );
     expect(res.status).toBe(503);
     expect(await res.json()).toEqual({ error: 'reviews persist is not configured' });
+  });
+});
+
+describe('filedCaseIdsToNotify', () => {
+  it('returns a caseId when incoming sets filedAt for the first time', () => {
+    expect(
+      filedCaseIdsToNotify(
+        [review({ caseId: 'one', updatedAt: '2026-08-10T00:00:00.000Z' })],
+        [
+          review({
+            caseId: 'one',
+            filedAt: '2026-08-29T12:00:00.000Z',
+            updatedAt: '2026-08-29T12:00:00.000Z',
+          }),
+        ],
+      ),
+    ).toEqual(['one']);
+  });
+
+  it('returns nothing when filedAt is unchanged and only a score or comment changes', () => {
+    const filed = review({
+      caseId: 'one',
+      filedAt: '2026-08-29T12:00:00.000Z',
+      updatedAt: '2026-08-29T12:00:00.000Z',
+      content: { passFail: 'pass', comment: 'old', labels: [] },
+    });
+    expect(
+      filedCaseIdsToNotify(
+        [filed],
+        [
+          review({
+            caseId: 'one',
+            filedAt: '2026-08-29T12:00:00.000Z',
+            updatedAt: '2026-08-29T12:05:00.000Z',
+            content: { passFail: 'fail', comment: 'keystroke', labels: [] },
+          }),
+        ],
+      ),
+    ).toEqual([]);
+  });
+
+  it('returns nothing when incoming unfiles', () => {
+    expect(
+      filedCaseIdsToNotify(
+        [
+          review({
+            caseId: 'one',
+            filedAt: '2026-08-29T12:00:00.000Z',
+            updatedAt: '2026-08-29T12:00:00.000Z',
+          }),
+        ],
+        [review({ caseId: 'one', updatedAt: '2026-08-29T12:10:00.000Z' })],
+      ),
+    ).toEqual([]);
+  });
+
+  it('returns a caseId when incoming re-files with a new filedAt', () => {
+    expect(
+      filedCaseIdsToNotify(
+        [
+          review({
+            caseId: 'one',
+            filedAt: '2026-08-29T12:00:00.000Z',
+            updatedAt: '2026-08-29T12:00:00.000Z',
+          }),
+        ],
+        [
+          review({
+            caseId: 'one',
+            filedAt: '2026-08-29T13:00:00.000Z',
+            updatedAt: '2026-08-29T13:00:00.000Z',
+          }),
+        ],
+      ),
+    ).toEqual(['one']);
+  });
+
+  it('notifies only newly filed caseIds in a multi-review PUT', () => {
+    expect(
+      filedCaseIdsToNotify(
+        [
+          review({
+            caseId: 'already',
+            filedAt: '2026-08-20T00:00:00.000Z',
+            updatedAt: '2026-08-20T00:00:00.000Z',
+          }),
+          review({ caseId: 'open', updatedAt: '2026-08-20T00:00:00.000Z' }),
+        ],
+        [
+          review({
+            caseId: 'already',
+            filedAt: '2026-08-20T00:00:00.000Z',
+            updatedAt: '2026-08-29T00:00:00.000Z',
+          }),
+          review({
+            caseId: 'open',
+            filedAt: '2026-08-29T12:00:00.000Z',
+            updatedAt: '2026-08-29T12:00:00.000Z',
+          }),
+          review({
+            caseId: 'fresh',
+            filedAt: '2026-08-29T12:00:00.000Z',
+            updatedAt: '2026-08-29T12:00:00.000Z',
+          }),
+        ],
+      ),
+    ).toEqual(['open', 'fresh']);
+  });
+});
+
+const WEBHOOK_ENV = {
+  EVAL_DASHBOARD_PASSWORD: 'board-secret',
+  BLOB_READ_WRITE_TOKEN: 'token',
+  OSCAR_EVAL_WEBHOOK_URL: 'https://oscar.example/eval-board-filed',
+  OSCAR_EVAL_WEBHOOK_KEY: 'oscar-sender-key',
+};
+
+function putReview(body: SteerReview, env = WEBHOOK_ENV, persist = memoryPersist(), fetchImpl = vi.fn()) {
+  return handleReviewsRequest(
+    new Request('https://x/api/reviews', {
+      method: 'PUT',
+      headers: {
+        Authorization: 'Bearer board-secret',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ review: body }),
+    }),
+    env,
+    persist,
+    { fetchImpl: fetchImpl as unknown as typeof fetch },
+  ).then((res) => ({ res, persist, fetchImpl }));
+}
+
+describe('notifyOscarFiled', () => {
+  it('does not fetch when the url or key is missing or blank', async () => {
+    const fetchImpl = vi.fn();
+    await notifyOscarFiled({ EVAL_DASHBOARD_PASSWORD: 'x' }, ['one'], fetchImpl as unknown as typeof fetch);
+    await notifyOscarFiled(
+      { OSCAR_EVAL_WEBHOOK_URL: 'https://oscar.example/hook', OSCAR_EVAL_WEBHOOK_KEY: '   ' },
+      ['one'],
+      fetchImpl as unknown as typeof fetch,
+    );
+    await notifyOscarFiled(
+      { OSCAR_EVAL_WEBHOOK_URL: '', OSCAR_EVAL_WEBHOOK_KEY: 'key' },
+      ['one'],
+      fetchImpl as unknown as typeof fetch,
+    );
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it('POSTs one JSON body per caseId with the sender Bearer', async () => {
+    const fetchImpl = vi.fn(async () => new Response('', { status: 200 }));
+    await notifyOscarFiled(WEBHOOK_ENV, ['one', 'two'], fetchImpl as unknown as typeof fetch);
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    const [url, init] = fetchImpl.mock.calls[0];
+    expect(url).toBe(WEBHOOK_ENV.OSCAR_EVAL_WEBHOOK_URL);
+    expect((init as RequestInit).method).toBe('POST');
+    expect((init as RequestInit).headers).toMatchObject({
+      Authorization: 'Bearer oscar-sender-key',
+      'Content-Type': 'application/json',
+    });
+    expect((init as RequestInit).signal).toBeInstanceOf(AbortSignal);
+    expect(JSON.parse(String((init as RequestInit).body))).toEqual(
+      expect.objectContaining({ caseId: 'one' }),
+    );
+    expect(JSON.parse(String(fetchImpl.mock.calls[1][1]?.body))).toEqual(
+      expect.objectContaining({ caseId: 'two' }),
+    );
+  });
+
+  it('swallows a thrown fetch and does not rethrow', async () => {
+    const fetchImpl = vi.fn(async () => {
+      throw new Error('webhook down');
+    });
+    await expect(
+      notifyOscarFiled(WEBHOOK_ENV, ['one'], fetchImpl as unknown as typeof fetch),
+    ).resolves.toBeUndefined();
+  });
+});
+
+describe('PUT /api/reviews Oscar file webhook', () => {
+  it('notifies once when a PUT sets filedAt for the first time', async () => {
+    const { res, fetchImpl } = await putReview(
+      review({
+        caseId: 'one',
+        filedAt: '2026-08-29T12:00:00.000Z',
+        updatedAt: '2026-08-29T12:00:00.000Z',
+      }),
+    );
+    expect(res.status).toBe(200);
+    expect(fetchImpl).toHaveBeenCalledOnce();
+    expect(JSON.parse(String(fetchImpl.mock.calls[0][1]?.body))).toEqual(
+      expect.objectContaining({ caseId: 'one' }),
+    );
+  });
+
+  it('does not notify when a PUT only changes a score or comment', async () => {
+    const persist = memoryPersist([
+      review({
+        caseId: 'one',
+        filedAt: '2026-08-29T12:00:00.000Z',
+        updatedAt: '2026-08-29T12:00:00.000Z',
+        content: { passFail: 'pass', comment: 'old', labels: [] },
+      }),
+    ]);
+    const { res, fetchImpl } = await putReview(
+      review({
+        caseId: 'one',
+        filedAt: '2026-08-29T12:00:00.000Z',
+        updatedAt: '2026-08-29T12:05:00.000Z',
+        content: { passFail: 'fail', comment: 'keystroke', labels: [] },
+      }),
+      WEBHOOK_ENV,
+      persist,
+    );
+    expect(res.status).toBe(200);
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it('does not notify when a PUT unfiles', async () => {
+    const persist = memoryPersist([
+      review({
+        caseId: 'one',
+        filedAt: '2026-08-29T12:00:00.000Z',
+        updatedAt: '2026-08-29T12:00:00.000Z',
+      }),
+    ]);
+    const { res, fetchImpl } = await putReview(
+      review({ caseId: 'one', updatedAt: '2026-08-29T12:10:00.000Z' }),
+      WEBHOOK_ENV,
+      persist,
+    );
+    expect(res.status).toBe(200);
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it('notifies when a PUT re-files with a new filedAt', async () => {
+    const persist = memoryPersist([
+      review({
+        caseId: 'one',
+        filedAt: '2026-08-29T12:00:00.000Z',
+        updatedAt: '2026-08-29T12:00:00.000Z',
+      }),
+    ]);
+    const { res, fetchImpl } = await putReview(
+      review({
+        caseId: 'one',
+        filedAt: '2026-08-29T13:00:00.000Z',
+        updatedAt: '2026-08-29T13:00:00.000Z',
+      }),
+      WEBHOOK_ENV,
+      persist,
+    );
+    expect(res.status).toBe(200);
+    expect(fetchImpl).toHaveBeenCalledOnce();
+    expect(JSON.parse(String(fetchImpl.mock.calls[0][1]?.body))).toEqual(
+      expect.objectContaining({ caseId: 'one' }),
+    );
+  });
+
+  it('skips the webhook when env is missing and still 200s the PUT', async () => {
+    const fetchImpl = vi.fn();
+    const { res } = await putReview(
+      review({
+        caseId: 'one',
+        filedAt: '2026-08-29T12:00:00.000Z',
+        updatedAt: '2026-08-29T12:00:00.000Z',
+      }),
+      { EVAL_DASHBOARD_PASSWORD: 'board-secret', BLOB_READ_WRITE_TOKEN: 'token' },
+      memoryPersist(),
+      fetchImpl,
+    );
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({
+      reviews: [
+        expect.objectContaining({ caseId: 'one', filedAt: '2026-08-29T12:00:00.000Z' }),
+      ],
+    });
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it('200s the PUT when the webhook fetch throws and does not leak the key or URL', async () => {
+    const fetchImpl = vi.fn(async () => {
+      throw new Error(`failed ${WEBHOOK_ENV.OSCAR_EVAL_WEBHOOK_URL} ${WEBHOOK_ENV.OSCAR_EVAL_WEBHOOK_KEY}`);
+    });
+    const { res } = await putReview(
+      review({
+        caseId: 'one',
+        filedAt: '2026-08-29T12:00:00.000Z',
+        updatedAt: '2026-08-29T12:00:00.000Z',
+      }),
+      WEBHOOK_ENV,
+      memoryPersist(),
+      fetchImpl,
+    );
+    expect(res.status).toBe(200);
+    const raw = await res.text();
+    expect(raw).not.toContain(WEBHOOK_ENV.OSCAR_EVAL_WEBHOOK_URL);
+    expect(raw).not.toContain(WEBHOOK_ENV.OSCAR_EVAL_WEBHOOK_KEY);
+    expect(JSON.parse(raw)).toEqual({
+      reviews: [expect.objectContaining({ caseId: 'one' })],
+    });
+  });
+
+  it('does not notify on Oscar comment or reply POSTs', async () => {
+    const fetchImpl = vi.fn();
+    vi.stubGlobal('fetch', fetchImpl);
+    const persist = memoryPersist([
+      review({
+        caseId: 'one',
+        updatedAt: '2026-08-10T00:00:00.000Z',
+        notes: [
+          {
+            id: 'n1',
+            kind: 'question',
+            lane: 'content',
+            author: 'sam',
+            text: 'Gap?',
+            createdAt: '2026-08-10T00:00:00.000Z',
+            replies: [],
+          },
+        ],
+      }),
+    ]);
+    try {
+      const comment = await handleReviewsCommentRequest(
+        new Request('https://x/api/reviews/comment', {
+          method: 'POST',
+          headers: {
+            Authorization: 'Bearer board-secret',
+            'content-type': 'application/json',
+          },
+          body: JSON.stringify({ caseId: 'one', text: 'Will fold this.', lane: 'content' }),
+        }),
+        WEBHOOK_ENV,
+        persist,
+      );
+      const reply = await handleReviewsReplyRequest(
+        new Request('https://x/api/reviews/reply', {
+          method: 'POST',
+          headers: {
+            Authorization: 'Bearer board-secret',
+            'content-type': 'application/json',
+          },
+          body: JSON.stringify({ caseId: 'one', noteId: 'n1', author: 'oscar', text: 'Here.' }),
+        }),
+        WEBHOOK_ENV,
+        persist,
+      );
+      expect(comment.status).toBe(200);
+      expect(reply.status).toBe(200);
+      expect(fetchImpl).not.toHaveBeenCalled();
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });
 

@@ -202,6 +202,16 @@ Accepts `{ "review": … }`, `{ "reviews": […] }`, or a reviews array. Merges 
 
 **Do not PUT a full review to leave a comment.** That can overwrite Sam’s scores, labels, and highlights. Sam’s board uses PUT when it syncs a review it already edited locally.
 
+### On file
+
+When Sam presses **Done — file it**, the board PUTs that review with a new `filedAt`. After the write succeeds, the server POSTs `{ "caseId": "<id>" }` to Oscar's Grok Bot webhook (`OSCAR_EVAL_WEBHOOK_URL`) with `Authorization: Bearer $OSCAR_EVAL_WEBHOOK_KEY`.
+
+One POST per newly filed `caseId` in that PUT. Newly filed means incoming `filedAt` is set and the stored review had none, or a different `filedAt` (re-file).
+
+Not on `POST /api/reviews/comment`. Not on `POST /api/reviews/reply`. Not on keystroke PUTs that leave `filedAt` unchanged. Not on unfile.
+
+If either env var is missing or blank, the PUT still returns 200 and no webhook fires. A webhook timeout (~3s) or fetch error is swallowed; the PUT still 200s.
+
 ---
 
 ## Shapes
