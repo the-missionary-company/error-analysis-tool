@@ -116,6 +116,9 @@ export function assignCaseDefaults(
   if (typeof obj.parentUrl === 'string' && obj.parentUrl) {
     obj.parentTicketUrl = obj.parentUrl;
   }
+  if (typeof obj.parentTitle === 'string' && obj.parentTitle.trim()) {
+    obj.parentTitle = obj.parentTitle.trim();
+  }
 
   // Vorflux session id is optional. session label defaults for older UI paths.
   if (typeof obj.sessionId === 'string' && obj.sessionId.trim()) {

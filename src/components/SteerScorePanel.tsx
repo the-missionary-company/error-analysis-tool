@@ -3,6 +3,7 @@ import { CHIP_DEFS, LANE_DEFS, addLaneLabel, removeLaneLabel } from '../lib/stee
 import { LANE_TONE } from '../lib/laneStyles';
 import { cn, formatDate } from '../lib/utils';
 import type { LaneScore, PassFail, ScoreLane, SteerReview } from '../types/steers';
+import { VoiceDictationButton } from './VoiceDictationButton';
 
 const LANES: ScoreLane[] = ['content', 'action'];
 
@@ -94,13 +95,20 @@ function LaneCard({
           <label className="mt-3 block text-xs font-medium text-ink-500" htmlFor={`${lane}-comment`}>
             {def.title} comment
           </label>
-          <textarea
-            id={`${lane}-comment`}
-            value={score.comment}
-            onChange={(e) => onChange({ ...score, comment: e.target.value })}
-            placeholder={def.placeholder}
-            className="mt-1 min-h-[72px] w-full resize-y rounded-lg border border-ink-200 bg-ink-50/50 px-3 py-2 text-sm leading-relaxed text-ink-900 placeholder:text-ink-400 focus:border-accent focus:bg-white focus:outline-none focus:ring-2 focus:ring-accent/20"
-          />
+          <div className="mt-1 flex items-start gap-2">
+            <textarea
+              id={`${lane}-comment`}
+              value={score.comment}
+              onChange={(e) => onChange({ ...score, comment: e.target.value })}
+              placeholder={def.placeholder}
+              className="min-h-[72px] min-w-0 flex-1 resize-y rounded-lg border border-ink-200 bg-ink-50/50 px-3 py-2 text-sm leading-relaxed text-ink-900 placeholder:text-ink-400 focus:border-accent focus:bg-white focus:outline-none focus:ring-2 focus:ring-accent/20"
+            />
+            <VoiceDictationButton
+              value={score.comment}
+              onChange={(next) => onChange({ ...score, comment: next })}
+              className="shrink-0"
+            />
+          </div>
         </>
       )}
     </section>
@@ -165,6 +173,7 @@ function LaneLabelEditor({
           placeholder="Type a label for this score"
           className="min-w-0 flex-1 rounded-lg border border-ink-200 px-2.5 py-1.5 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
         />
+        <VoiceDictationButton value={draft} onChange={setDraft} compact className="shrink-0" />
         <button type="submit" className="btn-secondary h-9 px-3 text-xs">
           Add
         </button>

@@ -85,41 +85,76 @@ export function emptyReview(caseId: string): SteerReview {
 /** Known parent Linear tickets for the five live projects. Oscar should still send parentId explicitly. */
 export const KNOWN_PROJECT_PARENTS: Record<
   string,
-  { parentId: string; parentUrl: string }
+  { parentId: string; parentUrl: string; shortTitle: string }
 > = {
   Capture: {
     parentId: 'CH-807',
     parentUrl:
       'https://linear.app/the-missionary-company/issue/CH-807/generic-capture-review-core',
+    shortTitle: 'Capture Review Core',
   },
   Sync: {
     parentId: 'CH-795',
     parentUrl:
       'https://linear.app/the-missionary-company/issue/CH-795/sync-p1-finish-project-source-acceptance-control-plane',
+    shortTitle: 'Sync P1 control plane',
   },
   Tracer: {
     parentId: 'CH-757',
     parentUrl:
       'https://linear.app/the-missionary-company/issue/CH-757/answer-engine-tracer-bullet-approved-better-implementation-package',
+    shortTitle: 'Answer Engine Tracer',
   },
   Fireflies: {
     parentId: 'CH-799',
     parentUrl:
       'https://linear.app/the-missionary-company/issue/CH-799/dormant-forecast-only-meetings-fireflies-implementation-increment',
+    shortTitle: 'Fireflies meetings',
   },
   Calendar: {
     parentId: 'CH-827',
     parentUrl:
       'https://linear.app/the-missionary-company/issue/CH-827/foundation-cal-01-exact-providersource-kind-registry-handoff',
+    shortTitle: 'Calendar registry',
   },
 };
 
+const KNOWN_PARENT_BY_ID: Record<string, { project: string; parentUrl: string; shortTitle: string }> =
+  Object.fromEntries(
+    Object.entries(KNOWN_PROJECT_PARENTS).map(([project, known]) => [
+      known.parentId,
+      { project, parentUrl: known.parentUrl, shortTitle: known.shortTitle },
+    ]),
+  );
+
+/** Vorflux / UUID-looking ids must never become filter chip labels. */
+export function looksLikeOpaqueId(value: string): boolean {
+  const v = value.trim();
+  if (!v) return false;
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v)) return true;
+  if (/^[0-9a-f]{16,}$/i.test(v)) return true;
+  if (/^[0-9a-f]{8,14}$/i.test(v)) return true;
+  return false;
+}
+
 export function caseProject(item: SteerCase): string {
   const project = item.project?.trim();
-  if (project) return project;
+  if (project && !looksLikeOpaqueId(project)) return project;
   const session = item.session?.trim();
-  if (session && session !== '—') return session;
+  if (session && session !== '—' && !looksLikeOpaqueId(session)) return session;
+  const parentId = caseParentId(item);
+  if (parentId && KNOWN_PARENT_BY_ID[parentId]?.project) return KNOWN_PARENT_BY_ID[parentId].project;
   return '';
+}
+
+export function caseParentTitle(item: SteerCase): string | undefined {
+  const explicit = item.parentTitle?.trim();
+  if (explicit) return explicit;
+  const parentId = caseParentId(item);
+  if (parentId && KNOWN_PARENT_BY_ID[parentId]?.shortTitle) return KNOWN_PARENT_BY_ID[parentId].shortTitle;
+  const project = caseProject(item);
+  if (project && KNOWN_PROJECT_PARENTS[project]?.shortTitle) return KNOWN_PROJECT_PARENTS[project].shortTitle;
+  return undefined;
 }
 
 export function caseParentSystem(item: SteerCase): string {
@@ -141,10 +176,10 @@ export function caseParentKey(item: SteerCase): string | null {
   return `${caseParentSystem(item)}:${id}`;
 }
 
-/** Display session label; treats legacy "—" placeholder as empty. */
+/** Display session label; treats legacy "—" and opaque Vorflux ids as empty. */
 export function caseSessionLabel(item: SteerCase): string | undefined {
   const session = item.session?.trim();
-  if (session && session !== '—') return session;
+  if (session && session !== '—' && !looksLikeOpaqueId(session)) return session;
   return undefined;
 }
 
@@ -153,7 +188,10 @@ export function withCaseScopeDefaults(item: SteerCase): SteerCase {
   const known = project ? KNOWN_PROJECT_PARENTS[project] : undefined;
   const parentSystem = caseParentSystem(item);
   const parentId = caseParentId(item) || known?.parentId;
-  const parentUrl = caseParentUrl(item) || known?.parentUrl;
+  const knownById = parentId ? KNOWN_PARENT_BY_ID[parentId] : undefined;
+  const parentUrl = caseParentUrl(item) || known?.parentUrl || knownById?.parentUrl;
+  const parentTitle =
+    item.parentTitle?.trim() || known?.shortTitle || knownById?.shortTitle || undefined;
   const sessionId = item.sessionId?.trim();
   // session is optional (Vorflux not required). Prefer real label → project → parentId.
   const session = caseSessionLabel(item) || project || parentId || '—';
@@ -165,6 +203,7 @@ export function withCaseScopeDefaults(item: SteerCase): SteerCase {
     parentSystem,
     ...(parentId ? { parentId, parentTicket: parentId } : {}),
     ...(parentUrl ? { parentUrl, parentTicketUrl: parentUrl } : {}),
+    ...(parentTitle ? { parentTitle } : {}),
     ...(sessionId ? { sessionId } : {}),
     ...(spec ? { spec } : {}),
   };
@@ -202,6 +241,7 @@ export interface ParentScopeOption {
   parentSystem: string;
   parentId: string;
   project: string;
+  parentTitle: string;
   label: string;
 }
 
@@ -212,13 +252,18 @@ export function listParentScopes(cases: SteerCase[]): ParentScopeOption[] {
     const key = caseParentKey(scoped);
     const parentId = caseParentId(scoped);
     if (!key || !parentId) continue;
+    // Never chip on opaque Vorflux/session ids mistaken for parentId.
+    if (looksLikeOpaqueId(parentId)) continue;
     const project = caseProject(scoped);
+    const parentTitle = caseParentTitle(scoped) || project || parentId;
+    const label = `${parentId} · ${parentTitle}`;
     const existing = byKey.get(key);
     if (existing) {
       if (!existing.project && project) existing.project = project;
-      existing.label = existing.project
-        ? `${parentId} · ${existing.project}`
-        : parentId;
+      if ((!existing.parentTitle || existing.parentTitle === existing.parentId) && parentTitle) {
+        existing.parentTitle = parentTitle;
+        existing.label = `${parentId} · ${parentTitle}`;
+      }
       continue;
     }
     byKey.set(key, {
@@ -226,7 +271,8 @@ export function listParentScopes(cases: SteerCase[]): ParentScopeOption[] {
       parentSystem: caseParentSystem(scoped),
       parentId,
       project,
-      label: project ? `${parentId} · ${project}` : parentId,
+      parentTitle,
+      label,
     });
   }
   return [...byKey.values()].sort((a, b) => a.label.localeCompare(b.label));
@@ -445,6 +491,7 @@ function parseCase(value: unknown, index: number): SteerCase {
   const parentSystem = readString(obj, 'parentSystem');
   const parentId = readString(obj, 'parentId') ?? readString(obj, 'parentTicket');
   const parentUrl = readString(obj, 'parentUrl') ?? readString(obj, 'parentTicketUrl');
+  const parentTitle = readString(obj, 'parentTitle');
   const spec = readString(obj, 'spec');
   const rawNumber = obj.number;
   if (yourCall) parsed.yourCall = yourCall;
@@ -465,6 +512,7 @@ function parseCase(value: unknown, index: number): SteerCase {
     parsed.parentUrl = parentUrl;
     parsed.parentTicketUrl = parentUrl;
   }
+  if (parentTitle) parsed.parentTitle = parentTitle;
   if (spec) parsed.spec = spec;
   if (typeof rawNumber === 'number' && Number.isFinite(rawNumber)) parsed.number = rawNumber;
   return withCaseScopeDefaults(parsed);

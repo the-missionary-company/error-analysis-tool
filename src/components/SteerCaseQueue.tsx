@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import {
   caseParentId,
   caseParentKey,
+  caseParentTitle,
   caseProgress,
   caseProject,
   isFiled,
@@ -121,11 +122,11 @@ export function SteerCaseQueue({
 
         <div className="mt-2">
           <p className="text-[11px] font-medium text-ink-400">Parent (Linear)</p>
-          <div className="mt-1 flex flex-wrap gap-1">
+          <div className="-mx-1 mt-1 flex gap-1 overflow-x-auto px-1 pb-1 [scrollbar-width:thin]">
             <button
               type="button"
               className={cn(
-                'rounded-md px-2 py-1 text-[11px]',
+                'shrink-0 rounded-md px-2 py-1 text-[11px]',
                 !parentFilter ? 'bg-ink-900 text-white' : 'bg-ink-50 text-ink-600 hover:bg-ink-100',
               )}
               onClick={() => onParentFilterChange(null)}
@@ -136,9 +137,9 @@ export function SteerCaseQueue({
               <button
                 key={parent.key}
                 type="button"
-                title={`${parent.parentSystem}:${parent.parentId}`}
+                title={`${parent.parentSystem}:${parent.parentId} — ${parent.parentTitle}`}
                 className={cn(
-                  'rounded-md px-2 py-1 text-[11px]',
+                  'max-w-[14rem] shrink-0 truncate rounded-md px-2 py-1 text-[11px]',
                   parentFilter === parent.key
                     ? 'bg-ink-900 text-white'
                     : 'bg-ink-50 text-ink-600 hover:bg-ink-100',
@@ -198,6 +199,7 @@ export function SteerCaseQueue({
           const progress = caseProgress(review);
           const project = caseProject(item);
           const parentId = caseParentId(item);
+          const parentTitle = caseParentTitle(item);
           return (
             <li key={item.id}>
               <button
@@ -216,9 +218,15 @@ export function SteerCaseQueue({
                   {parentId ? (
                     <span className="font-mono text-violet-800">{parentId}</span>
                   ) : (
-                    <span>{project || item.session}</span>
+                    <span>{project || '—'}</span>
                   )}
-                  {parentId && project && (
+                  {parentTitle && (
+                    <>
+                      <span>·</span>
+                      <span className="truncate">{parentTitle}</span>
+                    </>
+                  )}
+                  {!parentTitle && project && parentId && (
                     <>
                       <span>·</span>
                       <span>{project}</span>

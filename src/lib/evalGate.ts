@@ -1,5 +1,10 @@
 import { hasAuthCookie, isPublicPath, passwordMatches } from './evalAuth.js';
 
+export function isTranscribeApiPath(pathname: string): boolean {
+  const path = (pathname.split('?')[0] ?? pathname).replace(/\/$/, '') || '/';
+  return path === '/api/transcribe';
+}
+
 export function isReviewsApiPath(pathname: string): boolean {
   const path = (pathname.split('?')[0] ?? pathname).replace(/\/$/, '') || '/';
   return path === '/api/reviews' || path.startsWith('/api/reviews/');
@@ -11,7 +16,7 @@ export function isCasesApiPath(pathname: string): boolean {
 }
 
 export function isJsonApiPath(pathname: string): boolean {
-  return isReviewsApiPath(pathname) || isCasesApiPath(pathname);
+  return isReviewsApiPath(pathname) || isCasesApiPath(pathname) || isTranscribeApiPath(pathname);
 }
 
 export function parseBearerPassword(header: string | null | undefined): string | undefined {

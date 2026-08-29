@@ -15,6 +15,8 @@ import {
   isReviewsApiPath,
 } from './src/lib/reviewsApi';
 import { createBlobReviewsPersist } from './src/lib/reviewsBlob';
+import { handleTranscribeRequest } from './src/lib/transcribeApi';
+import { isTranscribeApiPath } from './src/lib/evalGate';
 
 function readBody(req: IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -25,7 +27,30 @@ function readBody(req: IncomingMessage): Promise<string> {
   });
 }
 
+function readBodyBuffer(req: IncomingMessage): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    req.on('data', (chunk) => chunks.push(Buffer.from(chunk)));
+    req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('error', reject);
+  });
+}
+
 function incomingToRequest(req: IncomingMessage, url: string, raw?: string): Request {
+  const headers = new Headers();
+  for (const [key, value] of Object.entries(req.headers)) {
+    if (typeof value === 'string') headers.set(key, value);
+    else if (Array.isArray(value)) headers.set(key, value.join(', '));
+  }
+  const method = req.method ?? 'GET';
+  return new Request(new URL(url, 'http://localhost'), {
+    method,
+    headers,
+    body: method === 'GET' || method === 'HEAD' ? undefined : raw,
+  });
+}
+
+function incomingToRequestBinary(req: IncomingMessage, url: string, raw?: Buffer): Request {
   const headers = new Headers();
   for (const [key, value] of Object.entries(req.headers)) {
     if (typeof value === 'string') headers.set(key, value);
@@ -75,6 +100,14 @@ function applyEvalDashboardGate(server: ViteDevServer | PreviewServer) {
       const raw = req.method === 'GET' || req.method === 'HEAD' ? undefined : await readBody(req);
       const request = incomingToRequest(req, url, raw);
       const response = await handleCasesRequest(request, process.env, createBlobCasesPersist(process.env));
+      await writeWebResponse(res, response);
+      return;
+    }
+
+    if (isTranscribeApiPath(path)) {
+      const raw = req.method === 'GET' || req.method === 'HEAD' ? undefined : await readBodyBuffer(req);
+      const request = incomingToRequestBinary(req, url, raw);
+      const response = await handleTranscribeRequest(request, process.env);
       await writeWebResponse(res, response);
       return;
     }

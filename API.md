@@ -31,7 +31,8 @@ Do **not** invent steer bodies. Do **not** invent or overwrite Sam’s Pass/Fail
 | Mark Pass/Fail, labels, chips, file/unfile | `PUT /api/reviews` | **Sam’s work.** A full PUT replaces the stored review and can wipe scores / `filedAt` |
 | Apply a visible revision on a question | *UI only today* | Strike + replacement overlay; does not rewrite the stored case body |
 | Remove a highlight | *UI only today* | Local + synced review via PUT if you must |
-| Sort / search / parent filter / inbox · `j` `k` `n` | *UI only* | Navigation. Filter chips are Linear parent ids. `n` = next unscored inbox case |
+| Sort / search / parent filter / inbox · `j` `k` `n` | *UI only* | Navigation. Filter chips are Linear parent titles (`CH-757 · Answer Engine Tracer`). `n` = next unscored inbox case |
+| Dictate into a comment / reply / label | `POST /api/transcribe` | Mic button. Grok STT. Screen wake lock, max 3 minutes |
 | Posting-as Sam/Oscar toggle | `author` on comment/reply | API field, not a session |
 | Hub + A1 annotate / cluster | *No Oscar API* | Separate Hamel-style board in the browser |
 
@@ -96,13 +97,14 @@ The durable identity of “which parent / which ticket / which project” is a *
 | --- | --- | --- | --- |
 | `parentSystem` | strongly yes | `"linear"` | Which system owns `parentId`. Default `linear`. Future-proof if another tracker appears. |
 | `parentId` | **yes for new posts** | `"CH-757"` | Unique parent id in that system. For Linear: the issue key. |
+| `parentTitle` | recommended | `"Answer Engine Tracer"` | Short title for filter chips. Prefer this over session ids |
 | `parentUrl` | recommended | `"https://linear.app/.../CH-757/..."` | Link shown on the board |
 | `project` | recommended | `"Tracer"` | Short human label (Capture / Sync / Tracer / Calendar / Fireflies) |
 | `spec` | optional | `"AF-CAL-01"` | Spec id or slug when relevant |
 | `sessionId` | optional | `"bdacf391"` | Vorflux (or other runner) session id. **Do not require this** — Sam will not always use Vorflux |
 | `session` | optional | `"Tracer"` | Legacy display label. If omitted, defaults to `project`, then `parentId`, then `"—"` |
 
-Aliases still accepted: `parentTicket` → `parentId`, `parentTicketUrl` → `parentUrl`. Responses mirror both so older clients keep working.
+Aliases still accepted: `parentTicket` → `parentId`, `parentTicketUrl` → `parentUrl`. Responses mirror both so older clients keep working. Never send a Vorflux UUID as `project`, `session`, or `parentId` — Sam filters on Linear titles, not session hashes.
 
 ```bash
 oscar -X POST "$HOST/api/cases" -d '{
@@ -110,6 +112,7 @@ oscar -X POST "$HOST/api/cases" -d '{
   "stamp": "KEEP",
   "parentSystem": "linear",
   "parentId": "CH-757",
+  "parentTitle": "Answer Engine Tracer",
   "parentUrl": "https://linear.app/the-missionary-company/issue/CH-757/answer-engine-tracer-bullet-approved-better-implementation-package",
   "project": "Tracer",
   "spec": "CH-757",
@@ -127,6 +130,13 @@ Persisted file: private Blob `steer-cases.json`.
 
 ---
 
+## Voice dictation
+
+### `POST /api/transcribe`
+
+Authenticated (cookie or Bearer). Multipart form field `file` = audio (webm/mp4/ogg, max ~3 minutes / 25MB). Returns `{ "text": "…" }` from **Grok Speech-to-Text** (`XAI_API_KEY` on the Vercel project).
+
+Used by the mic buttons next to comment / reply / label inputs. Recording keeps the screen awake (Wake Lock) and auto-stops at 3:00.
 ## Reviews
 
 ### `GET /api/reviews`

@@ -1,6 +1,12 @@
 import { ExternalLink } from 'lucide-react';
 import type { SteerCase, SteerHighlight, SteerRevision, SteerSection } from '../types/steers';
-import { caseParentId, caseParentSystem, caseParentUrl, caseProject } from '../lib/steers';
+import {
+  caseParentId,
+  caseParentSystem,
+  caseParentTitle,
+  caseParentUrl,
+  caseProject,
+} from '../lib/steers';
 import { HighlightableText, type PendingSpan } from './HighlightableText';
 
 const SECTIONS: { key: SteerSection; label: string }[] = [
@@ -29,6 +35,7 @@ export function SteerCaseView({
   const parentId = caseParentId(steer);
   const parentUrl = caseParentUrl(steer);
   const parentSystem = caseParentSystem(steer);
+  const parentTitle = caseParentTitle(steer);
   return (
     <article className="space-y-4">
       <header className="card p-5">
@@ -45,17 +52,21 @@ export function SteerCaseView({
                 className="rounded-full bg-violet-50 px-2.5 py-1 font-medium text-violet-900 ring-1 ring-violet-200 hover:bg-violet-100"
               >
                 {parentSystem === 'linear' ? 'Linear' : parentSystem}: {parentId}
+                {parentTitle ? ` · ${parentTitle}` : ''}
               </a>
             ) : (
               <MetaChip
                 label={parentSystem === 'linear' ? 'Linear' : parentSystem}
-                value={parentId}
+                value={parentTitle ? `${parentId} · ${parentTitle}` : parentId}
               />
             ))}
           {project && <MetaChip label="Project" value={project} />}
           {steer.spec && <MetaChip label="Spec" value={steer.spec} />}
           {steer.sessionId && <MetaChip label="Vorflux session" value={steer.sessionId} />}
-          {steer.session && steer.session !== '—' && steer.session !== project && (
+          {steer.session &&
+            steer.session !== '—' &&
+            steer.session !== project &&
+            steer.session !== parentId && (
             <MetaChip label="Session" value={steer.session} />
           )}
           <MetaChip label="Stamp" value={steer.stamp} tone={steer.stamp === 'HOLD' ? 'hold' : undefined} />

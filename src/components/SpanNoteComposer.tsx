@@ -4,6 +4,7 @@ import { LANE_TONE } from '../lib/laneStyles';
 import { cn } from '../lib/utils';
 import type { NoteKind, ScoreLane } from '../types/steers';
 import type { PendingSpan } from './HighlightableText';
+import { VoiceDictationButton } from './VoiceDictationButton';
 
 const LANES: ScoreLane[] = ['content', 'action'];
 
@@ -115,23 +116,26 @@ export function SpanNoteComposer({
                 </button>
               ))}
             </div>
-            <textarea
-              ref={inputRef}
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  keep();
+            <div className="mt-2 flex items-start gap-2">
+              <textarea
+                ref={inputRef}
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    keep();
+                  }
+                }}
+                placeholder={
+                  kind === 'question'
+                    ? `Question on ${LANE_DEFS[lane].title}… Enter to save`
+                    : `Note on ${LANE_DEFS[lane].title}… Enter to save`
                 }
-              }}
-              placeholder={
-                kind === 'question'
-                  ? `Question on ${LANE_DEFS[lane].title}… Enter to save`
-                  : `Note on ${LANE_DEFS[lane].title}… Enter to save`
-              }
-              className="mt-2 min-h-[96px] w-full resize-y rounded-lg border border-ink-200 bg-ink-50/50 px-3 py-2.5 text-base focus:border-accent focus:bg-white focus:outline-none focus:ring-2 focus:ring-accent/20 sm:min-h-[72px] sm:px-2.5 sm:py-2 sm:text-sm"
-            />
+                className="min-h-[96px] min-w-0 flex-1 resize-y rounded-lg border border-ink-200 bg-ink-50/50 px-3 py-2.5 text-base focus:border-accent focus:bg-white focus:outline-none focus:ring-2 focus:ring-accent/20 sm:min-h-[72px] sm:px-2.5 sm:py-2 sm:text-sm"
+              />
+              <VoiceDictationButton value={text} onChange={setText} className="shrink-0" />
+            </div>
             <div className="mt-3 flex items-center justify-between gap-2 sm:mt-2">
               <p className="text-xs text-ink-400 sm:text-[11px]">Enter saves · Shift+Enter new line</p>
               <div className="flex gap-2">
