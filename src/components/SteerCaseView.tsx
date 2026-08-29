@@ -1,5 +1,6 @@
 import { ExternalLink } from 'lucide-react';
 import type { SteerCase, SteerHighlight, SteerRevision, SteerSection } from '../types/steers';
+import { formatDate } from '../lib/utils';
 import { HighlightableText, type PendingSpan } from './HighlightableText';
 
 const SECTIONS: { key: SteerSection; label: string }[] = [
@@ -36,7 +37,7 @@ export function SteerCaseView({
           {steer.tooAggressive && <MetaChip label="Too aggressive?" value={steer.tooAggressive} />}
           {steer.yourCall && <MetaChip label="Your call" value={steer.yourCall} />}
           <MetaChip label="When" value={steer.when} />
-          {steer.timestamp && <MetaChip label="Timestamp" value={steer.timestamp} />}
+          {steer.timestamp && <MetaChip label="Timestamp" value={formatDate(steer.timestamp)} />}
         </div>
         {steer.notionUrl && (
           <a

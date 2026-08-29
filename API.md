@@ -69,7 +69,7 @@ Accepts one case, `{ "case": … }`, or `{ "cases": […] }`.
 
 Required: `title`, `session`, `stamp`, `context`, `problem`, `options`, `choice`.
 
-If `id` is missing, it is slugged from `title`. If `number` is missing, it is `max(seed + stored) + 1`. If `when` / `timestamp` are missing, they are now. Optional: `tooAggressive`, `yourCall`, `yourCallBody`, `contextLabel` (default `Background`), `choiceLabel` (default `Choice`), `notionUrl`.
+If `id` is missing, it is slugged from `title`. If `number` is missing, it is `max(seed + stored) + 1`. If `when` / `timestamp` are missing, they are now (UTC ISO in storage). The board shows `timestamp` in the viewer’s local timezone (Korea → KST). Optional: `tooAggressive`, `yourCall`, `yourCallBody`, `contextLabel` (default `Background`), `choiceLabel` (default `Choice`), `notionUrl`.
 
 Returns `{ "case": … }` for a single body, `{ "cases": […] }` for a list. **400** if a required field is missing.
 

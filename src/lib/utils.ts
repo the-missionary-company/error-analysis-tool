@@ -5,14 +5,19 @@ export function cn(...inputs: ClassValue[]) {
   return clsx(inputs);
 }
 
-export function formatDate(iso: string) {
+export function formatDate(iso: string, timeZone?: string) {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
   try {
     return new Intl.DateTimeFormat(undefined, {
+      year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: 'numeric',
       minute: '2-digit',
-    }).format(new Date(iso));
+      timeZoneName: 'short',
+      ...(timeZone ? { timeZone } : {}),
+    }).format(date);
   } catch {
     return iso;
   }
