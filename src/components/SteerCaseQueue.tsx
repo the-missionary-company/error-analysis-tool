@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { SlidersHorizontal, X } from 'lucide-react';
 import {
   caseListSection,
   caseParentId,
@@ -56,6 +57,7 @@ export function SteerCaseQueue({
 }) {
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<ProgressFilter>('all');
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const liveCases = useMemo(() => cases.filter((item) => !isArchived(item)), [cases]);
   const shelfCases = useMemo(() => cases.filter((item) => isArchived(item)), [cases]);
   const parents = useMemo(
@@ -90,191 +92,296 @@ export function SteerCaseQueue({
     });
   }, [cases, filter, inboxTab, parentFilter, query, reviews]);
 
-  return (
-    <aside className="flex max-h-[min(50vh,22rem)] flex-col rounded-xl border border-ink-200 bg-white md:max-h-[calc(100vh-7rem)] md:sticky md:top-[4.5rem]">
-      <div className="border-b border-ink-100 px-3 py-2.5">
-        <div className="flex items-baseline justify-between gap-2">
-          <h2 className="text-sm font-semibold text-ink-950">Cases</h2>
-          <p className="text-[11px] text-ink-500">
-            {inboxCount} inbox · {filedCount} filed
-            {archivedCount ? ` · ${archivedCount} archived` : ''}
-          </p>
-        </div>
+  const sheetFilterCount = (parentFilter ? 1 : 0) + (filter !== 'all' ? 1 : 0);
+  const activeFilterSummary = [
+    parentFilter ? parents.find((p) => p.key === parentFilter)?.label ?? 'Parent' : null,
+    filter !== 'all' ? filter : null,
+    `Sort ${SORT_FIELDS.find((f) => f.id === sort.field)?.label ?? sort.field}${
+      sort.direction === 'asc' ? ' ↑' : ' ↓'
+    }`,
+  ]
+    .filter(Boolean)
+    .join(' · ');
 
-        <div className="mt-2 grid grid-cols-2 gap-1">
-          {([
-            ['inbox', `Inbox (${inboxCount})`],
-            ['filed', `Filed (${filedCount})`],
-          ] as const).map(([value, label]) => (
+  useEffect(() => {
+    if (!filtersOpen) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setFiltersOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [filtersOpen]);
+
+  const filterControls = (
+    <>
+      <div>
+        <p className="text-[11px] font-medium text-ink-400">Parent (Linear)</p>
+        <div className="-mx-1 mt-1 flex gap-1 overflow-x-auto px-1 pb-1 [scrollbar-width:thin]">
+          <button
+            type="button"
+            className={cn(
+              'shrink-0 rounded-md px-2 py-1 text-[11px]',
+              !parentFilter ? 'bg-ink-900 text-white' : 'bg-ink-50 text-ink-600 hover:bg-ink-100',
+            )}
+            onClick={() => onParentFilterChange(null)}
+          >
+            All
+          </button>
+          {parents.map((parent) => (
             <button
-              key={value}
+              key={parent.key}
               type="button"
+              title={`${parent.parentSystem}:${parent.parentId} — ${parent.parentTitle}`}
               className={cn(
-                'rounded-md px-2 py-1.5 text-[11px] font-medium',
-                inboxTab === value ? 'bg-ink-900 text-white' : 'bg-ink-50 text-ink-600 hover:bg-ink-100',
+                'max-w-[14rem] shrink-0 truncate rounded-md px-2 py-1 text-[11px]',
+                parentFilter === parent.key
+                  ? 'bg-ink-900 text-white'
+                  : 'bg-ink-50 text-ink-600 hover:bg-ink-100',
               )}
-              onClick={() => onInboxTabChange(value)}
+              onClick={() => onParentFilterChange(parent.key)}
             >
-              {label}
+              {parent.label}
             </button>
           ))}
         </div>
-        <button
-          type="button"
-          className={cn(
-            'mt-1 w-full rounded-md px-2 py-1 text-[11px]',
-            inboxTab === 'archived'
-              ? 'bg-ink-900 text-white'
-              : 'text-ink-400 hover:bg-ink-50 hover:text-ink-600',
-          )}
-          onClick={() => onInboxTabChange('archived')}
-        >
-          Archived{archivedCount ? ` (${archivedCount})` : ''}
-        </button>
-
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search title, Linear id, project…"
-          className="mt-2 w-full rounded-lg border border-ink-200 px-2.5 py-1.5 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
-        />
-
-        <div className="mt-2">
-          <p className="text-[11px] font-medium text-ink-400">Parent (Linear)</p>
-          <div className="-mx-1 mt-1 flex gap-1 overflow-x-auto px-1 pb-1 [scrollbar-width:thin]">
-            <button
-              type="button"
-              className={cn(
-                'shrink-0 rounded-md px-2 py-1 text-[11px]',
-                !parentFilter ? 'bg-ink-900 text-white' : 'bg-ink-50 text-ink-600 hover:bg-ink-100',
-              )}
-              onClick={() => onParentFilterChange(null)}
-            >
-              All
-            </button>
-            {parents.map((parent) => (
-              <button
-                key={parent.key}
-                type="button"
-                title={`${parent.parentSystem}:${parent.parentId} — ${parent.parentTitle}`}
-                className={cn(
-                  'max-w-[14rem] shrink-0 truncate rounded-md px-2 py-1 text-[11px]',
-                  parentFilter === parent.key
-                    ? 'bg-ink-900 text-white'
-                    : 'bg-ink-50 text-ink-600 hover:bg-ink-100',
-                )}
-                onClick={() => onParentFilterChange(parent.key)}
-              >
-                {parent.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="mt-2 flex flex-wrap gap-1">
-          {(['all', 'open', 'scored'] as const).map((value) => (
-            <button
-              key={value}
-              type="button"
-              className={cn(
-                'rounded-md px-2 py-1 text-[11px] capitalize md:flex-1',
-                filter === value ? 'bg-ink-900 text-white' : 'bg-ink-50 text-ink-600 hover:bg-ink-100',
-              )}
-              onClick={() => setFilter(value)}
-            >
-              {value}
-            </button>
-          ))}
-        </div>
-        <div className="mt-2">
-          <p className="text-[11px] font-medium text-ink-400">Sort</p>
-          <div className="mt-1 grid grid-cols-2 gap-1">
-            {SORT_FIELDS.map((field) => (
-              <button
-                key={field.id}
-                type="button"
-                className={cn(
-                  'rounded-md px-2 py-1 text-[11px]',
-                  sort.field === field.id ? 'bg-ink-900 text-white' : 'bg-ink-50 text-ink-600 hover:bg-ink-100',
-                )}
-                onClick={() =>
-                  onSortChange({
-                    field: field.id,
-                    direction: sort.field === field.id && sort.direction === 'asc' ? 'desc' : 'asc',
-                  })
-                }
-              >
-                {field.label}
-                {sort.field === field.id ? (sort.direction === 'asc' ? ' ↑' : ' ↓') : ''}
-              </button>
-            ))}
-          </div>
-        </div>
-        <p className="mt-2 text-[11px] text-ink-400">j / k move · n next inbox · Done files it</p>
       </div>
-      <ul className="min-h-0 flex-1 overflow-y-auto p-1.5">
-        {visible.map((item) => {
-          const review = reviews[item.id];
-          const progress = caseProgress(review);
-          const project = caseProject(item);
-          const parentId = caseParentId(item);
-          const parentTitle = caseParentTitle(item);
-          return (
-            <li key={item.id}>
+
+      <div className="flex flex-wrap gap-1">
+        {(['all', 'open', 'scored'] as const).map((value) => (
+          <button
+            key={value}
+            type="button"
+            className={cn(
+              'rounded-md px-2 py-1 text-[11px] capitalize md:flex-1',
+              filter === value ? 'bg-ink-900 text-white' : 'bg-ink-50 text-ink-600 hover:bg-ink-100',
+            )}
+            onClick={() => setFilter(value)}
+          >
+            {value}
+          </button>
+        ))}
+      </div>
+
+      <div>
+        <p className="text-[11px] font-medium text-ink-400">Sort</p>
+        <div className="mt-1 grid grid-cols-2 gap-1">
+          {SORT_FIELDS.map((field) => (
+            <button
+              key={field.id}
+              type="button"
+              className={cn(
+                'rounded-md px-2 py-1.5 text-[11px] md:py-1',
+                sort.field === field.id ? 'bg-ink-900 text-white' : 'bg-ink-50 text-ink-600 hover:bg-ink-100',
+              )}
+              onClick={() =>
+                onSortChange({
+                  field: field.id,
+                  direction: sort.field === field.id && sort.direction === 'asc' ? 'desc' : 'asc',
+                })
+              }
+            >
+              {field.label}
+              {sort.field === field.id ? (sort.direction === 'asc' ? ' ↑' : ' ↓') : ''}
+            </button>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+
+  const emptyMessage =
+    inboxTab === 'inbox'
+      ? 'Inbox is clear for this filter.'
+      : inboxTab === 'filed'
+        ? 'No filed cases in this filter.'
+        : 'No archived cases in this filter.';
+
+  return (
+    <>
+      <aside className="flex max-h-[min(55vh,28rem)] flex-col rounded-xl border border-ink-200 bg-white md:max-h-[calc(100vh-7rem)] md:sticky md:top-[4.5rem]">
+        <div className="shrink-0 border-b border-ink-100 px-3 py-2.5">
+          <div className="flex items-baseline justify-between gap-2">
+            <h2 className="text-sm font-semibold text-ink-950">Cases</h2>
+            <p className="text-[11px] text-ink-500">
+              {inboxCount} inbox · {filedCount} filed
+              {archivedCount ? ` · ${archivedCount} archived` : ''}
+            </p>
+          </div>
+
+          <div className="mt-2 grid grid-cols-2 gap-1">
+            {([
+              ['inbox', `Inbox (${inboxCount})`],
+              ['filed', `Filed (${filedCount})`],
+            ] as const).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                className={cn(
+                  'rounded-md px-2 py-1.5 text-[11px] font-medium',
+                  inboxTab === value ? 'bg-ink-900 text-white' : 'bg-ink-50 text-ink-600 hover:bg-ink-100',
+                )}
+                onClick={() => onInboxTabChange(value)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            className={cn(
+              'mt-1 w-full rounded-md px-2 py-1 text-[11px]',
+              inboxTab === 'archived'
+                ? 'bg-ink-900 text-white'
+                : 'text-ink-400 hover:bg-ink-50 hover:text-ink-600',
+            )}
+            onClick={() => onInboxTabChange('archived')}
+          >
+            Archived{archivedCount ? ` (${archivedCount})` : ''}
+          </button>
+
+          <div className="mt-2 flex gap-1.5">
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search title, Linear id, project…"
+              className="min-w-0 flex-1 rounded-lg border border-ink-200 px-2.5 py-1.5 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+            />
+            <button
+              type="button"
+              className={cn(
+                'inline-flex shrink-0 items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium md:hidden',
+                filtersOpen || sheetFilterCount > 0
+                  ? 'border-ink-900 bg-ink-900 text-white'
+                  : 'border-ink-200 bg-white text-ink-700',
+              )}
+              aria-expanded={filtersOpen}
+              aria-controls="case-filters-sheet"
+              onClick={() => setFiltersOpen(true)}
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden />
+              Filter
+              {sheetFilterCount > 0 && (
+                <span className="rounded-full bg-white/20 px-1.5 py-px text-[10px] tabular-nums">
+                  {sheetFilterCount}
+                </span>
+              )}
+            </button>
+          </div>
+
+          <div className="mt-2 hidden space-y-2 md:block">
+            {filterControls}
+            <p className="text-[11px] text-ink-400">j / k move · n next inbox · Done files it</p>
+          </div>
+
+          {sheetFilterCount > 0 && (
+            <p className="mt-1.5 truncate text-[11px] text-ink-500 md:hidden">{activeFilterSummary}</p>
+          )}
+        </div>
+
+        <ul className="min-h-0 flex-1 overflow-y-auto p-1.5">
+          {visible.map((item) => {
+            const review = reviews[item.id];
+            const progress = caseProgress(review);
+            const project = caseProject(item);
+            const parentId = caseParentId(item);
+            const parentTitle = caseParentTitle(item);
+            return (
+              <li key={item.id}>
+                <button
+                  type="button"
+                  data-case-id={item.id}
+                  onClick={() => onSelect(item.id)}
+                  className={cn(
+                    'mb-1 w-full rounded-lg px-2.5 py-2 text-left text-sm transition',
+                    item.id === activeId
+                      ? 'bg-accent-soft text-ink-950 ring-1 ring-accent/30'
+                      : 'text-ink-700 hover:bg-ink-50',
+                  )}
+                >
+                  <span className="block truncate font-medium">{item.title}</span>
+                  <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] text-ink-400">
+                    {parentId ? (
+                      <span className="font-mono text-violet-800">{parentId}</span>
+                    ) : (
+                      <span>{project || '—'}</span>
+                    )}
+                    {parentTitle && (
+                      <>
+                        <span>·</span>
+                        <span className="truncate">{parentTitle}</span>
+                      </>
+                    )}
+                    {!parentTitle && project && parentId && (
+                      <>
+                        <span>·</span>
+                        <span>{project}</span>
+                      </>
+                    )}
+                    <span>·</span>
+                    <span>{item.stamp}</span>
+                    <StatusDots
+                      progress={progress}
+                      content={review?.content.passFail}
+                      action={review?.action.passFail}
+                      notes={review?.notes.length ?? 0}
+                    />
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+          {visible.length === 0 && (
+            <li className="px-2 py-6 text-center text-xs text-ink-400">{emptyMessage}</li>
+          )}
+        </ul>
+      </aside>
+
+      {filtersOpen && (
+        <div className="fixed inset-0 z-50 md:hidden" role="presentation">
+          <button
+            type="button"
+            aria-label="Close filters"
+            className="absolute inset-0 bg-ink-950/35"
+            onClick={() => setFiltersOpen(false)}
+          />
+          <div
+            id="case-filters-sheet"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="case-filters-title"
+            className="absolute inset-x-0 bottom-0 max-h-[min(85vh,36rem)] overflow-y-auto rounded-t-2xl border border-ink-200 bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-soft"
+          >
+            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-ink-200" aria-hidden />
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <h3 id="case-filters-title" className="text-sm font-semibold text-ink-950">
+                Filter & sort
+              </h3>
               <button
                 type="button"
-                data-case-id={item.id}
-                onClick={() => onSelect(item.id)}
-                className={cn(
-                  'mb-1 w-full rounded-lg px-2.5 py-2 text-left text-sm transition',
-                  item.id === activeId
-                    ? 'bg-accent-soft text-ink-950 ring-1 ring-accent/30'
-                    : 'text-ink-700 hover:bg-ink-50',
-                )}
+                className="btn-ghost h-9 w-9 p-0"
+                aria-label="Close"
+                onClick={() => setFiltersOpen(false)}
               >
-                <span className="block truncate font-medium">{item.title}</span>
-                <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] text-ink-400">
-                  {parentId ? (
-                    <span className="font-mono text-violet-800">{parentId}</span>
-                  ) : (
-                    <span>{project || '—'}</span>
-                  )}
-                  {parentTitle && (
-                    <>
-                      <span>·</span>
-                      <span className="truncate">{parentTitle}</span>
-                    </>
-                  )}
-                  {!parentTitle && project && parentId && (
-                    <>
-                      <span>·</span>
-                      <span>{project}</span>
-                    </>
-                  )}
-                  <span>·</span>
-                  <span>{item.stamp}</span>
-                  <StatusDots
-                    progress={progress}
-                    content={review?.content.passFail}
-                    action={review?.action.passFail}
-                    notes={review?.notes.length ?? 0}
-                  />
-                </span>
+                <X className="h-4 w-4" />
               </button>
-            </li>
-          );
-        })}
-        {visible.length === 0 && (
-          <li className="px-2 py-6 text-center text-xs text-ink-400">
-            {inboxTab === 'inbox'
-              ? 'Inbox is clear for this filter.'
-              : inboxTab === 'filed'
-                ? 'No filed cases in this filter.'
-                : 'No archived cases in this filter.'}
-          </li>
-        )}
-      </ul>
-    </aside>
+            </div>
+            <div className="space-y-3">{filterControls}</div>
+            <button
+              type="button"
+              className="btn-primary mt-4 h-11 w-full text-sm"
+              onClick={() => setFiltersOpen(false)}
+            >
+              Show {visible.length} case{visible.length === 1 ? '' : 's'}
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
