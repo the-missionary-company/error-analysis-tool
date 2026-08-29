@@ -15,6 +15,7 @@ describe('API.md', () => {
     expect(doc).toContain('Do not PUT a full review');
     expect(doc).toContain('parentId');
     expect(doc).toContain('parentSystem');
+    expect(doc).toContain('One Linear parent per steer');
     expect(doc).toContain('parentTitle');
     expect(doc).toContain('sessionId');
     expect(doc).toContain('filedAt');

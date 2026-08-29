@@ -91,6 +91,8 @@ If `id` is missing, it is slugged from `title`. If `number` is missing, it is `m
 
 ### Scope fields (Oscar / Nick)
 
+**One Linear parent per steer.** Each posted case is about a single project / parent ticket. Do not mix Capture + Sync + Fireflies (or any other combo) into one case body, one `parentId`, or one “mega session.” If Oscar needs Sam’s call on two projects, post **two cases**, each with its own `parentId` / `parentTitle` / `project`. Sam filters and files one parent at a time.
+
 The durable identity of “which parent / which ticket / which project” is a **tracker parent id**, not a Vorflux session.
 
 | Field | Required? | Example | Meaning |
@@ -231,9 +233,10 @@ Also optional: `number`, `timestamp`, `yourCall`, `tooAggressive`, `yourCallBody
 - Default list is **Inbox** (cases without `filedAt`).
 - **Done — file it** sets `filedAt` on that review and jumps to the next inbox case (honoring the parent filter).
 - **Filed** is a separate tab so Sam can still find finished cases.
-- Filter chips are **Linear parent ids** (`parentSystem:parentId`), with the project label as a subtitle.
+- Filter chips are **Linear parent titles** (`parentSystem:parentId`), e.g. `CH-757 · Answer Engine Tracer`.
+- **One parent per case.** Mixed-project steers break the filter; Oscar/Nick should split them.
 
-Oscar posts `parentSystem` + `parentId` (Linear). Filing is Sam’s workflow, not an Oscar API action.
+Oscar posts `parentSystem` + `parentId` (Linear), one project at a time. Filing is Sam’s workflow, not an Oscar API action.
 
 ## Errors
 
