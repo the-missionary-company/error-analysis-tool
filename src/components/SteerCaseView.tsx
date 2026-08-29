@@ -7,6 +7,7 @@ import {
   caseParentUrl,
   caseProject,
 } from '../lib/steers';
+import { formatLocalDateTime } from '../lib/utils';
 import { HighlightableText, type PendingSpan } from './HighlightableText';
 
 const SECTIONS: { key: SteerSection; label: string }[] = [
@@ -72,8 +73,10 @@ export function SteerCaseView({
           <MetaChip label="Stamp" value={steer.stamp} tone={steer.stamp === 'HOLD' ? 'hold' : undefined} />
           {steer.tooAggressive && <MetaChip label="Too aggressive?" value={steer.tooAggressive} />}
           {steer.yourCall && <MetaChip label="Your call" value={steer.yourCall} />}
-          <MetaChip label="When" value={steer.when} />
-          {steer.timestamp && <MetaChip label="Timestamp" value={steer.timestamp} />}
+          <MetaChip label="When" value={formatLocalDateTime(steer.when)} />
+          {steer.timestamp && (
+            <MetaChip label="Timestamp" value={formatLocalDateTime(steer.timestamp)} />
+          )}
         </div>
         {steer.notionUrl && (
           <a
