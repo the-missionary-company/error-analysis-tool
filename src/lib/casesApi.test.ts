@@ -123,29 +123,47 @@ describe('handleCasesRequest', () => {
     expect(cookie.status).toBe(200);
   });
 
-  it('filters GET cases by project and parentTicket', async () => {
+  it('filters GET cases by parentId and accepts POSTs without session', async () => {
     const persist = memoryCases();
-    const headers = { Authorization: 'Bearer board-secret' };
-    const byProject = await handleCasesRequest(
-      new Request('https://x/api/cases?project=Tracer', { headers }),
+    const headers = {
+      Authorization: 'Bearer board-secret',
+      'content-type': 'application/json',
+    };
+    const byParent = await handleCasesRequest(
+      new Request('https://x/api/cases?parentId=CH-757', { headers: { Authorization: 'Bearer board-secret' } }),
       env,
       persist,
     );
-    expect(byProject.status).toBe(200);
-    const projectBody = (await byProject.json()) as { cases: SteerCase[] };
-    expect(projectBody.cases.length).toBeGreaterThan(0);
-    expect(projectBody.cases.every((item) => item.project === 'Tracer' || item.session === 'Tracer')).toBe(
-      true,
-    );
+    expect(byParent.status).toBe(200);
+    const parentBody = (await byParent.json()) as { cases: SteerCase[] };
+    expect(parentBody.cases.length).toBeGreaterThan(0);
+    expect(parentBody.cases.every((item) => item.parentId === 'CH-757')).toBe(true);
 
-    const byTicket = await handleCasesRequest(
-      new Request('https://x/api/cases?parentTicket=CH-757', { headers }),
+    const created = await handleCasesRequest(
+      new Request('https://x/api/cases', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          title: 'No Vorflux session',
+          stamp: 'KEEP',
+          parentSystem: 'linear',
+          parentId: 'CH-999',
+          project: 'Tracer',
+          context: 'c',
+          problem: 'p',
+          options: 'o',
+          choice: 'x',
+        }),
+      }),
       env,
       persist,
     );
-    const ticketBody = (await byTicket.json()) as { cases: SteerCase[] };
-    expect(ticketBody.cases.length).toBeGreaterThan(0);
-    expect(ticketBody.cases.every((item) => item.parentTicket === 'CH-757')).toBe(true);
+    expect(created.status).toBe(200);
+    const createdBody = (await created.json()) as { case: SteerCase };
+    expect(createdBody.case.parentId).toBe('CH-999');
+    expect(createdBody.case.parentSystem).toBe('linear');
+    expect(createdBody.case.session).toBe('Tracer');
+    expect(createdBody.case.sessionId).toBeUndefined();
   });
 
   it('400s a POST that is missing required fields', async () => {

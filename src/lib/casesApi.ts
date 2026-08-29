@@ -13,7 +13,6 @@ export interface CasesPersist {
 
 const REQUIRED_POST_FIELDS = [
   'title',
-  'session',
   'stamp',
   'context',
   'problem',
@@ -90,6 +89,44 @@ export function assignCaseDefaults(
   if (typeof obj.choiceLabel !== 'string' || !obj.choiceLabel.trim()) {
     obj.choiceLabel = 'Choice';
   }
+
+  // Canonical parent identity (Linear by default). Accept legacy aliases.
+  if (typeof obj.parentId !== 'string' || !String(obj.parentId).trim()) {
+    if (typeof obj.parentTicket === 'string' && obj.parentTicket.trim()) {
+      obj.parentId = obj.parentTicket.trim();
+    }
+  } else {
+    obj.parentId = String(obj.parentId).trim();
+  }
+  if (typeof obj.parentUrl !== 'string' || !String(obj.parentUrl).trim()) {
+    if (typeof obj.parentTicketUrl === 'string' && obj.parentTicketUrl.trim()) {
+      obj.parentUrl = obj.parentTicketUrl.trim();
+    }
+  } else {
+    obj.parentUrl = String(obj.parentUrl).trim();
+  }
+  if (typeof obj.parentSystem !== 'string' || !String(obj.parentSystem).trim()) {
+    obj.parentSystem = 'linear';
+  } else {
+    obj.parentSystem = String(obj.parentSystem).trim();
+  }
+  if (typeof obj.parentId === 'string' && obj.parentId) {
+    obj.parentTicket = obj.parentId;
+  }
+  if (typeof obj.parentUrl === 'string' && obj.parentUrl) {
+    obj.parentTicketUrl = obj.parentUrl;
+  }
+
+  // Vorflux session id is optional. session label defaults for older UI paths.
+  if (typeof obj.sessionId === 'string' && obj.sessionId.trim()) {
+    obj.sessionId = obj.sessionId.trim();
+  }
+  if (typeof obj.session !== 'string' || !obj.session.trim()) {
+    const project = typeof obj.project === 'string' ? obj.project.trim() : '';
+    const parentId = typeof obj.parentId === 'string' ? obj.parentId.trim() : '';
+    obj.session = project || parentId || '—';
+  }
+
   return obj;
 }
 
@@ -164,6 +201,9 @@ export async function handleCasesRequest(
       cases = filterCasesByScope(cases, {
         project: params.get('project'),
         parentTicket: params.get('parentTicket'),
+        parentId: params.get('parentId'),
+        parentSystem: params.get('parentSystem'),
+        parentKey: params.get('parentKey'),
         spec: params.get('spec'),
       });
       return jsonResponse(200, { cases });

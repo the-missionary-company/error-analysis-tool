@@ -13,19 +13,19 @@ import {
   loadAuthor,
   loadCaseSort,
   loadInboxTab,
-  loadProjectFilter,
+  loadParentFilter,
   saveAuthor,
   saveCaseSort,
   saveInboxTab,
-  saveProjectFilter,
+  saveParentFilter,
 } from '../lib/steerStorage';
 import { downloadText } from '../lib/storage';
 import {
   AUTHOR_DEFS,
   addThreadReply,
   attachSpanNotes,
+  caseParentKey,
   caseProgress,
-  caseProject,
   createRevisionFromQuestion,
   emptyReview,
   isFiled,
@@ -58,7 +58,7 @@ export function SteersPage() {
   const [sort, setSort] = useState<CaseSort>(() => loadCaseSort());
   const [author, setAuthor] = useState<Author>(() => loadAuthor());
   const [inboxTab, setInboxTab] = useState<InboxTab>(() => loadInboxTab());
-  const [projectFilter, setProjectFilter] = useState<string | null>(() => loadProjectFilter());
+  const [parentFilter, setParentFilter] = useState<string | null>(() => loadParentFilter());
   const orderedCases = sortCases(cases, sort);
   const [focusedNoteId, setFocusedNoteId] = useState<string | null>(null);
   const casesInput = useRef<HTMLInputElement>(null);
@@ -71,11 +71,11 @@ export function SteersPage() {
         const filed = isFiled(reviews[item.id]);
         if (inboxTab === 'inbox' && filed) return false;
         if (inboxTab === 'filed' && !filed) return false;
-        if (projectFilter && caseProject(item) !== projectFilter) return false;
+        if (parentFilter && caseParentKey(item) !== parentFilter) return false;
         return true;
       })
       .map((item) => item.id);
-  }, [inboxTab, orderedCases, projectFilter, reviews]);
+  }, [inboxTab, orderedCases, parentFilter, reviews]);
 
   useEffect(() => {
     document.querySelector(`[data-case-id="${activeId}"]`)?.scrollIntoView({ block: 'nearest' });
@@ -184,7 +184,7 @@ export function SteersPage() {
       .filter((item) => {
         if (item.id === activeCase.id) return false;
         if (isFiled(reviews[item.id])) return false;
-        if (projectFilter && caseProject(item) !== projectFilter) return false;
+        if (parentFilter && caseParentKey(item) !== parentFilter) return false;
         return true;
       })
       .map((item) => item.id);
@@ -326,7 +326,7 @@ export function SteersPage() {
           activeId={activeId}
           sort={sort}
           inboxTab={inboxTab}
-          projectFilter={projectFilter}
+          parentFilter={parentFilter}
           onSortChange={(next) => {
             setSort(next);
             saveCaseSort(next);
@@ -335,9 +335,9 @@ export function SteersPage() {
             setInboxTab(tab);
             saveInboxTab(tab);
           }}
-          onProjectFilterChange={(project) => {
-            setProjectFilter(project);
-            saveProjectFilter(project);
+          onParentFilterChange={(key) => {
+            setParentFilter(key);
+            saveParentFilter(key);
           }}
           onSelect={(id) => {
             setActiveId(id);

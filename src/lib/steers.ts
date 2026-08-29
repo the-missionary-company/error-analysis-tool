@@ -53,7 +53,6 @@ export const CHIP_DEFS: { id: SteerChipId; label: string }[] = [
 const CASE_FIELDS = [
   'id',
   'title',
-  'session',
   'stamp',
   'when',
   'context',
@@ -83,54 +82,90 @@ export function emptyReview(caseId: string): SteerReview {
   };
 }
 
-/** Known parent Linear tickets for the five live projects. Oscar should still send these explicitly. */
+/** Known parent Linear tickets for the five live projects. Oscar should still send parentId explicitly. */
 export const KNOWN_PROJECT_PARENTS: Record<
   string,
-  { parentTicket: string; parentTicketUrl: string }
+  { parentId: string; parentUrl: string }
 > = {
   Capture: {
-    parentTicket: 'CH-807',
-    parentTicketUrl:
+    parentId: 'CH-807',
+    parentUrl:
       'https://linear.app/the-missionary-company/issue/CH-807/generic-capture-review-core',
   },
   Sync: {
-    parentTicket: 'CH-795',
-    parentTicketUrl:
+    parentId: 'CH-795',
+    parentUrl:
       'https://linear.app/the-missionary-company/issue/CH-795/sync-p1-finish-project-source-acceptance-control-plane',
   },
   Tracer: {
-    parentTicket: 'CH-757',
-    parentTicketUrl:
+    parentId: 'CH-757',
+    parentUrl:
       'https://linear.app/the-missionary-company/issue/CH-757/answer-engine-tracer-bullet-approved-better-implementation-package',
   },
   Fireflies: {
-    parentTicket: 'CH-799',
-    parentTicketUrl:
+    parentId: 'CH-799',
+    parentUrl:
       'https://linear.app/the-missionary-company/issue/CH-799/dormant-forecast-only-meetings-fireflies-implementation-increment',
   },
   Calendar: {
-    parentTicket: 'CH-827',
-    parentTicketUrl:
+    parentId: 'CH-827',
+    parentUrl:
       'https://linear.app/the-missionary-company/issue/CH-827/foundation-cal-01-exact-providersource-kind-registry-handoff',
   },
 };
 
 export function caseProject(item: SteerCase): string {
   const project = item.project?.trim();
-  return project || item.session.trim();
+  if (project) return project;
+  const session = item.session?.trim();
+  if (session && session !== '—') return session;
+  return '';
+}
+
+export function caseParentSystem(item: SteerCase): string {
+  return item.parentSystem?.trim() || 'linear';
+}
+
+export function caseParentId(item: SteerCase): string | undefined {
+  return item.parentId?.trim() || item.parentTicket?.trim() || undefined;
+}
+
+export function caseParentUrl(item: SteerCase): string | undefined {
+  return item.parentUrl?.trim() || item.parentTicketUrl?.trim() || undefined;
+}
+
+/** Stable filter key: `linear:CH-757`. */
+export function caseParentKey(item: SteerCase): string | null {
+  const id = caseParentId(item);
+  if (!id) return null;
+  return `${caseParentSystem(item)}:${id}`;
+}
+
+/** Display session label; treats legacy "—" placeholder as empty. */
+export function caseSessionLabel(item: SteerCase): string | undefined {
+  const session = item.session?.trim();
+  if (session && session !== '—') return session;
+  return undefined;
 }
 
 export function withCaseScopeDefaults(item: SteerCase): SteerCase {
-  const project = caseProject(item);
-  const known = KNOWN_PROJECT_PARENTS[project];
-  const parentTicket = item.parentTicket?.trim() || known?.parentTicket;
-  const parentTicketUrl = item.parentTicketUrl?.trim() || known?.parentTicketUrl;
+  const project = caseProject(item) || undefined;
+  const known = project ? KNOWN_PROJECT_PARENTS[project] : undefined;
+  const parentSystem = caseParentSystem(item);
+  const parentId = caseParentId(item) || known?.parentId;
+  const parentUrl = caseParentUrl(item) || known?.parentUrl;
+  const sessionId = item.sessionId?.trim();
+  // session is optional (Vorflux not required). Prefer real label → project → parentId.
+  const session = caseSessionLabel(item) || project || parentId || '—';
   const spec = item.spec?.trim();
   return {
     ...item,
-    project,
-    ...(parentTicket ? { parentTicket } : {}),
-    ...(parentTicketUrl ? { parentTicketUrl } : {}),
+    session,
+    ...(project ? { project } : {}),
+    parentSystem,
+    ...(parentId ? { parentId, parentTicket: parentId } : {}),
+    ...(parentUrl ? { parentUrl, parentTicketUrl: parentUrl } : {}),
+    ...(sessionId ? { sessionId } : {}),
     ...(spec ? { spec } : {}),
   };
 }
@@ -162,17 +197,63 @@ export function listProjects(cases: SteerCase[]): string[] {
   return out.sort((a, b) => a.localeCompare(b));
 }
 
+export interface ParentScopeOption {
+  key: string;
+  parentSystem: string;
+  parentId: string;
+  project: string;
+  label: string;
+}
+
+export function listParentScopes(cases: SteerCase[]): ParentScopeOption[] {
+  const byKey = new Map<string, ParentScopeOption>();
+  for (const item of cases) {
+    const scoped = withCaseScopeDefaults(item);
+    const key = caseParentKey(scoped);
+    const parentId = caseParentId(scoped);
+    if (!key || !parentId) continue;
+    const project = caseProject(scoped);
+    const existing = byKey.get(key);
+    if (existing) {
+      if (!existing.project && project) existing.project = project;
+      existing.label = existing.project
+        ? `${parentId} · ${existing.project}`
+        : parentId;
+      continue;
+    }
+    byKey.set(key, {
+      key,
+      parentSystem: caseParentSystem(scoped),
+      parentId,
+      project,
+      label: project ? `${parentId} · ${project}` : parentId,
+    });
+  }
+  return [...byKey.values()].sort((a, b) => a.label.localeCompare(b.label));
+}
+
 export function filterCasesByScope(
   cases: SteerCase[],
-  filters: { project?: string | null; parentTicket?: string | null; spec?: string | null },
+  filters: {
+    project?: string | null;
+    parentTicket?: string | null;
+    parentId?: string | null;
+    parentSystem?: string | null;
+    parentKey?: string | null;
+    spec?: string | null;
+  },
 ): SteerCase[] {
   const project = filters.project?.trim().toLowerCase();
-  const parentTicket = filters.parentTicket?.trim().toLowerCase();
+  const parentId = (filters.parentId ?? filters.parentTicket)?.trim().toLowerCase();
+  const parentSystem = filters.parentSystem?.trim().toLowerCase();
+  const parentKey = filters.parentKey?.trim().toLowerCase();
   const spec = filters.spec?.trim().toLowerCase();
   return cases.filter((item) => {
     const scoped = withCaseScopeDefaults(item);
     if (project && caseProject(scoped).toLowerCase() !== project) return false;
-    if (parentTicket && (scoped.parentTicket ?? '').toLowerCase() !== parentTicket) return false;
+    if (parentKey && (caseParentKey(scoped) ?? '').toLowerCase() !== parentKey) return false;
+    if (parentId && (caseParentId(scoped) ?? '').toLowerCase() !== parentId) return false;
+    if (parentSystem && caseParentSystem(scoped).toLowerCase() !== parentSystem) return false;
     if (spec && (scoped.spec ?? '').toLowerCase() !== spec) return false;
     return true;
   });
@@ -343,7 +424,8 @@ function parseCase(value: unknown, index: number): SteerCase {
   const parsed: SteerCase = {
     id: String(obj.id),
     title: String(obj.title),
-    session: String(obj.session),
+    // Placeholder only; withCaseScopeDefaults fills from project / parentId.
+    session: typeof obj.session === 'string' && obj.session.trim() ? String(obj.session).trim() : '',
     stamp: String(obj.stamp),
     when: String(obj.when),
     context: String(obj.context),
@@ -359,8 +441,10 @@ function parseCase(value: unknown, index: number): SteerCase {
   const notionUrl = readString(obj, 'notionUrl');
   const timestamp = readString(obj, 'timestamp');
   const project = readString(obj, 'project');
-  const parentTicket = readString(obj, 'parentTicket');
-  const parentTicketUrl = readString(obj, 'parentTicketUrl');
+  const sessionId = readString(obj, 'sessionId');
+  const parentSystem = readString(obj, 'parentSystem');
+  const parentId = readString(obj, 'parentId') ?? readString(obj, 'parentTicket');
+  const parentUrl = readString(obj, 'parentUrl') ?? readString(obj, 'parentTicketUrl');
   const spec = readString(obj, 'spec');
   const rawNumber = obj.number;
   if (yourCall) parsed.yourCall = yourCall;
@@ -371,8 +455,16 @@ function parseCase(value: unknown, index: number): SteerCase {
   if (notionUrl) parsed.notionUrl = notionUrl;
   if (timestamp) parsed.timestamp = timestamp;
   if (project) parsed.project = project;
-  if (parentTicket) parsed.parentTicket = parentTicket;
-  if (parentTicketUrl) parsed.parentTicketUrl = parentTicketUrl;
+  if (sessionId) parsed.sessionId = sessionId;
+  if (parentSystem) parsed.parentSystem = parentSystem;
+  if (parentId) {
+    parsed.parentId = parentId;
+    parsed.parentTicket = parentId;
+  }
+  if (parentUrl) {
+    parsed.parentUrl = parentUrl;
+    parsed.parentTicketUrl = parentUrl;
+  }
   if (spec) parsed.spec = spec;
   if (typeof rawNumber === 'number' && Number.isFinite(rawNumber)) parsed.number = rawNumber;
   return withCaseScopeDefaults(parsed);
@@ -398,6 +490,9 @@ function compareSortField(a: SteerCase, b: SteerCase, field: CaseSortField): num
   }
   if (field === 'project') {
     return caseProject(a).localeCompare(caseProject(b));
+  }
+  if (field === 'parent') {
+    return (caseParentKey(a) ?? '').localeCompare(caseParentKey(b) ?? '');
   }
   return a[field].localeCompare(b[field]);
 }

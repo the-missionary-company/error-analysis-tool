@@ -15,6 +15,7 @@ const KEYS = {
   sort: 'ea.steers.sort',
   inboxTab: 'ea.steers.inboxTab',
   projectFilter: 'ea.steers.projectFilter',
+  parentFilter: 'ea.steers.parentFilter',
 } as const;
 
 function defaultStore(): KeyValueStore {
@@ -96,7 +97,7 @@ export function saveActiveId(id: string, store: KeyValueStore = defaultStore()) 
   store.setItem(KEYS.active, id);
 }
 
-const SORT_FIELDS = new Set(['timestamp', 'number', 'stamp', 'session', 'project']);
+const SORT_FIELDS = new Set(['timestamp', 'number', 'stamp', 'session', 'project', 'parent']);
 
 export function loadCaseSort(store: KeyValueStore = defaultStore()): CaseSort {
   const raw = readJSON<Partial<CaseSort> | null>(store, KEYS.sort, null);
@@ -130,6 +131,16 @@ export function saveProjectFilter(project: string | null, store: KeyValueStore =
     return;
   }
   store.setItem(KEYS.projectFilter, project);
+}
+
+/** Parent filter key, e.g. `linear:CH-757`. */
+export function loadParentFilter(store: KeyValueStore = defaultStore()): string | null {
+  const raw = store.getItem(KEYS.parentFilter);
+  return raw && raw.trim() ? raw.trim() : null;
+}
+
+export function saveParentFilter(parentKey: string | null, store: KeyValueStore = defaultStore()) {
+  store.setItem(KEYS.parentFilter, parentKey?.trim() ?? '');
 }
 
 export function importSteerReviews(

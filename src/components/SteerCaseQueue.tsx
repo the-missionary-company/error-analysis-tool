@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react';
 import {
+  caseParentId,
+  caseParentKey,
   caseProgress,
   caseProject,
   isFiled,
-  listProjects,
+  listParentScopes,
   type CaseProgress,
 } from '../lib/steers';
 import { cn } from '../lib/utils';
@@ -20,9 +22,10 @@ type ProgressFilter = 'all' | 'open' | 'scored';
 const SORT_FIELDS: { id: CaseSortField; label: string }[] = [
   { id: 'timestamp', label: 'Timestamp' },
   { id: 'number', label: 'Number' },
+  { id: 'parent', label: 'Parent' },
+  { id: 'project', label: 'Project' },
   { id: 'stamp', label: 'Stamp' },
   { id: 'session', label: 'Session' },
-  { id: 'project', label: 'Project' },
 ];
 
 export function SteerCaseQueue({
@@ -31,10 +34,10 @@ export function SteerCaseQueue({
   activeId,
   sort,
   inboxTab,
-  projectFilter,
+  parentFilter,
   onSortChange,
   onInboxTabChange,
-  onProjectFilterChange,
+  onParentFilterChange,
   onSelect,
 }: {
   cases: SteerCase[];
@@ -42,15 +45,15 @@ export function SteerCaseQueue({
   activeId: string;
   sort: CaseSort;
   inboxTab: InboxTab;
-  projectFilter: string | null;
+  parentFilter: string | null;
   onSortChange: (sort: CaseSort) => void;
   onInboxTabChange: (tab: InboxTab) => void;
-  onProjectFilterChange: (project: string | null) => void;
+  onParentFilterChange: (parentKey: string | null) => void;
   onSelect: (id: string) => void;
 }) {
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<ProgressFilter>('all');
-  const projects = useMemo(() => listProjects(cases), [cases]);
+  const parents = useMemo(() => listParentScopes(cases), [cases]);
 
   const inboxCount = cases.filter((item) => !isFiled(reviews[item.id])).length;
   const filedCount = cases.length - inboxCount;
@@ -62,7 +65,7 @@ export function SteerCaseQueue({
       const filed = isFiled(review);
       if (inboxTab === 'inbox' && filed) return false;
       if (inboxTab === 'filed' && !filed) return false;
-      if (projectFilter && caseProject(item) !== projectFilter) return false;
+      if (parentFilter && caseParentKey(item) !== parentFilter) return false;
       const progress = caseProgress(review);
       if (filter === 'scored' && progress !== 'scored') return false;
       if (filter === 'open' && progress === 'scored') return false;
@@ -70,14 +73,15 @@ export function SteerCaseQueue({
       return [
         item.title,
         item.session,
+        item.sessionId,
         caseProject(item),
-        item.parentTicket,
+        caseParentId(item),
         item.spec,
         item.stamp,
         item.when,
       ].some((part) => (part ?? '').toLowerCase().includes(q));
     });
-  }, [cases, filter, inboxTab, projectFilter, query, reviews]);
+  }, [cases, filter, inboxTab, parentFilter, query, reviews]);
 
   return (
     <aside className="flex max-h-[min(50vh,22rem)] flex-col rounded-xl border border-ink-200 bg-white md:max-h-[calc(100vh-7rem)] md:sticky md:top-[4.5rem]">
@@ -111,36 +115,37 @@ export function SteerCaseQueue({
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search title, project, ticket…"
+          placeholder="Search title, Linear id, project…"
           className="mt-2 w-full rounded-lg border border-ink-200 px-2.5 py-1.5 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
         />
 
         <div className="mt-2">
-          <p className="text-[11px] font-medium text-ink-400">Project</p>
+          <p className="text-[11px] font-medium text-ink-400">Parent (Linear)</p>
           <div className="mt-1 flex flex-wrap gap-1">
             <button
               type="button"
               className={cn(
                 'rounded-md px-2 py-1 text-[11px]',
-                !projectFilter ? 'bg-ink-900 text-white' : 'bg-ink-50 text-ink-600 hover:bg-ink-100',
+                !parentFilter ? 'bg-ink-900 text-white' : 'bg-ink-50 text-ink-600 hover:bg-ink-100',
               )}
-              onClick={() => onProjectFilterChange(null)}
+              onClick={() => onParentFilterChange(null)}
             >
               All
             </button>
-            {projects.map((project) => (
+            {parents.map((parent) => (
               <button
-                key={project}
+                key={parent.key}
                 type="button"
+                title={`${parent.parentSystem}:${parent.parentId}`}
                 className={cn(
                   'rounded-md px-2 py-1 text-[11px]',
-                  projectFilter === project
+                  parentFilter === parent.key
                     ? 'bg-ink-900 text-white'
                     : 'bg-ink-50 text-ink-600 hover:bg-ink-100',
                 )}
-                onClick={() => onProjectFilterChange(project)}
+                onClick={() => onParentFilterChange(parent.key)}
               >
-                {project}
+                {parent.label}
               </button>
             ))}
           </div>
@@ -192,6 +197,7 @@ export function SteerCaseQueue({
           const review = reviews[item.id];
           const progress = caseProgress(review);
           const project = caseProject(item);
+          const parentId = caseParentId(item);
           return (
             <li key={item.id}>
               <button
@@ -207,11 +213,15 @@ export function SteerCaseQueue({
               >
                 <span className="block truncate font-medium">{item.title}</span>
                 <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] text-ink-400">
-                  <span>{project}</span>
-                  {item.parentTicket && (
+                  {parentId ? (
+                    <span className="font-mono text-violet-800">{parentId}</span>
+                  ) : (
+                    <span>{project || item.session}</span>
+                  )}
+                  {parentId && project && (
                     <>
                       <span>·</span>
-                      <span className="font-mono">{item.parentTicket}</span>
+                      <span>{project}</span>
                     </>
                   )}
                   <span>·</span>
