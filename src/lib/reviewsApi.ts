@@ -1,6 +1,13 @@
 import { SEED_STEER_IDS } from '../data/seedCaseIds.js';
 import type { Author, NoteKind, ScoreLane, SteerNote, SteerReview, SteerSection } from '../types/steers.js';
-import { addThreadReply, attachSpanNotes, emptyReview, newId, parseSteerReviews } from './steers.js';
+import {
+  addThreadReply,
+  attachSpanNotes,
+  emptyReview,
+  isAuthor,
+  newId,
+  parseSteerReviews,
+} from './steers.js';
 import { authorizeReviewsRequest, jsonResponse } from './evalGate.js';
 
 export { gateEvalDashboardRequest, isCasesApiPath, isJsonApiPath, isReviewsApiPath } from './evalGate.js';
@@ -107,6 +114,12 @@ export function parseReviewsWritePayload(input: unknown): SteerReview[] {
 
 const LANES: ScoreLane[] = ['content', 'action'];
 const SECTIONS: SteerSection[] = ['context', 'problem', 'options', 'choice'];
+
+/** Omitted author stays oscar for Oscar Tech Lead clients. Unknown is 400. */
+function resolveRequestAuthor(value: unknown): Author | null {
+  if (value === undefined) return 'oscar';
+  return isAuthor(value) ? value : null;
+}
 
 export interface AppendCommentInput {
   caseId: string;
@@ -299,7 +312,8 @@ export async function handleReviewsReplyRequest(
     if (typeof body.caseId !== 'string' || typeof body.noteId !== 'string' || typeof body.text !== 'string') {
       return jsonResponse(400, { error: 'caseId, noteId, and text are required' });
     }
-    const author: Author = body.author === 'oscar' ? 'oscar' : 'sam';
+    const author = resolveRequestAuthor(body.author);
+    if (!author) return jsonResponse(400, { error: 'author must be sam, oscar, or oscar-clone' });
     const existing = await persist.read();
     const result = appendReplyToReviews(existing, {
       caseId: body.caseId,
@@ -336,12 +350,14 @@ export async function handleReviewsCommentRequest(
     if (!LANES.includes(body.lane as ScoreLane)) {
       return jsonResponse(400, { error: 'lane must be content or action' });
     }
+    const author = resolveRequestAuthor(body.author);
+    if (!author) return jsonResponse(400, { error: 'author must be sam, oscar, or oscar-clone' });
     const existing = await persist.read();
     const result = appendCommentToReviews(
       existing,
       {
         caseId: body.caseId,
-        author: body.author === 'sam' ? 'sam' : 'oscar',
+        author,
         text: body.text,
         lane: body.lane as ScoreLane,
         kind: body.kind === 'question' ? 'question' : 'comment',

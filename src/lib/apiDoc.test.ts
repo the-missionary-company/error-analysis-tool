@@ -25,5 +25,7 @@ describe('API.md', () => {
     expect(doc).toContain('OSCAR_EVAL_WEBHOOK_KEY');
     expect(doc).toContain('POST /api/transcribe');
     expect(doc).toContain('XAI_API_KEY');
+    expect(doc).toContain('oscar-clone');
+    expect(doc).toContain('`sam` | `oscar` | `oscar-clone`');
   });
 });

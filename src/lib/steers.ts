@@ -1,20 +1,21 @@
-import type {
-  Author,
-  CaseSort,
-  CaseSortField,
-  LaneScore,
-  NoteKind,
-  PassFail,
-  ScoreLane,
-  SteerBoardFile,
-  SteerCase,
-  SteerChipId,
-  SteerHighlight,
-  SteerNote,
-  SteerRevision,
-  SteerReview,
-  SteerSection,
-  ThreadReply,
+import {
+  AUTHORS,
+  type Author,
+  type CaseSort,
+  type CaseSortField,
+  type LaneScore,
+  type NoteKind,
+  type PassFail,
+  type ScoreLane,
+  type SteerBoardFile,
+  type SteerCase,
+  type SteerChipId,
+  type SteerHighlight,
+  type SteerNote,
+  type SteerRevision,
+  type SteerReview,
+  type SteerSection,
+  type ThreadReply,
 } from '../types/steers.js';
 
 export const LANE_DEFS: Record<
@@ -41,7 +42,16 @@ export const LANE_DEFS: Record<
 export const AUTHOR_DEFS: Record<Author, { id: Author; label: string }> = {
   sam: { id: 'sam', label: 'Sam' },
   oscar: { id: 'oscar', label: 'Oscar' },
+  'oscar-clone': { id: 'oscar-clone', label: 'Oscar Clone' },
 };
+
+export function isAuthor(value: unknown): value is Author {
+  return AUTHORS.some((author) => author === value);
+}
+
+export function parseAuthor(value: unknown): Author {
+  return isAuthor(value) ? value : 'sam';
+}
 
 export const CHIP_DEFS: { id: SteerChipId; label: string }[] = [
   { id: 'jumped-to-options', label: 'jumped to options (no background)' },
@@ -624,10 +634,6 @@ function parseHighlight(value: unknown, index: number): SteerHighlight {
     passFail: parsePassFail(obj.passFail ?? obj.score),
     comment: typeof obj.comment === 'string' ? obj.comment : '',
   };
-}
-
-function parseAuthor(value: unknown): Author {
-  return value === 'oscar' ? 'oscar' : 'sam';
 }
 
 function parseNoteKind(value: unknown): NoteKind {

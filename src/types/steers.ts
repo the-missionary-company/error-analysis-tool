@@ -89,7 +89,8 @@ export interface SteerCase {
   archived?: boolean;
 }
 
-export type Author = 'sam' | 'oscar';
+export const AUTHORS = ['sam', 'oscar', 'oscar-clone'] as const;
+export type Author = (typeof AUTHORS)[number];
 export type NoteKind = 'comment' | 'question';
 
 export interface ThreadReply {

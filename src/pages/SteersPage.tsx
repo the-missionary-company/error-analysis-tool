@@ -40,9 +40,8 @@ import {
   sortCases,
   usedLabelsForLane,
 } from '../lib/steers';
-import type { CaseSort, InboxTab } from '../types/steers';
 import { cn } from '../lib/utils';
-import type { Author, LaneScore, NoteKind, ScoreLane } from '../types/steers';
+import { AUTHORS, type Author, type CaseSort, type InboxTab, type LaneScore, type NoteKind, type ScoreLane } from '../types/steers';
 
 export function SteersPage() {
   const {
@@ -323,7 +322,7 @@ export function SteersPage() {
         <span className="ml-auto flex items-center gap-2 text-xs text-ink-500">
           Posting as
           <span className="inline-flex rounded-lg border border-ink-200 bg-surface p-0.5">
-            {(['sam', 'oscar'] as const).map((who) => (
+            {AUTHORS.map((who) => (
               <button
                 key={who}
                 type="button"
