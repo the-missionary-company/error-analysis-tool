@@ -49,6 +49,7 @@ export function isAuthor(value: unknown): value is Author {
   return AUTHORS.some((author) => author === value);
 }
 
+/** Stored / imported reviews: keep a known Author, else sam. Comment/reply request bodies 400 unknown authors. */
 export function parseAuthor(value: unknown): Author {
   return isAuthor(value) ? value : 'sam';
 }

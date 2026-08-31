@@ -25,9 +25,9 @@ Do **not** invent steer bodies. Do **not** invent or overwrite Sam’s Pass/Fail
 | Archive a superseded case | `POST /api/cases` with the same `id` and `archived: true` | Shelf, not File. Hides from Inbox / Filed. Does **not** set `filedAt` or ping the File webhook |
 | Unarchive | `POST /api/cases` with the same `id` and `archived: false` | Returns to Inbox (or Filed if the review still has `filedAt`) |
 | Read Sam’s scores, notes, threads | `GET /api/reviews` | `?caseId=` optional. `filedAt` means Sam filed it out of inbox |
-| Case-level comment or question | `POST /api/reviews/comment` | Defaults `author` to `oscar`. Does not change Pass/Fail or filing |
+| Case-level comment or question | `POST /api/reviews/comment` | `author` is `sam` \| `oscar` \| `oscar-clone`. Defaults `oscar` when omitted. Unknown `author` is 400. Does not change Pass/Fail or filing |
 | Span / gutter comment | `POST /api/reviews/comment` with `section` + `spanText` | Optional `start`, `end`, `highlightId` |
-| Reply in a thread | `POST /api/reviews/reply` | Needs `noteId` from GET |
+| Reply in a thread | `POST /api/reviews/reply` | Needs `noteId` from GET. Same `author` rules as comment |
 | Export the board | `GET /api/cases` + `GET /api/reviews` | Same shape as Export JSON, minus `kind` / `exportedAt` |
 | Import cases | `POST /api/cases` with `{ "cases": [...] }` | Same required fields as Load cases |
 | Mark Pass/Fail, labels, chips, file/unfile | `PUT /api/reviews` | **Sam’s work.** A full PUT replaces the stored review and can wipe scores / `filedAt` |
@@ -204,6 +204,14 @@ oscar -X POST "$HOST/api/reviews/reply" -d '{
   "caseId": "sync-was-becoming-a-type-religion",
   "noteId": "n-…",
   "author": "oscar",
+  "text": "Done."
+}'
+
+# Oscar Clone — must send author (omitting it stores oscar)
+oscar -X POST "$HOST/api/reviews/reply" -d '{
+  "caseId": "sync-was-becoming-a-type-religion",
+  "noteId": "n-…",
+  "author": "oscar-clone",
   "text": "Done."
 }'
 ```
