@@ -3,9 +3,11 @@ import { SEED_STEERS } from '../data/steerSeed';
 import { emptyReview, markArchived } from './steers';
 import {
   importSteerReviews,
+  loadAuthor,
   loadInboxTab,
   loadSteerCases,
   loadSteerReviews,
+  saveAuthor,
   saveImportedCases,
   saveInboxTab,
   saveSteerReview,
@@ -155,6 +157,62 @@ describe('steerStorage', () => {
     expect(loaded.action.labels).toEqual([]);
     expect(loaded.content.passFail).toBe('pass');
     expect(loaded.action.passFail).toBe('fail');
+  });
+
+  it('round-trips oscar-clone as the posting-as voice and on stored notes', () => {
+    const store = memoryStore();
+    expect(loadAuthor(store)).toBe('sam');
+    saveAuthor('oscar-clone', store);
+    expect(loadAuthor(store)).toBe('oscar-clone');
+    saveAuthor('oscar', store);
+    expect(loadAuthor(store)).toBe('oscar');
+    saveSteerReview(
+      {
+        ...emptyReview('c1'),
+        notes: [
+          {
+            id: 'n1',
+            kind: 'comment',
+            lane: 'content',
+            author: 'oscar-clone',
+            text: 'Clone note.',
+            createdAt: '2026-08-31T12:00:00.000Z',
+            replies: [
+              {
+                id: 'r1',
+                author: 'oscar-clone',
+                text: 'Clone reply.',
+                createdAt: '2026-08-31T12:01:00.000Z',
+              },
+            ],
+          },
+        ],
+      },
+      store,
+    );
+    const loaded = loadSteerReviews(store).c1;
+    expect(loaded.notes[0].author).toBe('oscar-clone');
+    expect(loaded.notes[0].replies[0].author).toBe('oscar-clone');
+    const imported = importSteerReviews(
+      [
+        {
+          ...emptyReview('c2'),
+          notes: [
+            {
+              id: 'n2',
+              kind: 'comment',
+              lane: 'action',
+              author: 'oscar-clone',
+              text: 'Imported clone.',
+              createdAt: '2026-08-31T12:02:00.000Z',
+              replies: [],
+            },
+          ],
+        },
+      ],
+      store,
+    );
+    expect(imported.c2.notes[0].author).toBe('oscar-clone');
   });
 
   it('persists a question thread and a visible revision', () => {

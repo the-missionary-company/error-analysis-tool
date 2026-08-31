@@ -1,6 +1,6 @@
 import { SEED_STEERS } from '../data/steerSeed';
 import type { Author, CaseSort, InboxTab, SteerCase, SteerReview } from '../types/steers';
-import { DEFAULT_CASE_SORT, mergeCases, parseSteerReviews } from './steers';
+import { DEFAULT_CASE_SORT, mergeCases, parseAuthor, parseSteerReviews } from './steers';
 
 export interface KeyValueStore {
   getItem(key: string): string | null;
@@ -82,7 +82,7 @@ export function saveAllSteerReviews(
 }
 
 export function loadAuthor(store: KeyValueStore = defaultStore()): Author {
-  return store.getItem(KEYS.author) === 'oscar' ? 'oscar' : 'sam';
+  return parseAuthor(store.getItem(KEYS.author));
 }
 
 export function saveAuthor(author: Author, store: KeyValueStore = defaultStore()) {

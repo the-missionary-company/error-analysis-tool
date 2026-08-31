@@ -760,6 +760,95 @@ describe('handleReviewsCommentRequest', () => {
     expect(saved[0].notes[0].text).toBe('Will fix the plaque.');
   });
 
+  it('stores author oscar-clone, defaults omitted author to oscar, and 400s unknown authors', async () => {
+    const persist = memoryPersist([
+      review({
+        caseId: 'sync-was-becoming-a-type-religion',
+        updatedAt: '2026-08-10T00:00:00.000Z',
+        content: { passFail: 'fail', comment: 'Sam score', labels: [] },
+      }),
+    ]);
+    const headers = {
+      Authorization: 'Bearer board-secret',
+      'content-type': 'application/json',
+    };
+    const clone = await handleReviewsCommentRequest(
+      new Request('https://x/api/reviews/comment', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          caseId: 'sync-was-becoming-a-type-religion',
+          author: 'oscar-clone',
+          text: 'Clone write.',
+          lane: 'content',
+        }),
+      }),
+      env,
+      persist,
+    );
+    expect(clone.status).toBe(200);
+    const cloneBody = (await clone.json()) as { note: { author: string } };
+    expect(cloneBody.note.author).toBe('oscar-clone');
+    expect((await persist.read())[0].notes[0].author).toBe('oscar-clone');
+    expect((await persist.read())[0].content.passFail).toBe('fail');
+
+    const omitted = await handleReviewsCommentRequest(
+      new Request('https://x/api/reviews/comment', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          caseId: 'sync-was-becoming-a-type-religion',
+          text: 'Tech lead write.',
+          lane: 'action',
+        }),
+      }),
+      env,
+      persist,
+    );
+    expect(omitted.status).toBe(200);
+    const omittedBody = (await omitted.json()) as { note: { author: string } };
+    expect(omittedBody.note.author).toBe('oscar');
+
+    const sam = await handleReviewsCommentRequest(
+      new Request('https://x/api/reviews/comment', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          caseId: 'sync-was-becoming-a-type-religion',
+          author: 'sam',
+          text: 'Sam write.',
+          lane: 'content',
+        }),
+      }),
+      env,
+      persist,
+    );
+    expect(sam.status).toBe(200);
+    expect(((await sam.json()) as { note: { author: string } }).note.author).toBe('sam');
+
+    const nope = await handleReviewsCommentRequest(
+      new Request('https://x/api/reviews/comment', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          caseId: 'sync-was-becoming-a-type-religion',
+          author: 'nope',
+          text: 'Should not store.',
+          lane: 'content',
+        }),
+      }),
+      env,
+      persist,
+    );
+    expect(nope.status).toBe(400);
+    expect(await nope.json()).toEqual({ error: 'author must be sam, oscar, or oscar-clone' });
+    expect((await persist.read()).flatMap((item) => item.notes).map((note) => note.author)).toEqual([
+      'oscar-clone',
+      'oscar',
+      'sam',
+    ]);
+  });
+
   it('404s an unknown case and 401s without auth', async () => {
     const persist = memoryPersist();
     const missing = await handleReviewsCommentRequest(
@@ -843,6 +932,80 @@ describe('handleReviewsReplyRequest', () => {
     );
     expect(missing.status).toBe(404);
     expect(await missing.json()).toEqual({ error: 'note not found' });
+  });
+
+  it('stores reply author oscar-clone, defaults omitted author to oscar, and 400s unknown authors', async () => {
+    const persist = memoryPersist([
+      review({
+        caseId: 'one',
+        updatedAt: '2026-08-10T00:00:00.000Z',
+        notes: [
+          {
+            id: 'n1',
+            kind: 'question',
+            lane: 'content',
+            author: 'sam',
+            text: 'Gap?',
+            createdAt: '2026-08-10T00:00:00.000Z',
+            replies: [],
+          },
+        ],
+      }),
+    ]);
+    const headers = {
+      Authorization: 'Bearer board-secret',
+      'content-type': 'application/json',
+    };
+
+    const clone = await handleReviewsReplyRequest(
+      new Request('https://x/api/reviews/reply', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          caseId: 'one',
+          noteId: 'n1',
+          author: 'oscar-clone',
+          text: 'Clone reply.',
+        }),
+      }),
+      env,
+      persist,
+    );
+    expect(clone.status).toBe(200);
+    expect((await persist.read())[0].notes[0].replies[0].author).toBe('oscar-clone');
+
+    const omitted = await handleReviewsReplyRequest(
+      new Request('https://x/api/reviews/reply', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ caseId: 'one', noteId: 'n1', text: 'Tech lead reply.' }),
+      }),
+      env,
+      persist,
+    );
+    expect(omitted.status).toBe(200);
+    expect((await persist.read())[0].notes[0].replies[1].author).toBe('oscar');
+
+    const nope = await handleReviewsReplyRequest(
+      new Request('https://x/api/reviews/reply', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          caseId: 'one',
+          noteId: 'n1',
+          author: 'nope',
+          text: 'Should not store.',
+        }),
+      }),
+      env,
+      persist,
+    );
+    expect(nope.status).toBe(400);
+    expect(await nope.json()).toEqual({ error: 'author must be sam, oscar, or oscar-clone' });
+    expect((await persist.read())[0].notes[0].replies.map((item) => item.author)).toEqual([
+      'oscar-clone',
+      'oscar',
+    ]);
   });
 });
 

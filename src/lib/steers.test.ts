@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { SEED_STEER_IDS } from '../data/seedCaseIds';
 import { SEED_STEERS } from '../data/steerSeed';
 import {
+  AUTHOR_DEFS,
   CHIP_DEFS,
   LANE_DEFS,
   applyHighlightSegments,
@@ -1002,6 +1003,51 @@ describe('optional chips', () => {
       'cathedral-ceremony',
     ]);
     expect(CHIP_DEFS.every((c) => c.label.length > 0)).toBe(true);
+  });
+});
+
+describe('oscar-clone author', () => {
+  it('names Oscar Clone without colliding with Oscar', () => {
+    expect(AUTHOR_DEFS.sam.label).toBe('Sam');
+    expect(AUTHOR_DEFS.oscar.label).toBe('Oscar');
+    expect(AUTHOR_DEFS).toMatchObject({
+      'oscar-clone': { id: 'oscar-clone', label: 'Oscar Clone' },
+    });
+  });
+
+  it('round-trips oscar-clone on notes, replies, and board export', () => {
+    const [review] = parseSteerReviews([
+      {
+        caseId: 'c1',
+        notes: [
+          {
+            id: 'n1',
+            kind: 'comment',
+            lane: 'action',
+            author: 'oscar-clone',
+            text: 'Clone wrote this.',
+            replies: [{ author: 'oscar-clone', text: 'Clone reply.' }],
+          },
+        ],
+      },
+    ]);
+    expect(review.notes[0].author).toBe('oscar-clone');
+    expect(review.notes[0].replies[0].author).toBe('oscar-clone');
+
+    const withReply = addThreadReply(review.notes[0], 'oscar-clone', 'Second clone reply.');
+    expect(withReply.replies[1].author).toBe('oscar-clone');
+
+    const parsed = JSON.parse(
+      exportSteerBoardJSON(SEED_STEERS, [{ ...emptyReview('c1'), notes: [withReply] }]),
+    );
+    expect(parsed.reviews[0].notes[0].author).toBe('oscar-clone');
+    expect(parsed.reviews[0].notes[0].replies.map((item: { author: string }) => item.author)).toEqual([
+      'oscar-clone',
+      'oscar-clone',
+    ]);
+    const restored = parseSteerReviews(parsed)[0];
+    expect(restored.notes[0].author).toBe('oscar-clone');
+    expect(restored.notes[0].replies[1].author).toBe('oscar-clone');
   });
 });
 

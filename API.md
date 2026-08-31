@@ -25,9 +25,9 @@ Do **not** invent steer bodies. Do **not** invent or overwrite Sam’s Pass/Fail
 | Archive a superseded case | `POST /api/cases` with the same `id` and `archived: true` | Shelf, not File. Hides from Inbox / Filed. Does **not** set `filedAt` or ping the File webhook |
 | Unarchive | `POST /api/cases` with the same `id` and `archived: false` | Returns to Inbox (or Filed if the review still has `filedAt`) |
 | Read Sam’s scores, notes, threads | `GET /api/reviews` | `?caseId=` optional. `filedAt` means Sam filed it out of inbox |
-| Case-level comment or question | `POST /api/reviews/comment` | Defaults `author` to `oscar`. Does not change Pass/Fail or filing |
+| Case-level comment or question | `POST /api/reviews/comment` | `author` is `sam` \| `oscar` \| `oscar-clone`. Defaults `oscar` when omitted. Unknown `author` is 400. Does not change Pass/Fail or filing |
 | Span / gutter comment | `POST /api/reviews/comment` with `section` + `spanText` | Optional `start`, `end`, `highlightId` |
-| Reply in a thread | `POST /api/reviews/reply` | Needs `noteId` from GET |
+| Reply in a thread | `POST /api/reviews/reply` | Needs `noteId` from GET. Same `author` rules as comment |
 | Export the board | `GET /api/cases` + `GET /api/reviews` | Same shape as Export JSON, minus `kind` / `exportedAt` |
 | Import cases | `POST /api/cases` with `{ "cases": [...] }` | Same required fields as Load cases |
 | Mark Pass/Fail, labels, chips, file/unfile | `PUT /api/reviews` | **Sam’s work.** A full PUT replaces the stored review and can wipe scores / `filedAt` |
@@ -35,7 +35,7 @@ Do **not** invent steer bodies. Do **not** invent or overwrite Sam’s Pass/Fail
 | Remove a highlight | *UI only today* | Local + synced review via PUT if you must |
 | Sort / search / parent filter / inbox · `j` `k` `n` | *UI only* | Navigation. Filter chips are Linear parent titles (`CH-757 · Answer Engine Tracer`). `n` = next unscored inbox case |
 | Dictate into a comment / reply / label | `POST /api/transcribe` | Mic button. Grok STT. Screen wake lock, max 3 minutes |
-| Posting-as Sam/Oscar toggle | `author` on comment/reply | API field, not a session |
+| Posting-as Sam / Oscar / Oscar Clone toggle | `author` on comment/reply | API field, not a session. Clone must send `author: "oscar-clone"` |
 | Hub + A1 annotate / cluster | *No Oscar API* | Separate Hamel-style board in the browser |
 
 The board pulls `GET /api/cases` and `GET /api/reviews` about every 15 seconds. A POST from Oscar shows up for Sam without a seed deploy. If Blob persist is missing, writes return **503**.
@@ -160,7 +160,7 @@ oscar "$HOST/api/reviews?caseId=sync-was-becoming-a-type-religion"
 
 ### `POST /api/reviews/comment`
 
-Does **not** change Pass/Fail. Defaults `author` to `oscar`. `lane` is `content` or `action`. `kind` is `comment` (default) or `question`.
+Does **not** change Pass/Fail. `author` is `sam` | `oscar` | `oscar-clone`. Defaults `author` to `oscar` when omitted (Oscar Tech Lead’s current clients). `sam` still maps to Sam. Clone must send `author: "oscar-clone"` — do not omit it or Clone will look like Oscar. Unknown `author` is **400**, not coerced to Oscar. `lane` is `content` or `action`. `kind` is `comment` (default) or `question`.
 
 Known cases = seed ids + any id you posted to `/api/cases` + any case that already has a review.
 
@@ -183,6 +183,14 @@ oscar -X POST "$HOST/api/reviews/comment" -d '{
   "start": 3,
   "end": 19
 }'
+
+# Oscar Clone — must send author (omitting it stores oscar)
+oscar -X POST "$HOST/api/reviews/comment" -d '{
+  "caseId": "sync-was-becoming-a-type-religion",
+  "author": "oscar-clone",
+  "lane": "action",
+  "text": "I will cut the type chapel."
+}'
 ```
 
 `section` is `context` | `problem` | `options` | `choice`. Optional `highlightId` attaches to an existing highlight.
@@ -198,9 +206,17 @@ oscar -X POST "$HOST/api/reviews/reply" -d '{
   "author": "oscar",
   "text": "Done."
 }'
+
+# Oscar Clone — must send author (omitting it stores oscar)
+oscar -X POST "$HOST/api/reviews/reply" -d '{
+  "caseId": "sync-was-becoming-a-type-religion",
+  "noteId": "n-…",
+  "author": "oscar-clone",
+  "text": "Done."
+}'
 ```
 
-`noteId` comes from GET. **404** if the note is missing.
+`author` is the same union as comment. Omitted `author` defaults to `oscar`. Clone must send `author: "oscar-clone"`. Unknown `author` is **400**. `noteId` comes from GET. **404** if the note is missing.
 
 ### `PUT /api/reviews`
 
@@ -240,7 +256,7 @@ Also optional: `number`, `timestamp`, `yourCall`, `tooAggressive`, `yourCallBody
 
 `lane`: `content` | `action`.  
 `kind`: `comment` | `question`.  
-`author`: `sam` | `oscar`.
+`author`: `sam` | `oscar` | `oscar-clone`.
 
 ---
 
@@ -261,7 +277,7 @@ Oscar posts `parentSystem` + `parentId` (Linear), one project at a time. Filing 
 | Status | When |
 | --- | --- |
 | 401 | Missing/wrong Bearer or cookie on `/api/cases` or `/api/reviews*` |
-| 400 | Missing required case fields, bad JSON, invalid comment (`caseId` / `text` / `lane`) |
+| 400 | Missing required case fields, bad JSON, invalid comment (`caseId` / `text` / `lane` / `author`) |
 | 404 | Unknown case, highlight, or note |
 | 405 | Wrong method |
 | 503 | `BLOB_READ_WRITE_TOKEN` not set |
